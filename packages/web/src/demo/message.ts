@@ -63,6 +63,9 @@ export const ClickedDismissAllToasts = m('ClickedDismissAllToasts')
 
 // animation
 export const ToggledAnimation = m('ToggledAnimation')
+export const SelectedNav = m('SelectedNav', {
+  value: S.Literals(['Overview', 'Components', 'Settings', 'Docs']),
+})
 
 // file drop
 export const ClickedRemoveFile = m('ClickedRemoveFile', { fileIndex: S.Number })
@@ -118,6 +121,7 @@ export const Message = S.Union([
   ClickedShowErrorToast,
   ClickedDismissAllToasts,
   ToggledAnimation,
+  SelectedNav,
   ClickedRemoveFile,
   ClickedScrollToMiddle,
   UpdatedLoginEmail,

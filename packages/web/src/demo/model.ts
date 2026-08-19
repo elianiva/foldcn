@@ -37,6 +37,9 @@ export type Plan = typeof Plan.Type
 export const DemoTab = S.Literals(['Overview', 'Settings', 'Billing'])
 export type DemoTab = typeof DemoTab.Type
 
+export const DemoNav = S.Literals(['Overview', 'Components', 'Settings', 'Docs'])
+export type DemoNav = typeof DemoNav.Type
+
 export const ListboxItem = S.Literals([
   'Michael Bluth',
   'Lindsay Funke',
@@ -92,6 +95,7 @@ export const Model = S.Struct({
   maybeComboboxValue: S.Option(City),
   tabs: Tabs.Model,
   activeTab: DemoTab,
+  activeNav: DemoNav,
   radioGroup: RadioGroup.Model,
   maybePlan: S.Option(Plan),
   sliderRating: Slider.Model,

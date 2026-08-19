@@ -19,7 +19,7 @@ export type InitConfig = FoldkitAnimation.InitConfig
 export type ViewInputs = FoldkitAnimation.ViewInputs
 
 export const animationContentClass =
-  'rounded-lg border border-border bg-card p-4 text-card-foreground shadow-sm transition duration-200 ease-out data-[closed]:opacity-0 data-[closed]:scale-95 data-[closed]:-translate-y-2'
+  'rounded-lg border border-border bg-card p-4 text-card-foreground shadow-sm transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[closed]:opacity-0 data-[closed]:scale-95 data-[closed]:-translate-y-2 motion-reduce:transition-none motion-reduce:transform-none'
 
 export type StyledViewInputs = Readonly<{
   content: Html

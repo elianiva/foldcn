@@ -70,6 +70,7 @@ export const init = (): [Model, ReadonlyArray<Command.Command<Message>>] => [
     maybeComboboxValue: Option.none(),
     tabs: Tabs.init({ id: 'tabs-demo' }),
     activeTab: 'Overview',
+    activeNav: 'Components',
     radioGroup: RadioGroup.init({ id: 'radio-group-demo' }),
     maybePlan: Option.none(),
     sliderRating: Slider.init({ id: 'slider-rating-demo', min: 0, max: 10, step: 1 }),

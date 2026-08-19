@@ -486,6 +486,8 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         ]
       },
 
+      SelectedNav: ({ value }) => [evo(model, { activeNav: () => value }), []],
+
       ToggledAnimation: () => {
         const nextShowing = !model.isAnimationShowing
         return foldAnimation(

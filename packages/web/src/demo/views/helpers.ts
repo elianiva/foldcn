@@ -9,6 +9,7 @@ import {
   ClickedButtonDemo,
   ToggledDisclosureAnimated,
   ToggledDisclosureBasic,
+  SelectedNav,
   type Message,
 } from '../message'
 import type { Model } from '../model'
@@ -76,8 +77,9 @@ export const navView = (model: Model, h: HtmlBuilder<Message>): Html =>
     {
       items: NAV_ITEMS,
       ariaLabel: 'Primary',
-      toHref: (value, index) => (index === 1 ? '/' : '#'),
-      isItemCurrent: (_, index) => index === 1,
+      toHref: () => '#',
+      isItemCurrent: (value) => value === model.activeNav,
+      onItemClick: (value) => SelectedNav({ value }),
       toLabel: (value) => value,
     },
     h,

@@ -8,7 +8,7 @@ import { ChevronDown } from 'lucide'
 import { cn } from '@/lib/utils'
 
 export const disclosureButtonClass =
-  'flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 select-none data-[open]:rounded-b-none'
+  'flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 select-none data-[open]:rounded-b-none motion-reduce:transition-none'
 
 export const disclosurePanelClass =
   'overflow-hidden rounded-b-lg border border-t-0 border-border bg-card px-4 py-3 text-sm text-muted-foreground'
@@ -17,7 +17,7 @@ export const disclosureAnimatedPanelClass =
   'overflow-hidden rounded-b-lg border-x border-b border-t-0 border-border bg-card px-4 py-3 text-sm text-muted-foreground'
 
 export const disclosureChevronClass =
-  'size-4 shrink-0 text-muted-foreground transition-transform duration-200'
+  'size-4 shrink-0 text-muted-foreground transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
 
 export const disclosureWrapperClass = 'w-full'
 

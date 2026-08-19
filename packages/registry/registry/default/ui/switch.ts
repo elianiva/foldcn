@@ -12,12 +12,12 @@ export const switchSizes: Record<SwitchSize, string> = {
 }
 
 const switchBase =
-  'peer group/switch inline-flex shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-input shadow-xs transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[checked]:bg-primary dark:bg-input/80'
+  'peer group/switch inline-flex shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-input shadow-xs transition-[background-color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[checked]:bg-primary dark:bg-input/80 motion-reduce:transition-none'
 
 export const switchClass = switchBase
 
 export const switchThumbClass =
-  'pointer-events-none block rounded-full bg-background ring-0 transition-transform dark:group-data-[checked]/switch:bg-primary-foreground dark:group-data-[unchecked]/switch:bg-foreground'
+  'pointer-events-none block rounded-full bg-background ring-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:group-data-[checked]/switch:bg-primary-foreground dark:group-data-[unchecked]/switch:bg-foreground motion-reduce:transition-none'
 
 export const switchThumbSizes: Record<SwitchSize, string> = {
   default: 'size-4 group-data-[checked]/switch:translate-x-4',
