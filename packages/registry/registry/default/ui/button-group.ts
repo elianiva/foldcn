@@ -10,10 +10,10 @@ type Child = Html | string
 // group reads as one unit (mirrors shadcn's `button-group` base).
 
 export const buttonGroupClass =
-  'group/button-group inline-flex w-fit rounded-md border border-input shadow-xs *:not-first:-ml-px *:not-first:rounded-l-none *:not-first:border-l-0 *:not-last:rounded-r-none *:shadow-none'
+  'group/button-group inline-flex w-fit rounded-md shadow-xs *:not-first:-ml-px *:not-first:rounded-l-none *:not-first:border-l-0 *:not-last:rounded-r-none *:shadow-none'
 
 export const buttonGroupItemClass =
-  'rounded-md focus-visible:z-10 active:z-10 relative'
+  'relative rounded-md focus-visible:z-10 active:z-10 focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-ring'
 
 type StyleConfig = Readonly<{ className?: string }>
 
@@ -23,7 +23,10 @@ export const buttonGroup = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.div([h.Class(cn(buttonGroupClass, config.className)), h.DataAttribute('slot', 'button-group')], children)
+  h.div(
+    [h.Class(cn(buttonGroupClass, config.className)), h.DataAttribute('slot', 'button-group')],
+    children,
+  )
 
 /** A `button` styled to sit inside a `buttonGroup` (connected corners). */
 export const buttonGroupItem = <M>(
@@ -34,8 +37,8 @@ export const buttonGroupItem = <M>(
   button<M>(
     {
       ...config,
-      size: config.size ?? ('default' as ButtonSize),
-      variant: config.variant ?? ('outline' as ButtonVariant),
+      size: (config.size ?? 'default') satisfies ButtonSize,
+      variant: (config.variant ?? 'outline') satisfies ButtonVariant,
       className: cn(buttonGroupItemClass, config.className),
     },
     label,
