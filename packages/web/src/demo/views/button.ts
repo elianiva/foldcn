@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { button, buttonSizeKeys, buttonVariantKeys } from '@foldcn/registry/src/ui/button'
+import { button, buttonSizeKeys, buttonVariantKeys } from '@foldcn/registry/styles/default/ui/button'
 
 import { ClickedButtonDemo, type Message } from '../message'
 import type { Model } from '../model'

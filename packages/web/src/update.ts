@@ -1,4 +1,4 @@
-import { Effect, Match as M, Option, Schema as S } from 'effect'
+import { Effect, Match as M, Option, pipe, Schema as S } from 'effect'
 import { Command, Url } from 'foldkit'
 import { load, pushUrl } from 'foldkit/navigation'
 import { evo } from 'foldkit/struct'
@@ -6,7 +6,6 @@ import * as Tabs from '@foldkit/ui/tabs'
 
 import * as Demo from './demo'
 import { parseRoute } from './route'
-import { PACKAGE_MANAGER_STORAGE_KEY, THEME_STORAGE_KEY } from './init'
 import {
   CompletedApplyTheme,
   CompletedCopy,
@@ -17,9 +16,13 @@ import {
   CompletedScrollToTop,
   GotDemoMessage,
   GotInstallTabsMessage,
+  LoadedBrowserEnvironment,
   type Message,
 } from './message'
 import { Model, PackageManager, ResolvedTheme, ThemePreference } from './model'
+
+export const THEME_STORAGE_KEY = 'foldcn-theme'
+export const PACKAGE_MANAGER_STORAGE_KEY = 'foldcn-package-manager'
 
 // Create a tabs bundle for package manager selection
 const PackageManagerTabs = Tabs.create<PackageManager>()
@@ -108,6 +111,35 @@ const SavePackageManager = Command.define('SavePackageManager', {
     }),
 })
 
+const fromStored = (raw: string): ThemePreference | undefined =>
+  raw === 'dark' ? 'Dark' : raw === 'light' ? 'Light' : raw === 'system' ? 'System' : undefined
+
+const readStoredPreference = (): Option.Option<ThemePreference> =>
+  typeof localStorage === 'undefined'
+    ? Option.none()
+    : pipe(
+        Option.some(localStorage.getItem(THEME_STORAGE_KEY)),
+        Option.flatMap((raw) => (raw === null ? Option.none() : Option.some(fromStored(raw)))),
+        Option.flatMap((parsed) => (parsed === undefined ? Option.none() : Option.some(parsed))),
+      )
+
+const fromStoredPackageManager = (raw: string): PackageManager | undefined =>
+  raw === 'npm' ? 'npm' : raw === 'pnpm' ? 'pnpm' : raw === 'bun' ? 'bun' : undefined
+
+const readStoredPackageManager = (): PackageManager =>
+  typeof localStorage === 'undefined'
+    ? 'pnpm'
+    : pipe(
+        Option.some(localStorage.getItem(PACKAGE_MANAGER_STORAGE_KEY)),
+        Option.flatMap((raw) =>
+          raw === null ? Option.none() : Option.some(fromStoredPackageManager(raw)),
+        ),
+        Option.match({
+          onNone: () => 'pnpm' satisfies PackageManager,
+          onSome: (parsed) => (parsed === undefined ? 'pnpm' : parsed),
+        }),
+      )
+
 const systemPrefersDark = (): ResolvedTheme =>
   typeof window !== 'undefined' &&
   typeof window.matchMedia === 'function' &&
@@ -117,6 +149,21 @@ const systemPrefersDark = (): ResolvedTheme =>
 
 const resolveTheme = (model: Model, preference: ThemePreference): ResolvedTheme =>
   preference === 'System' ? systemPrefersDark() : preference
+
+/** Boot-time load of everything only the browser knows: the stored theme
+ *  preference and package manager plus the live system color scheme. init
+ *  stays deterministic so hydration adopts the prerendered DOM; the runtime
+ *  runs this Command once hydration has completed and never during SSR. */
+export const LoadBrowserEnvironment = Command.define('LoadBrowserEnvironment', {
+  messages: [LoadedBrowserEnvironment],
+  execute: Effect.sync(() =>
+    LoadedBrowserEnvironment({
+      maybePreference: readStoredPreference(),
+      systemTheme: systemPrefersDark(),
+      packageManager: readStoredPackageManager(),
+    }),
+  ),
+})
 
 const foldDemo = (model: Model, message: Demo.DemoMessage): UpdateReturn => {
   const [nextDemo, demoCommands] = Demo.update(model.demo, message)
@@ -183,6 +230,23 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       CompletedApplyTheme: () => [model, []],
       CompletedSaveThemePreference: () => [model, []],
       CompletedSavePackageManager: () => [model, []],
+
+      LoadedBrowserEnvironment: ({ maybePreference, systemTheme, packageManager }) => {
+        const resolvedTheme = Option.match(maybePreference, {
+          onNone: () => systemTheme,
+          onSome: (preference) => (preference === 'System' ? systemTheme : preference),
+        })
+        return [
+          evo(model, {
+            maybeThemePreference: () => maybePreference,
+            resolvedTheme: () => resolvedTheme,
+            selectedPackageManager: () => packageManager,
+          }),
+          // Re-applies the class the inline head script already set pre-paint,
+          // keeping documentElement and the meta theme-color on one code path.
+          [ApplyTheme({ theme: resolvedTheme })],
+        ]
+      },
 
       ClickedCopy: ({ value }) =>
         // Guard: ignore clicks while already in the copied state (prevents spam).

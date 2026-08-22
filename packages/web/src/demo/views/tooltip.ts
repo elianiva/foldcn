@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as Tooltip from '@foldcn/registry/src/ui/tooltip'
+import * as Tooltip from '@foldcn/registry/styles/default/ui/tooltip'
 
 import { GotTooltipMessage, type Message } from '../message'
 import type { Model } from '../model'

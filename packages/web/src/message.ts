@@ -5,7 +5,7 @@ import { UrlRequest } from 'foldkit/navigation'
 
 import { Message as DemoMessage } from './demo/message'
 import { Message as InstallTabsMessage } from '@foldkit/ui/tabs'
-import { ResolvedTheme, ThemePreference } from './model'
+import { PackageManager, ResolvedTheme, ThemePreference } from './model'
 
 // routing
 export const ClickedLink = m('ClickedLink', { request: UrlRequest })
@@ -23,6 +23,13 @@ export const ChangedSystemTheme = m('ChangedSystemTheme', {
 })
 export const CompletedApplyTheme = m('CompletedApplyTheme')
 export const CompletedSaveThemePreference = m('CompletedSaveThemePreference')
+
+// browser environment boot load
+export const LoadedBrowserEnvironment = m('LoadedBrowserEnvironment', {
+  maybePreference: S.Option(ThemePreference),
+  systemTheme: ResolvedTheme,
+  packageManager: PackageManager,
+})
 
 // clipboard
 export const ClickedCopy = m('ClickedCopy', { value: S.String })
@@ -48,6 +55,7 @@ export const Message = S.Union([
   GotDemoMessage,
   SelectedThemePreference,
   ChangedSystemTheme,
+  LoadedBrowserEnvironment,
   CompletedApplyTheme,
   CompletedSaveThemePreference,
   ClickedCopy,

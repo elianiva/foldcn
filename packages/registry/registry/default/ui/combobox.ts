@@ -30,26 +30,36 @@ export type ViewInputs<Item extends string = string> = FoldkitCombobox.ViewInput
 export type ItemConfig = FoldkitCombobox.ItemConfig
 export type GroupHeading = FoldkitCombobox.GroupHeading
 
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/combobox.tsx. Class strings are identical
+// to upstream; visual styling lives in the central foldcn style definition.
+//
+// foldkit deltas: items highlight via data-active (upstream
+// data-highlighted:) per the derivation mapping. Gaps vs upstream: no chips
+// UI for multi-select, no clear button, no Empty row; filtering is
+// parent-owned.
+
+/** foldcn renders a bare input (upstream wraps one in an InputGroup inside
+ *  the popup for chips mode); keep the input token string. */
 export const comboboxInputClass =
-  'h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 pr-9 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] data-[invalid]:border-destructive data-[invalid]:ring-destructive/20 data-[invalid]:ring-[3px] md:text-sm dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:aria-invalid:border-destructive/50 dark:data-[invalid]:ring-destructive/40 dark:data-[invalid]:border-destructive/50'
+  'cn-input w-full min-w-0 rounded-md pr-9 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50'
 
 export const comboboxButtonClass =
   'absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4'
 
 export const comboboxItemsClass =
-  'z-50 min-w-56 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2'
+  'cn-combobox-content z-50 min-w-56 overflow-hidden outline-hidden'
 
-export const comboboxItemsAnimatedClass =
-  'z-50 min-w-56 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2 data-[enter]:animate-in data-[enter]:fade-in-0 data-[enter]:zoom-in-95 data-[leave]:animate-out data-[leave]:fade-out-0 data-[leave]:zoom-out-95'
+export const comboboxItemsAnimatedClass = comboboxItemsClass
 
 export const comboboxItemClass =
-  "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[active]:bg-accent data-[active]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[selected]:font-medium data-[readonly]:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-combobox-item relative flex w-full cursor-default select-none outline-hidden data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 data-selected:font-medium data-readonly:pointer-events-none'
 
-export const comboboxGroupHeadingClass = 'px-2 py-1.5 text-xs font-semibold text-muted-foreground'
+export const comboboxGroupHeadingClass = 'cn-dropdown-menu-label px-2 py-1.5 text-xs font-medium text-muted-foreground'
 
-export const comboboxSeparatorClass = '-mx-1 my-1 h-px bg-border'
+export const comboboxSeparatorClass = 'cn-dropdown-menu-separator -mx-1 my-1 h-px'
 
-export const comboboxItemsScrollClass = 'max-h-96 overflow-y-auto overscroll-contain'
+export const comboboxItemsScrollClass = 'no-scrollbar max-h-72 scroll-py-1 overflow-y-auto p-1'
 
 export const comboboxBackdropClass = 'fixed inset-0 z-0'
 

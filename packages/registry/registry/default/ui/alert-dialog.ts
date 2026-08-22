@@ -7,6 +7,14 @@ import { cn } from '@/lib/utils'
 
 // Re-export the @foldkit/ui Dialog submodel surface. An alert dialog is a
 // Dialog variant: same headless behavior, destructive-confirm styling.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/alert-dialog.tsx. Class strings are
+// identical to upstream; visual styling lives in the central foldcn style definition. See docs/deriving-from-base.md.
+//
+// foldcn gaps vs upstream: no Media part slot wiring in styledViewInputs
+// (use AlertDialog.media inside content), and Action/Cancel compose Button
+// tokens instead of rendering the Button component.
 
 export const Model = FoldkitDialog.Model
 export type Model = typeof Model.Type
@@ -30,30 +38,39 @@ export type RenderInfo = FoldkitDialog.RenderInfo
 
 // --- Class constants ---
 
+/** foldkit delta: host <dialog> element chrome (upstream Root renders
+ *  nothing). See dialog.ts. */
 export const alertDialogClass = 'bg-transparent p-0 open:flex items-center justify-center'
 
-export const alertDialogBackdropClass =
-  'fixed inset-0 isolate z-50 bg-black/50 data-[leave]:animate-out data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:fade-in-0'
+export const alertDialogBackdropClass = 'cn-alert-dialog-overlay fixed inset-0 isolate z-50'
 
+/** Upstream content string. The `data-size` attr ("default" | "sm") keys the
+ *  cn-alert-dialog-content token's max-width variants. */
 export const alertDialogPanelClass =
-  'fixed top-1/2 left-1/2 z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 outline-none data-[leave]:animate-out data-[leave]:fade-out-0 data-[leave]:zoom-out-95 data-[enter]:animate-in data-[enter]:fade-in-0 data-[enter]:zoom-in-95 sm:rounded-lg'
+  'cn-alert-dialog-content group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 outline-none'
 
-export const alertDialogTitleClass = 'text-lg leading-none font-semibold'
+export const alertDialogMediaClass = 'cn-alert-dialog-media'
 
-export const alertDialogDescriptionClass = 'text-sm text-muted-foreground'
+export const alertDialogTitleClass = 'cn-alert-dialog-title cn-font-heading'
 
-export const alertDialogHeaderClass = 'flex flex-col gap-2 text-center sm:text-left'
+export const alertDialogDescriptionClass = 'cn-alert-dialog-description'
 
-export const alertDialogFooterClass = 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'
+export const alertDialogHeaderClass = 'cn-alert-dialog-header'
 
+export const alertDialogFooterClass =
+  'cn-alert-dialog-footer flex flex-col-reverse gap-2 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end'
+
+/** Upstream renders Cancel via `<Button variant="outline" size="default">`. */
 export const alertDialogCancelClass =
-  'mt-2 inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground sm:mt-0'
+  'cn-button cn-button-variant-outline cn-button-size-default'
 
-export const alertDialogActionClass =
-  'inline-flex h-9 items-center justify-center rounded-md bg-destructive px-4 py-2 text-sm font-medium text-white shadow-xs transition-colors hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40'
+/** Upstream renders Action via `<Button>` (default variant). */
+export const alertDialogActionClass = 'cn-button cn-button-variant-default cn-button-size-default'
 
+/** foldcn extra (upstream alert-dialog has no close X): ghost icon button,
+ *  kept for backward compatibility with the closeButton helper. */
 export const alertDialogCloseButtonClass =
-  "absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-button cn-button-variant-ghost cn-button-size-icon-sm'
 
 // --- Composable sub-components ---
 
@@ -64,7 +81,22 @@ export const header = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(alertDialogHeaderClass, config.className))], children)
+): Html =>
+  h.div(
+    [h.DataAttribute('slot', 'alert-dialog-header'), h.Class(cn(alertDialogHeaderClass, config.className))],
+    children,
+  )
+
+/** Media slot — icon/media area above the title (upstream AlertDialogMedia). */
+export const media = <M>(
+  config: StyleConfig,
+  children: ReadonlyArray<Child>,
+  h: HtmlBuilder<M>,
+): Html =>
+  h.div(
+    [h.DataAttribute('slot', 'alert-dialog-media'), h.Class(cn(alertDialogMediaClass, config.className))],
+    children,
+  )
 
 /** Alert dialog title — merges with the submodel's title attributes. */
 export const title = <M>(
@@ -73,7 +105,14 @@ export const title = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.h2([...attributes, h.Class(cn(alertDialogTitleClass, config.className))], children)
+  h.h2(
+    [
+      ...attributes,
+      h.DataAttribute('slot', 'alert-dialog-title'),
+      h.Class(cn(alertDialogTitleClass, config.className)),
+    ],
+    children,
+  )
 
 /** Alert dialog description — merges with the submodel's description attributes. */
 export const description = <M>(
@@ -82,14 +121,25 @@ export const description = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.p([...attributes, h.Class(cn(alertDialogDescriptionClass, config.className))], children)
+  h.p(
+    [
+      ...attributes,
+      h.DataAttribute('slot', 'alert-dialog-description'),
+      h.Class(cn(alertDialogDescriptionClass, config.className)),
+    ],
+    children,
+  )
 
 /** Alert dialog footer wrapper. */
 export const footer = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(alertDialogFooterClass, config.className))], children)
+): Html =>
+  h.div(
+    [h.DataAttribute('slot', 'alert-dialog-footer'), h.Class(cn(alertDialogFooterClass, config.className))],
+    children,
+  )
 
 /** Close button — merges with the submodel's closeButton attributes. */
 export const closeButton = <M>(
@@ -98,7 +148,10 @@ export const closeButton = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.button([...attributes, h.Class(cn(alertDialogCloseButtonClass, config.className))], children)
+  h.button(
+    [...attributes, h.DataAttribute('slot', 'alert-dialog-close'), h.Class(cn(alertDialogCloseButtonClass, config.className))],
+    children,
+  )
 
 /** Destructive action button. Spread the submodel's `closeButton` attributes so
  *  a confirm also dismisses the dialog. */
@@ -108,7 +161,10 @@ export const actionButton = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.button([...attributes, h.Class(cn(alertDialogActionClass, config.className))], children)
+  h.button(
+    [...attributes, h.DataAttribute('slot', 'alert-dialog-action'), h.Class(cn(alertDialogActionClass, config.className))],
+    children,
+  )
 
 /** Secondary cancel button. */
 export const cancelButton = <M>(
@@ -117,7 +173,10 @@ export const cancelButton = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.button([...attributes, h.Class(cn(alertDialogCancelClass, config.className))], children)
+  h.button(
+    [...attributes, h.DataAttribute('slot', 'alert-dialog-cancel'), h.Class(cn(alertDialogCancelClass, config.className))],
+    children,
+  )
 
 // --- styledViewInputs factory ---
 
@@ -132,6 +191,9 @@ export type StyledViewInputs<M> = Readonly<{
   className?: string
   backdropClass?: string
   panelClass?: string
+  /** Upstream Content `size` prop ("default" | "sm"); keys the panel token's
+   *  max-width variants via data-size. */
+  size?: 'default' | 'sm'
 }>
 
 /** Build styled `Dialog.ViewInputs` for an alert dialog. Pass your view's `h`
@@ -145,9 +207,18 @@ export const styledViewInputs = <M>(
       [...dialog, h.Class(cn(alertDialogClass, viewInputs.className))],
       isVisible
         ? [
-            h.div([...backdrop, h.Class(cn(alertDialogBackdropClass, viewInputs.backdropClass))]),
+            h.div([
+              ...backdrop,
+              h.DataAttribute('slot', 'alert-dialog-overlay'),
+              h.Class(cn(alertDialogBackdropClass, viewInputs.backdropClass)),
+            ]),
             h.div(
-              [...panel, h.Class(cn(alertDialogPanelClass, viewInputs.panelClass))],
+              [
+                ...panel,
+                h.DataAttribute('slot', 'alert-dialog-content'),
+                h.DataAttribute('size', viewInputs.size ?? 'default'),
+                h.Class(cn(alertDialogPanelClass, viewInputs.panelClass)),
+              ],
               viewInputs.content({ closeButton, title, description }, h),
             ),
           ]

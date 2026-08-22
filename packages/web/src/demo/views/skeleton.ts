@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { skeleton } from '@foldcn/registry/src/ui/skeleton'
+import { skeleton } from '@foldcn/registry/styles/default/ui/skeleton'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

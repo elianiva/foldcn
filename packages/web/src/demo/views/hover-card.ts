@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as HoverCard from '@foldcn/registry/src/ui/hover-card'
+import * as HoverCard from '@foldcn/registry/styles/default/ui/hover-card'
 
 import { GotPopoverMessage, type Message } from '../message'
 import type { Model } from '../model'

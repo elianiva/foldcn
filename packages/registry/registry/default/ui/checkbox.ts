@@ -5,6 +5,23 @@ import { icon } from '@/lib/icons'
 import { Check, Minus } from 'lucide'
 import { cn } from '@/lib/utils'
 
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/checkbox.tsx.
+ * Class strings are identical to upstream; visual styling lives in the central foldcn style definition. See docs/deriving-from-base.md.
+ *
+ * foldkit delta (inlined at style resolution): foldkit emits
+ * aria-disabled/data-disabled instead of native disabled, and data-checked /
+ * data-indeterminate for state.
+ */
+
+/** Upstream checkbox component string. The disabled: variants are inert under
+ *  foldkit (never native disabled) — compat twins are inlined at style resolution. */
+export const checkboxClass =
+  'cn-checkbox peer relative shrink-0 outline-none after:absolute after:-inset-x-3 after:-inset-y-2 disabled:cursor-not-allowed disabled:opacity-50'
+
+export const checkboxIndicatorClass =
+  'cn-checkbox-indicator grid place-content-center text-current transition-none'
+
 export type CheckboxConfig<M> = Readonly<{
   id: string
   isChecked: boolean
@@ -46,19 +63,14 @@ export const checkbox = <M>(config: CheckboxConfig<M>, h: HtmlBuilder<M>): Html 
                   [
                     ...attributes.checkbox,
                     h.DataAttribute('slot', 'checkbox'),
-                    h.Class(
-                      cn(
-                        'peer relative grid size-4 shrink-0 place-content-center rounded-[4px] border border-input bg-input/90 shadow-xs transition-shadow outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-[disabled]:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[checked]:border-primary data-[checked]:bg-primary data-[checked]:text-primary-foreground data-[indeterminate]:border-primary data-[indeterminate]:bg-primary data-[indeterminate]:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-[checked]:bg-primary dark:data-[indeterminate]:bg-primary',
-                        config.className,
-                      ),
-                    ),
+                    h.Class(cn(checkboxClass, config.className)),
                   ],
                   config.isChecked || config.isIndeterminate === true
                     ? [
                         h.span(
                           [
                             h.DataAttribute('slot', 'checkbox-indicator'),
-                            h.Class('grid place-content-center text-current transition-none'),
+                            h.Class(checkboxIndicatorClass),
                           ],
                           [
                             icon(

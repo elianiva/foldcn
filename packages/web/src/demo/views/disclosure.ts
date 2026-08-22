@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { disclosure } from '@foldcn/registry/src/ui/disclosure'
+import { disclosure } from '@foldcn/registry/styles/default/ui/disclosure'
 
 import { ToggledDisclosureAnimated, ToggledDisclosureBasic, type Message } from '../message'
 import type { Model } from '../model'

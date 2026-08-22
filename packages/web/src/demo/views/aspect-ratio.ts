@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { aspectRatio } from '@foldcn/registry/src/ui/aspect-ratio'
+import { aspectRatio } from '@foldcn/registry/styles/default/ui/aspect-ratio'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

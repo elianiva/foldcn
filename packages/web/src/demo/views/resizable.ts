@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { resizable } from '@foldcn/registry/src/ui/resizable'
+import { resizable } from '@foldcn/registry/styles/default/ui/resizable'
 
 import { ResizedSplit, type Message } from '../message'
 import type { Model } from '../model'

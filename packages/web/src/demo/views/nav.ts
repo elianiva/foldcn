@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { nav } from '@foldcn/registry/src/ui/nav'
+import { nav } from '@foldcn/registry/styles/default/ui/nav'
 
 import { SelectedNav, type Message } from '../message'
 import type { Model } from '../model'

@@ -9,8 +9,16 @@ import { CircleCheck, Info, LoaderCircle, OctagonX, TriangleAlert, X } from 'luc
 import { cn } from '@/lib/utils'
 
 // Re-export the @foldkit/ui Toast surface. Sonner is a Toast variant: the same
-// stacked, auto-dismissing notifications styled after shadcn's `sonner`
-// (compact entries, close affordance, optional per-variant icon).
+// stacked, auto-dismissing notifications with compact entries, close
+// affordance and per-variant icons.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/sonner.tsx (surface tokens) — the entry
+// card uses the cn-toast token like upstream's toastOptions.classNames.
+//
+// foldcn gaps vs upstream: no sonner-library passthrough props, no theme
+// sync (--normal-* vars), no swipe; the Foldkit toast engine drives
+// positioning/duration.
 
 export const Variant = FoldkitToast.Variant
 export type Variant = typeof Variant.Type
@@ -26,9 +34,9 @@ export const toastVariantClass = (variant: Variant): string =>
 export const sonnerContainerClass = 'flex w-full flex-col gap-2'
 
 export const sonnerEntryClass =
-  'w-full max-w-sm rounded-lg border bg-background p-4 pr-8 text-popover-foreground shadow-lg will-change-transform outline-none select-none transition duration-200 ease-out data-[closed]:opacity-0 data-[closed]:translate-y-2'
+  'w-full max-w-sm rounded-2xl bg-popover p-4 pr-8 text-popover-foreground shadow-lg will-change-transform outline-none select-none transition duration-200 ease-out data-[closed]:opacity-0 data-[closed]:translate-y-2'
 
-export const sonnerTitleClass = 'text-sm font-semibold'
+export const sonnerTitleClass = 'text-sm font-medium'
 
 export const sonnerDescriptionClass = 'text-sm text-muted-foreground'
 

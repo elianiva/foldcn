@@ -1,7 +1,7 @@
 import { Option } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as combobox from '@foldcn/registry/src/ui/combobox'
+import * as combobox from '@foldcn/registry/styles/default/ui/combobox'
 import { CityCombobox } from '../bundles'
 
 import { GotComboboxMessage, type Message } from '../message'

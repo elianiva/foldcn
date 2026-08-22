@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { textarea } from '@foldcn/registry/src/ui/textarea'
+import { textarea } from '@foldcn/registry/styles/default/ui/textarea'
 
 import { UpdatedTextareaValue, type Message } from '../message'
 import type { Model } from '../model'

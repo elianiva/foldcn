@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as tabs from '@foldcn/registry/src/ui/tabs'
+import * as tabs from '@foldcn/registry/styles/default/ui/tabs'
 import { DemoTabs } from '../bundles'
 
 import { GotTabsMessage, type Message } from '../message'

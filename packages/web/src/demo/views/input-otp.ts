@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { inputOtp } from '@foldcn/registry/src/ui/input-otp'
+import { inputOtp } from '@foldcn/registry/styles/default/ui/input-otp'
 
 import { UpdatedOtp, type Message } from '../message'
 import type { Model } from '../model'

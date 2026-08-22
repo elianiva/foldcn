@@ -1,7 +1,7 @@
 import { Subscription } from 'foldkit'
 import { Slider as FoldkitSlider, VirtualList as FoldkitVirtualList } from '@foldkit/ui'
 
-import * as DragAndDrop from '@foldcn/registry/src/ui/drag-and-drop'
+import * as DragAndDrop from '@foldcn/registry/styles/default/ui/drag-and-drop'
 
 import {
   GotDragAndDropMessage,

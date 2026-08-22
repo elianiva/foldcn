@@ -29,6 +29,15 @@ export const view = FoldkitDialog.view
 export type InitConfig = FoldkitDialog.InitConfig
 export type RenderInfo = FoldkitDialog.RenderInfo
 
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/sheet.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
+//
+// foldkit delta: upstream keys enter/exit motion on
+// data-starting-style/data-ending-style, which foldkit cannot emit — the
+// equivalent declarations are inlined under data-enter/data-leave,
+// and the panel emits data-side (derived from the anchor placement).
+
 // --- Sides ---
 
 export type SheetSide = 'top' | 'bottom' | 'left' | 'right'
@@ -40,28 +49,34 @@ export const SHEET_ANCHOR: Readonly<Record<SheetSide, AnchorConfig>> = {
   right: { placement: 'right', gap: 0, padding: 0 },
 }
 
+/** Upstream SheetContent string. Positioning comes from the cn-sheet-content
+ *  token keyed on the emitted data-side attribute. */
 export const sheetPanelClass: Readonly<Record<SheetSide, string>> = {
-  top: 'fixed inset-x-0 top-0 z-50 flex h-auto flex-col gap-4 border bg-background p-6 shadow-lg duration-200 outline-none data-[leave]:animate-out data-[leave]:slide-out-to-top data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:slide-in-from-top data-[enter]:fade-in-0',
-  bottom:
-    'fixed inset-x-0 bottom-0 z-50 flex h-auto flex-col gap-4 border bg-background p-6 shadow-lg duration-200 outline-none data-[leave]:animate-out data-[leave]:slide-out-to-bottom data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:slide-in-from-bottom data-[enter]:fade-in-0',
-  left: 'fixed inset-y-0 left-0 z-50 h-full w-3/4 gap-4 border bg-background p-6 shadow-lg duration-200 outline-none data-[leave]:animate-out data-[leave]:slide-out-to-left data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:slide-in-from-left data-[enter]:fade-in-0 sm:max-w-sm',
-  right:
-    'fixed inset-y-0 right-0 z-50 h-full w-3/4 gap-4 border bg-background p-6 shadow-lg duration-200 outline-none data-[leave]:animate-out data-[leave]:slide-out-to-right data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:slide-in-from-right data-[enter]:fade-in-0 sm:max-w-sm',
+  top: 'cn-sheet-content',
+  bottom: 'cn-sheet-content',
+  left: 'cn-sheet-content',
+  right: 'cn-sheet-content',
 }
 
+/** Upstream motion classes (data-starting-style/data-ending-style variants);
+ *  foldkit equivalents are added to the same tokens at style resolution. */
+export const sheetMotionClass =
+  'data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]'
+
 export const sheetBackdropClass =
-  'fixed inset-0 z-50 bg-black/50 data-[leave]:animate-out data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:fade-in-0'
+  'cn-sheet-overlay fixed inset-0 z-50 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0'
 
-export const sheetHeaderClass = 'flex flex-col gap-1.5 p-0'
+export const sheetHeaderClass = 'cn-sheet-header flex flex-col'
 
-export const sheetFooterClass = 'mt-auto flex flex-col gap-2 p-0 sm:flex-row sm:justify-end'
+export const sheetFooterClass = 'cn-sheet-footer mt-auto flex flex-col'
 
-export const sheetTitleClass = 'text-base font-semibold text-foreground'
+export const sheetTitleClass = 'cn-sheet-title cn-font-heading'
 
-export const sheetDescriptionClass = 'text-sm text-muted-foreground'
+export const sheetDescriptionClass = 'cn-sheet-description'
 
+/** Upstream renders close via `<Button variant="ghost" size="icon-sm">`. */
 export const sheetCloseButtonClass =
-  "absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-button cn-button-variant-ghost cn-button-size-icon-sm cn-sheet-close'
 
 // --- Composable sub-components ---
 
@@ -71,27 +86,47 @@ export const header = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(sheetHeaderClass, config.className))], children)
+): Html =>
+  h.div(
+    [h.DataAttribute('slot', 'sheet-header'), h.Class(cn(sheetHeaderClass, config.className))],
+    children,
+  )
 
 export const title = <M>(
   attributes: ReadonlyArray<Attribute<M> | ChildAttribute>,
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.h2([...attributes, h.Class(cn(sheetTitleClass, config.className))], children)
+): Html =>
+  h.h2(
+    [...attributes, h.DataAttribute('slot', 'sheet-title'), h.Class(cn(sheetTitleClass, config.className))],
+    children,
+  )
 
 export const description = <M>(
   attributes: ReadonlyArray<Attribute<M> | ChildAttribute>,
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.p([...attributes, h.Class(cn(sheetDescriptionClass, config.className))], children)
+): Html =>
+  h.p(
+    [
+      ...attributes,
+      h.DataAttribute('slot', 'sheet-description'),
+      h.Class(cn(sheetDescriptionClass, config.className)),
+    ],
+    children,
+  )
 
 export const footer = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(sheetFooterClass, config.className))], children)
+): Html =>
+  h.div(
+    [h.DataAttribute('slot', 'sheet-footer'), h.Class(cn(sheetFooterClass, config.className))],
+    children,
+  )
 
 export const closeButton = <M>(
   attributes: ReadonlyArray<Attribute<M> | ChildAttribute>,
@@ -99,7 +134,10 @@ export const closeButton = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.button([...attributes, h.Class(cn(sheetCloseButtonClass, config.className))], children)
+  h.button(
+    [...attributes, h.DataAttribute('slot', 'sheet-close'), h.Class(cn(sheetCloseButtonClass, config.className))],
+    children,
+  )
 
 // --- styledViewInputs factory ---
 
@@ -129,9 +167,18 @@ export const styledViewInputs = <M>(
         [...dialog, h.Class(cn('bg-transparent p-0 open:block', viewInputs.className))],
         isVisible
           ? [
-              h.div([...backdrop, h.Class(cn(sheetBackdropClass, viewInputs.backdropClass))]),
+              h.div([
+                ...backdrop,
+                h.DataAttribute('slot', 'sheet-overlay'),
+                h.Class(cn(sheetBackdropClass, viewInputs.backdropClass)),
+              ]),
               h.div(
-                [...panel, h.Class(cn(sheetPanelClass[side], viewInputs.panelClass))],
+                [
+                  ...panel,
+                  h.DataAttribute('slot', 'sheet-content'),
+                  h.DataAttribute('side', side),
+                  h.Class(cn(sheetPanelClass[side], sheetMotionClass, viewInputs.panelClass)),
+                ],
                 viewInputs.content({ closeButton, title, description }, h),
               ),
             ]

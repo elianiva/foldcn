@@ -9,6 +9,14 @@ import { CircleCheck, Info, LoaderCircle, OctagonX, TriangleAlert, X } from 'luc
 import { cn } from '@/lib/utils'
 
 // Re-export the @foldkit/ui Toast surface.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/toast.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
+//
+// foldcn gaps vs upstream: no swipe-to-dismiss, no stacked scale/peek
+// expansion (single static entry styling), no Action part — compose actions
+// via your payload's toContent.
 
 export const Variant = FoldkitToast.Variant
 export type Variant = typeof Variant.Type
@@ -112,7 +120,11 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
         h.DataAttribute('slot', 'toast'),
         h.Class(
           cn(
-            'cn-toast group/toast pointer-events-auto relative flex w-full items-center gap-3 overflow-hidden rounded-md border bg-popover p-4 pr-8 text-popover-foreground shadow-lg will-change-transform outline-none select-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 transition duration-200 ease-out data-[closed]:opacity-0 data-[closed]:translate-y-2',
+            // Upstream Toast root string minus the stacking choreography
+            // (--toast-index transforms, data-expanded/data-limited,
+            // swipe exits) which needs primitive state; exit motion is a
+            // simple fade/translate keyed on foldkit's data-closed window.
+            'cn-toast group/toast pointer-events-auto relative flex w-full items-center gap-3 overflow-hidden rounded-md border bg-popover p-4 text-popover-foreground shadow-lg will-change-transform outline-none select-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 transition duration-200 ease-out data-[closed]:opacity-0 data-[closed]:translate-y-2',
             config.className,
           ),
         ),

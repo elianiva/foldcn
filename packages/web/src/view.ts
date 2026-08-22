@@ -24,11 +24,16 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     [h.Class('flex min-h-svh flex-col bg-background text-foreground')],
     [
       headerView(model, h),
-      Match.value(model.route).pipe(
-        Match.tag('Home', () => homeView(model, h)),
-        Match.tag('Components', () => componentsIndexView(model, h)),
-        Match.tag('Item', (itemRoute) => itemPage(model, itemRoute.name, h)),
-        Match.orElse(() => notFoundView(h)),
+      h.main(
+        [h.Class('flex-1')],
+        [
+          Match.value(model.route).pipe(
+            Match.tag('Home', () => homeView(model, h)),
+            Match.tag('Components', () => componentsIndexView(model, h)),
+            Match.tag('Item', (itemRoute) => itemPage(model, itemRoute.name, h)),
+            Match.orElse(() => notFoundView(h)),
+          ),
+        ],
       ),
       footerView(h),
     ],

@@ -4,10 +4,13 @@ type Child = Html | string
 
 import { cn } from '@/lib/utils'
 
-export const kbdClass =
-  "pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none [&_svg:not([class*='size-'])]:size-3 [[data-slot=tooltip-content]_&]:bg-background/20 [[data-slot=tooltip-content]_&]:text-background dark:[[data-slot=tooltip-content]_&]:bg-background/10"
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/kbd.tsx.
+ * Keep the class strings identical to upstream — visual styling lives in the central foldcn style definition. See docs/deriving-from-base.md.
+ */
+export const kbdClass = 'cn-kbd pointer-events-none inline-flex items-center justify-center select-none'
 
-export const kbdGroupClass = 'inline-flex items-center gap-1'
+export const kbdGroupClass = 'cn-kbd-group inline-flex items-center'
 
 type StyleConfig = Readonly<{ className?: string }>
 

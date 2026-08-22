@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { switch_ } from '@foldcn/registry/src/ui/switch'
+import { switch_ } from '@foldcn/registry/styles/default/ui/switch'
 
 import { ToggledSwitchEmail, ToggledSwitchTfa, type Message } from '../message'
 import type { Model } from '../model'

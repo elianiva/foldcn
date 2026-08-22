@@ -41,21 +41,31 @@ export const HOVER_CARD_ANCHOR: AnchorConfig = {
 export const hoverCardTriggerClass =
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 underline-offset-4 hover:underline'
 
+/**
+ * Derived from the shadcn v4 BASE registry:
+ * apps/v4/registry/bases/base/ui/hover-card.tsx. Class strings are identical
+ * to upstream; visual styling lives in the central foldcn style definition.
+ *
+ * foldcn gap vs upstream: Base UI backs hover-card with PreviewCard (true
+ * hover-intent open/close); foldkit has no hover primitive, so this stays a
+ * click-activated popover wearing the card styles. The panel emits data-side
+ * derived from the anchor placement alongside foldkit's data-placement.
+ */
 export const hoverCardContentClass =
-  'z-50 w-64 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2'
+  'cn-hover-card-content cn-hover-card-content-logical z-50 origin-(--transform-origin) outline-hidden'
 
-export const hoverCardContentAnimatedClass =
-  'z-50 w-64 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2 data-[enter]:animate-in data-[enter]:fade-in-0 data-[enter]:zoom-in-95 data-[leave]:animate-out data-[leave]:fade-out-0 data-[leave]:zoom-out-95'
+/** Kept for backward compatibility — animations now live in the token. */
+export const hoverCardContentAnimatedClass = hoverCardContentClass
 
 export const hoverCardBackdropClass = 'fixed inset-0 z-0'
 
 export const hoverCardWrapperClass = 'relative inline-block'
 
-export const hoverCardHeaderClass = 'flex flex-col gap-1'
+export const hoverCardHeaderClass = 'cn-popover-header flex flex-col gap-1'
 
-export const hoverCardTitleClass = 'text-sm font-semibold'
+export const hoverCardTitleClass = 'cn-popover-title font-medium'
 
-export const hoverCardDescriptionClass = 'text-sm text-muted-foreground'
+export const hoverCardDescriptionClass = 'cn-popover-description text-muted-foreground'
 
 // --- Composable sub-components ---
 
@@ -101,8 +111,11 @@ export type StyledViewInputs = Readonly<{
 export const styledViewInputs = <M>(
   viewInputs: StyledViewInputs,
   h: HtmlBuilder<M>,
-): FoldkitPopover.ViewInputs => ({
-  anchor: viewInputs.anchor ?? HOVER_CARD_ANCHOR,
+): FoldkitPopover.ViewInputs => {
+  const anchor = { ...HOVER_CARD_ANCHOR, ...viewInputs.anchor }
+  const side = (anchor.placement ?? 'bottom').split('-')[0] || 'bottom'
+  return {
+    anchor,
   isDisabled: viewInputs.isDisabled,
   focusSelector: viewInputs.focusSelector,
   ariaLabel: viewInputs.ariaLabel,
@@ -134,6 +147,7 @@ export const styledViewInputs = <M>(
                     ),
                   ),
                   h.DataAttribute('slot', 'hover-card-content'),
+                  h.DataAttribute('side', side),
                 ],
                 viewInputs.content,
               ),
@@ -141,4 +155,5 @@ export const styledViewInputs = <M>(
           : []),
       ],
     ),
-})
+  }
+}

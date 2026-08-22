@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { dataTable } from '@foldcn/registry/src/blocks/data-table/data-table'
+import { dataTable } from '@foldcn/registry/styles/default/blocks/data-table/data-table'
 
 import { UpdatedTableSearch, type Message } from '../message'
 import type { Model } from '../model'

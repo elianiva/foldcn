@@ -7,6 +7,15 @@ import { cn } from '@/lib/utils'
 // Re-export the @foldkit/ui Menu surface. Create a bundle once per item type:
 //
 //   export const ActionMenu = Menu.create<"Edit" | "Delete">()
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/dropdown-menu.tsx. Class strings are
+// identical to upstream; visual styling lives in the central foldcn style definition.
+//
+// foldkit deltas: items highlight via data-active (upstream uses focus:) —
+// prefix adjusted per docs/deriving-from-base.md; panels emit data-side
+// derived from anchor placement. Gaps vs upstream: no checkbox/radio/submenu/
+// destructive/inset item kinds (primitive-level).
 
 export const create = FoldkitMenu.create
 export const init = (config: InitConfig): Model => FoldkitMenu.init({ isAnimated: true, ...config })
@@ -24,31 +33,32 @@ export type ViewInputs<Item extends string = string> = FoldkitMenu.ViewInputs<It
 export type ItemConfig = FoldkitMenu.ItemConfig
 export type GroupHeading = FoldkitMenu.GroupHeading
 
+/** Upstream renders DropdownMenuTrigger unstyled (consumers pass a Button);
+ *  foldcn's trigger builder keeps a ghost-button composition. */
 export const menuTriggerClass =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50'
+  'cn-button cn-button-variant-ghost cn-button-size-default'
 
 export const menuItemsClass =
-  'z-50 min-w-48 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2'
+  'cn-dropdown-menu-content z-50 min-w-32 overflow-hidden outline-hidden'
 
-export const menuItemsAnimatedClass =
-  'z-50 min-w-48 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2 data-[enter]:animate-in data-[enter]:fade-in-0 data-[enter]:zoom-in-95 data-[leave]:animate-out data-[leave]:fade-out-0 data-[leave]:zoom-out-95'
+export const menuItemsAnimatedClass = menuItemsClass
 
 export const menuItemClass =
-  "relative flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[active]:bg-accent data-[active]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-dropdown-menu-item relative flex w-full cursor-default select-none outline-hidden data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50'
 
-export const menuSeparatorClass = '-mx-1 my-1 h-px bg-border'
+export const menuSeparatorClass = 'cn-dropdown-menu-separator -mx-1 my-1 h-px'
 
-export const menuHeadingClass = 'px-2 py-1.5 text-xs font-semibold text-muted-foreground'
+export const menuHeadingClass = 'cn-dropdown-menu-label px-2 py-1.5 text-xs font-medium text-muted-foreground'
+
+export const menuShortcutClass = 'cn-dropdown-menu-shortcut ml-auto text-xs tracking-widest text-muted-foreground'
 
 export const menuLabelClass = menuHeadingClass
 
-export const menuShortcutClass = 'ml-auto text-xs tracking-widest text-muted-foreground'
-
 export const menuSubTriggerClass =
-  "flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[open]:bg-accent data-[open]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-dropdown-menu-sub-trigger flex w-full cursor-default items-center gap-2 rounded-md px-1.5 py-1 text-sm outline-hidden select-none data-open:bg-accent data-open:text-accent-foreground'
 
 export const menuCheckboxItemClass =
-  "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-dropdown-menu-checkbox-item relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50'
 
 export const menuRadioItemClass = menuCheckboxItemClass
 

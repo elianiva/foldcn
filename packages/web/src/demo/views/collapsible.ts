@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { disclosure } from '@foldcn/registry/src/ui/collapsible'
+import { disclosure } from '@foldcn/registry/styles/default/ui/collapsible'
 
 import { ToggledCollapsible, type Message } from '../message'
 import type { Model } from '../model'

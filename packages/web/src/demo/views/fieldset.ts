@@ -1,8 +1,8 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { fieldset } from '@foldcn/registry/src/ui/fieldset'
-import { input } from '@foldcn/registry/src/ui/input'
-import * as select from '@foldcn/registry/src/ui/select'
+import { fieldset } from '@foldcn/registry/styles/default/ui/fieldset'
+import { input } from '@foldcn/registry/styles/default/ui/input'
+import * as select from '@foldcn/registry/styles/default/ui/select'
 import { LanguageSelect } from '../bundles'
 
 import { GotSelectMessage, UpdatedInputValue, type Message } from '../message'

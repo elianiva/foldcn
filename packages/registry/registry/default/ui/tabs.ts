@@ -23,29 +23,39 @@ export type ViewInputs<Value extends string = string> = FoldkitTabs.ViewInputs<V
 export type RenderInfo<Value extends string = string> = FoldkitTabs.RenderInfo<Value>
 
 // --- Class constants ---
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/tabs.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
+//
+// foldkit delta: foldkit emits data-selected (upstream Base UI emits
+// data-active) — the copied trigger string keeps the semantics with the
+// data-active prefix per docs/deriving-from-base.md. The group orientation
+// hooks use data-horizontal/data-vertical attrs emitted by the styled view.
 
 export type TabsListVariant = 'default' | 'line'
 
 const tabsListBaseClass =
-  'group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none'
+  'cn-tabs-list group/tabs-list inline-flex w-fit items-center justify-center text-muted-foreground group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col'
 
 const tabsListVariantClasses: Record<TabsListVariant, string> = {
-  default: 'bg-muted',
-  line: 'gap-1 bg-transparent',
+  default: 'cn-tabs-list-variant-default bg-muted',
+  line: 'cn-tabs-list-variant-line gap-1 bg-transparent',
 }
 
 export const tabsListClass = (variant: TabsListVariant = 'default') =>
   cn(tabsListBaseClass, tabsListVariantClasses[variant])
 
+/** Upstream TabsTrigger string with data-active → data-selected prefix swaps
+ *  (foldkit attr name). */
 export const tabsTriggerClass = cn(
-  "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-  'group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-[selected]:bg-transparent dark:group-data-[variant=line]/tabs-list:data-[selected]:border-transparent dark:group-data-[variant=line]/tabs-list:data-[selected]:bg-transparent',
-  'data-[selected]:bg-background data-[selected]:text-foreground dark:data-[selected]:border-input dark:data-[selected]:bg-input/30 dark:data-[selected]:text-foreground',
-  "after:absolute after:content-[''] after:bottom-[-1px] after:left-0 after:h-0.5 after:w-full after:bg-foreground after:opacity-0 after:transition-opacity group-data-[orientation=vertical]/tabs:after:-right-1 group-data-[orientation=vertical]/tabs:after:bottom-auto group-data-[orientation=vertical]/tabs:after:left-auto group-data-[orientation=vertical]/tabs:after:h-full group-data-[orientation=vertical]/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-[selected]:after:opacity-100",
-  'group-data-[variant=default]/tabs-list:data-[selected]:shadow-sm group-data-[variant=line]/tabs-list:data-[selected]:shadow-none',
+  'cn-tabs-trigger relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center whitespace-nowrap text-foreground/60 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  'group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-selected:bg-transparent dark:group-data-[variant=line]/tabs-list:data-selected:border-transparent dark:group-data-[variant=line]/tabs-list:data-selected:bg-transparent',
+  'data-selected:bg-background data-selected:text-foreground dark:data-selected:border-input dark:data-selected:bg-input/30 dark:data-selected:text-foreground',
+  'after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-selected:after:opacity-100',
 )
 
-export const tabsContentClass = 'flex-1 outline-none'
+export const tabsContentClass = 'cn-tabs-content flex-1 outline-none'
 
 // --- Composable sub-components ---
 //
@@ -126,6 +136,7 @@ export const styledViewInputs = <M, Value extends string = string>(
         [
           h.DataAttribute('slot', 'tabs'),
           h.DataAttribute('orientation', isVertical ? 'vertical' : 'horizontal'),
+          ...(isVertical ? [h.DataAttribute('vertical', '')] : [h.DataAttribute('horizontal', '')]),
           h.Class(cn('group/tabs flex', isVertical ? 'w-full gap-2' : 'flex-col', viewInputs.variant === 'line' ? '' : '')),
         ],
         [

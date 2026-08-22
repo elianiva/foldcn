@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { button } from '@foldcn/registry/src/ui/button'
-import * as AlertDialog from '@foldcn/registry/src/ui/alert-dialog'
+import { button } from '@foldcn/registry/styles/default/ui/button'
+import * as AlertDialog from '@foldcn/registry/styles/default/ui/alert-dialog'
 
 import { ClickedOpenDialog, GotDialogMessage, type Message } from '../message'
 import type { Model } from '../model'

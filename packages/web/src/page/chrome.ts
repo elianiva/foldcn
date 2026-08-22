@@ -3,10 +3,10 @@ import { Option } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import * as Tabs from '@foldkit/ui/tabs'
 
-import { codeBlock as registryCodeBlock } from '@foldcn/registry/src/lib/code-block'
-import { copyButton as registryCopyButton } from '@foldcn/registry/src/lib/copy-button'
-import { icon } from '@foldcn/registry/src/lib/icons'
-import { styledViewInputs as tabsStyledViewInputs } from '@foldcn/registry/src/ui/tabs'
+import { codeBlock as registryCodeBlock } from '@foldcn/registry/styles/default/lib/code-block'
+import { copyButton as registryCopyButton } from '@foldcn/registry/styles/default/lib/copy-button'
+import { icon } from '@foldcn/registry/styles/default/lib/icons'
+import { styledViewInputs as tabsStyledViewInputs } from '@foldcn/registry/styles/default/ui/tabs'
 import { ArrowRight, Computer, Moon, Sun } from 'lucide'
 
 import {

@@ -4,8 +4,10 @@ type Child = Html | string
 
 import { cn } from '@/lib/utils'
 
+/** Derived from the shadcn v4 BASE registry:
+ *  apps/v4/registry/bases/base/ui/label.tsx. */
 export const labelClass =
-  'flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50'
+  'cn-label flex items-center select-none group-data-[disabled=true]:pointer-events-none peer-disabled:cursor-not-allowed'
 
 type LabelConfig = Readonly<{ forId?: string; className?: string }>
 

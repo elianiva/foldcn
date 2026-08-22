@@ -4,22 +4,28 @@ type Child = Html | string
 
 import { cn } from '@/lib/utils'
 
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/alert.tsx.
+ * Keep the class strings identical to upstream — visual styling lives in the central foldcn style definition. See docs/deriving-from-base.md.
+ */
+
 export const alertVariantKeys = ['default', 'destructive'] as const
 export type AlertVariant = (typeof alertVariantKeys)[number]
 
 export const alertVariants: Record<AlertVariant, string> = {
-  default: 'bg-card text-card-foreground',
-  destructive:
-    'bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 [&>svg]:text-current',
+  default: 'cn-alert-variant-default',
+  destructive: 'cn-alert-variant-destructive',
 }
 
-export const alertClass =
-  'relative grid w-full grid-cols-[0_1fr] items-start gap-y-0.5 rounded-lg border px-4 py-3 text-sm has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current'
+export const alertClass = 'cn-alert group/alert relative w-full'
 
-export const alertTitleClass = 'col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight'
+export const alertTitleClass =
+  'cn-alert-title [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground'
 
 export const alertDescriptionClass =
-  'col-start-2 grid justify-items-start gap-1 text-sm text-muted-foreground [&_p]:leading-relaxed'
+  'cn-alert-description [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground'
+
+export const alertActionClass = 'cn-alert-action'
 
 type StyleConfig = Readonly<{ className?: string; variant?: AlertVariant }>
 
@@ -58,9 +64,19 @@ const alertDescription = <M>(
     children,
   )
 
-/** Styled alert — `Alert.title` and `Alert.description` sub-builders. Mirrors
- *  the shadcn v4 `alert.tsx`. */
+/** Alert action — an absolutely positioned slot in the top-right corner; the
+ *  container token reserves room for it via has-data-[slot=alert-action]. */
+const alertAction = <M>(
+  config: StyleConfig,
+  children: ReadonlyArray<Child>,
+  h: HtmlBuilder<M>,
+): Html =>
+  h.div([h.Class(cn(alertActionClass, config.className)), h.DataAttribute('slot', 'alert-action')], children)
+
+/** Styled alert — `Alert.title`, `Alert.description` and `Alert.action`
+ *  sub-builders. Derived from the shadcn v4 BASE registry `alert.tsx`. */
 export const Alert = Object.assign(alertContainer, {
   title: alertTitle,
   description: alertDescription,
+  action: alertAction,
 })

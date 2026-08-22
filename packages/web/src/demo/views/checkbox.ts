@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { checkbox } from '@foldcn/registry/src/ui/checkbox'
+import { checkbox } from '@foldcn/registry/styles/default/ui/checkbox'
 
 import { ToggledCheckbox, type Message } from '../message'
 import type { Model } from '../model'

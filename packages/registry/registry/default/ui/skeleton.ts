@@ -4,7 +4,9 @@ type Child = Html | string
 
 import { cn } from '@/lib/utils'
 
-export const skeletonClass = 'animate-pulse rounded-md bg-accent'
+/** Derived from the shadcn v4 BASE registry:
+ *  apps/v4/registry/bases/base/ui/skeleton.tsx. */
+export const skeletonClass = 'cn-skeleton animate-pulse'
 
 type StyleConfig = Readonly<{ className?: string }>
 

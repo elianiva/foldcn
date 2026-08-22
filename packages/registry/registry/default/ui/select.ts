@@ -29,16 +29,25 @@ export type ItemConfig = FoldkitListbox.ItemConfig
 
 export type SelectSize = 'default' | 'sm'
 
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/select.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
+//
+// foldkit deltas: items highlight via data-active (upstream focus:) per the
+// derivation mapping; the panel emits data-side from the anchor placement.
+
+/** Upstream SelectTrigger token string + w-full (foldcn renders a full-width
+ *  trigger inside its label wrapper). */
 export const selectTriggerClass =
-  'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm whitespace-nowrap shadow-xs outline-none transition-[color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 disabled:pointer-events-none data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] data-[invalid]:border-destructive data-[invalid]:ring-destructive/20 data-[invalid]:ring-[3px] dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/40 dark:aria-invalid:border-destructive/50 dark:data-[invalid]:ring-destructive/40 dark:data-[invalid]:border-destructive/50 data-[size=sm]:h-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4 [&_svg:not([class*="text-"])]:text-muted-foreground motion-reduce:transition-none'
+  'cn-select-trigger flex h-8 w-full items-center justify-between gap-1.5 whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-[size=sm]:h-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4 [&_svg:not([class*="text-"])]:text-muted-foreground'
 
 export const selectItemsClass =
-  'z-50 max-h-96 min-w-[var(--button-width)] overflow-x-hidden overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2 data-[enter]:animate-in data-[enter]:fade-in-0 data-[enter]:zoom-in-95 data-[leave]:animate-out data-[leave]:fade-out-0 data-[leave]:zoom-out-95'
+  'cn-select-content z-50 max-h-96 min-w-36 overflow-x-hidden overflow-y-auto p-1 outline-none'
 
 export const selectItemClass =
-  'relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none transition-colors duration-150 ease-out data-[active]:bg-accent data-[active]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[selected]:font-medium motion-reduce:transition-none'
+  'cn-select-item relative flex w-full cursor-default items-center select-none outline-none data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 data-selected:font-medium'
 
-export const selectLabelClass = 'text-sm font-medium leading-none'
+export const selectLabelClass = 'cn-select-label px-1.5 py-1 text-xs text-muted-foreground'
 export const selectDescriptionClass = 'text-sm text-muted-foreground'
 export const selectWrapperClass = 'flex w-full flex-col gap-1.5'
 export const selectBackdropClass = 'fixed inset-0 z-0'

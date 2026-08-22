@@ -3,8 +3,11 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { resolveStyles } from './resolve-styles.mjs'
+
 const REGISTRY_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT_DIR = resolve(REGISTRY_DIR, 'dist/r')
+const STYLES_DIR = resolve(REGISTRY_DIR, 'styles', 'default', 'ui')
 
 const run = (command, args) => {
   const result = spawnSync(command, args, {
@@ -17,17 +20,73 @@ const run = (command, args) => {
   }
 }
 
+// 0. Emit the resolved component trees (styles/default/{ui,lib,blocks}) that
+//    both the web demo and the publishable registry JSONs consume — the shadcn
+//    parity behaviour: installed sources carry concrete Tailwind classes, not
+//    raw `cn-*` tokens.
+console.log('resolving cn-* style tokens…')
+resolveStyles()
+
 // 1. Build the registry catalog with the shadcn CLI. `-c` pins the working
 //    directory (this package) and `-o` puts the flattened catalog + per-item
 //    JSON wherever we like — the deploy worker serves them from here.
 run('pnpm', ['dlx', 'shadcn@latest', 'build', '-c', REGISTRY_DIR, '-o', OUT_DIR])
 
-// 2. Generate a worker index over the built item JSONs so the deploy worker
-//    can serve /r/{name}.json without knowing the item list ahead of time.
+// 2. Swap every embedded ui source for its resolved counterpart. Item paths
+//    stay untouched so install targeting is unchanged — only the shipped code
+//    goes from token classes to resolved utilities.
 const itemFiles = readdirSync(OUT_DIR)
   .filter((file) => file.endsWith('.json') && file !== 'registry.json')
   .sort()
 
+let swapped = 0
+for (const file of itemFiles) {
+  const itemPath = resolve(OUT_DIR, file)
+  const item = JSON.parse(readFileSync(itemPath, 'utf8'))
+  let changed = false
+  for (const entry of item.files ?? []) {
+    const match = entry.path?.match(/^registry\/default\/ui\/([\w-]+\.ts)$/)
+    if (!match) continue
+    const resolved = readFileSync(resolve(STYLES_DIR, match[1]), 'utf8')
+    if (entry.content !== resolved) {
+      entry.content = resolved
+      changed = true
+      swapped += 1
+    }
+  }
+  if (changed) writeFileSync(itemPath, `${JSON.stringify(item, null, 2)}\n`)
+}
+console.log(`resolved sources swapped into ${swapped} file(s) across ${itemFiles.length} item JSONs`)
+
+// 2b. Assert the shipped sources keep the resolver's guarantee: no `cn-*`
+//     tokens inside string literals (comments may still reference upstream
+//     token names as behavioral documentation).
+const { Node, Project } = await import('ts-morph')
+const literalOffenders = []
+for (const file of itemFiles) {
+  const item = JSON.parse(readFileSync(resolve(OUT_DIR, file), 'utf8'))
+  for (const entry of item.files ?? []) {
+    if (!entry.path?.endsWith('.ts') || !entry.content) continue
+    const sf = new Project({ useInMemoryFileSystem: true }).createSourceFile(
+      entry.path,
+      entry.content,
+      { overwrite: true },
+    )
+    sf.forEachDescendant((node) => {
+      const isLiteral = Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)
+      if (isLiteral && /\bcn-[\w-]+\b/.test(node.getLiteralText())) {
+        literalOffenders.push(`${file} :: ${entry.path}`)
+      }
+    })
+  }
+}
+if (literalOffenders.length > 0) {
+  console.error(`unresolved cn-* literals in shipped sources:\n  ${[...new Set(literalOffenders)].join('\n  ')}`)
+  process.exit(1)
+}
+
+// 3. Generate a worker index over the built item JSONs so the deploy worker
+//    can serve /r/{name}.json without knowing the item list ahead of time.
 const identifierFor = (file) => `_${file.slice(0, -'.json'.length).replace(/[^a-zA-Z0-9]/g, '_')}`
 
 const importLines = itemFiles.map((file) => `import ${identifierFor(file)} from './${file}'`)

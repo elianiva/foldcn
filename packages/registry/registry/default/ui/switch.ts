@@ -3,26 +3,28 @@ import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import { cn } from '@/lib/utils'
 
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/switch.tsx.
+ * Class strings are identical to upstream; visual styling lives in the central foldcn style definition. See docs/deriving-from-base.md.
+ *
+ * foldkit deltas (inlined at style resolution): foldkit emits aria-disabled/
+ * data-disabled instead of native disabled, and only data-checked (never
+ * data-unchecked) — this view hand-emits data-unchecked when off so the
+ * upstream thumb/track variants resolve.
+ */
+
 export const switchSizeKeys = ['default', 'sm'] as const
 export type SwitchSize = (typeof switchSizeKeys)[number]
 
-export const switchSizes: Record<SwitchSize, string> = {
-  default: 'h-5 w-9',
-  sm: 'h-3.5 w-6',
-}
+/** Upstream switch component string; sizes come from the cn-switch token via
+ *  the data-size attribute. */
+export const switchClass =
+  'cn-switch peer group/switch relative inline-flex items-center transition-all outline-none after:absolute after:-inset-x-3 after:-inset-y-2 data-disabled:cursor-not-allowed data-disabled:opacity-50'
 
-const switchBase =
-  'peer group/switch relative inline-flex shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-input shadow-xs transition-[background-color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-disabled:cursor-not-allowed data-disabled:opacity-50 data-[checked]:bg-primary dark:bg-input/80 motion-reduce:transition-none'
-
-export const switchClass = switchBase
-
+/** Upstream thumb string; geometry/travel come from the token keyed on
+ *  group data-size + data-checked/data-unchecked. */
 export const switchThumbClass =
-  'pointer-events-none block rounded-full bg-background ring-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:group-data-[checked]/switch:bg-primary-foreground dark:group-data-[unchecked]/switch:bg-foreground motion-reduce:transition-none'
-
-export const switchThumbSizes: Record<SwitchSize, string> = {
-  default: 'size-4 group-data-[checked]/switch:translate-x-4',
-  sm: 'size-3 group-data-[checked]/switch:translate-x-3',
-}
+  'cn-switch-thumb pointer-events-none block ring-0 transition-transform'
 
 export const switchLabelClass =
   'text-sm font-medium leading-none group-data-[disabled]/field:cursor-not-allowed group-data-[disabled]/field:opacity-70'
@@ -76,21 +78,16 @@ export const switch_ = <M>(config: SwitchConfig<M>, h: HtmlBuilder<M>): Html =>
                 h.DataAttribute('slot', 'switch'),
                 h.DataAttribute('size', config.size ?? 'default'),
                 ...(config.isChecked ? [] : [h.DataAttribute('unchecked', '')]),
-                h.Class(cn(switchClass, switchSizes[config.size ?? 'default'], config.className)),
+                h.Class(cn(switchClass, config.className)),
               ],
               [
                 h.span([
                   h.DataAttribute('slot', 'switch-thumb'),
-                  h.Class(
-                    cn(
-                      switchThumbClass,
-                      switchThumbSizes[config.size ?? 'default'],
-                      config.thumbClass,
-                    ),
-                  ),
+                  h.Class(cn(switchThumbClass, config.thumbClass)),
                 ]),
               ],
             ),
+            ...(attributes.hiddenInput.length > 0 ? [h.input([...attributes.hiddenInput])] : []),
             h.div(
               [h.Class(switchTextWrapperClass)],
               [

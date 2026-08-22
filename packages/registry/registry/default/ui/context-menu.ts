@@ -20,6 +20,15 @@ export type Message = typeof Message.Type
 export const OutMessage = FoldkitMenu.OutMessage
 export type OutMessage = typeof OutMessage.Type
 
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/context-menu.tsx. Class strings are
+// identical to upstream; visual styling lives in the central foldcn style definition.
+//
+// foldcn gap vs upstream: opens on activation at a fixed anchor — foldkit has
+// no right-click/pointer-position anchoring primitive (wire a region trigger
+// yourself). Items highlight via data-active (upstream focus:) per the
+// derivation mapping.
+
 export type Bundle<Item extends string = string> = FoldkitMenu.Bundle<Item>
 export type InitConfig = FoldkitMenu.InitConfig
 export type ViewInputs<Item extends string = string> = FoldkitMenu.ViewInputs<Item>
@@ -30,20 +39,19 @@ export const contextMenuTriggerClass =
   'flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden focus:outline-hidden'
 
 export const contextMenuItemsClass =
-  'z-50 min-w-48 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2'
+  'cn-context-menu-content cn-context-menu-content-logical z-50 min-w-36 overflow-hidden outline-hidden'
 
-export const contextMenuItemsAnimatedClass =
-  'z-50 min-w-48 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden data-[placement=bottom]:slide-in-from-top-2 data-[placement=left]:slide-in-from-right-2 data-[placement=right]:slide-in-from-left-2 data-[placement=top]:slide-in-from-bottom-2 data-[enter]:animate-in data-[enter]:fade-in-0 data-[enter]:zoom-in-95 data-[leave]:animate-out data-[leave]:fade-out-0 data-[leave]:zoom-out-95'
+export const contextMenuItemsAnimatedClass = contextMenuItemsClass
 
 export const contextMenuItemClass =
-  "relative flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-context-menu-item relative flex w-full cursor-default select-none outline-hidden data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50'
 
-export const contextMenuSeparatorClass = '-mx-1 my-1 h-px bg-border'
+export const contextMenuSeparatorClass = 'cn-context-menu-separator -mx-1 my-1 h-px'
 
-export const contextMenuHeadingClass = 'px-2 py-1.5 text-sm font-semibold text-foreground'
+export const contextMenuHeadingClass = 'cn-context-menu-label px-2 py-1.5 text-xs font-medium text-muted-foreground'
 
 export const contextMenuShortcutClass =
-  'ml-auto text-xs tracking-widest text-muted-foreground'
+  'cn-context-menu-shortcut ml-auto text-xs tracking-widest text-muted-foreground'
 
 export const contextMenuSubTriggerClass =
   "flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[open]:bg-accent data-[open]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"

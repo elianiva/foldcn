@@ -2,8 +2,8 @@ import { clsx } from 'clsx'
 import { Array, Option, pipe } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { cn } from '@foldcn/registry/src/lib/utils'
-import * as DragAndDrop from '@foldcn/registry/src/ui/drag-and-drop'
+import { cn } from '@foldcn/registry/styles/default/lib/utils'
+import * as DragAndDrop from '@foldcn/registry/styles/default/ui/drag-and-drop'
 
 import { GotDragAndDropMessage, type Message } from '../message'
 import type { DemoCard, DemoColumn, Model } from '../model'

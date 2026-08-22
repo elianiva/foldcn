@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import * as Combobox from '@foldcn/registry/src/ui/combobox'
-import * as Dialog from '@foldcn/registry/src/ui/dialog'
-import * as Menu from '@foldcn/registry/src/ui/menu'
-import * as Popover from '@foldcn/registry/src/ui/popover'
+import * as Combobox from '@foldcn/registry/styles/default/ui/combobox'
+import * as Dialog from '@foldcn/registry/styles/default/ui/dialog'
+import * as Menu from '@foldcn/registry/styles/default/ui/menu'
+import * as Popover from '@foldcn/registry/styles/default/ui/popover'
 
 // Regression guard: foldcn's overlay components must animate by default to
 // match the shadcn reference. The @foldkit/ui Animation submodel only emits

@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as menu from '@foldcn/registry/src/ui/menu'
+import * as menu from '@foldcn/registry/styles/default/ui/menu'
 import { DemoMenu } from '../bundles'
 
 import { GotMenuMessage, type Message } from '../message'

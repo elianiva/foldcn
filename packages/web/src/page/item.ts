@@ -43,7 +43,7 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<Message>): H
         [h.Class('flex-1 min-w-0')],
         [
           h.div(
-            [h.Class('mx-auto w-full max-w-3xl px-4 py-12 sm:px-6')],
+            [h.Class('mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 font-mono')],
             [
               // breadcrumb
               h.nav(
@@ -59,7 +59,7 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<Message>): H
 
               // title
               h.div(
-                [h.Class('flex flex-wrap items-center gap-2')],
+                [h.Class('flex flex-wrap items-center gap-2 font-mono')],
                 [
                   h.h1([h.Class('text-3xl font-bold tracking-tight sm:text-4xl')], [item.title]),
                   h.span(
@@ -72,13 +72,13 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<Message>): H
                   ),
                 ],
               ),
-              h.p([h.Class('mt-4 text-pretty text-muted-foreground')], [item.description]),
+              h.p([h.Class('mt-4 text-pretty text-muted-foreground font-mono')], [item.description]),
 
               // dependencies
               ...(item.maybeDependencies && item.maybeDependencies.length > 0
                 ? [
                     h.div(
-                      [h.Class('mt-4 flex flex-wrap items-center gap-1.5')],
+                      [h.Class('mt-4 flex flex-wrap items-center gap-1.5 font-mono')],
                       [
                         h.span(
                           [h.Class('text-xs font-medium text-muted-foreground')],
@@ -96,7 +96,7 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<Message>): H
                     const demoExample = demoExampleByName[demoName]
                     return [
                       h.div(
-                        [h.Class('mt-10 overflow-hidden rounded-xl border border-border bg-background')],
+                        [h.Class('mt-10 overflow-hidden rounded-xl border border-border bg-background font-sans')],
                         [
                           h.div(
                             [
@@ -141,7 +141,7 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<Message>): H
 
               // install
               h.div(
-                [h.Class('mt-12')],
+                [h.Class('mt-12 font-mono')],
                 [
                   h.h2([h.Class('text-lg font-semibold tracking-tight')], ['Installation']),
                   h.p(
@@ -156,7 +156,7 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<Message>): H
               ...(item.maybeSource
                 ? [
                     h.div(
-                      [h.Class('mt-12')],
+                      [h.Class('mt-12 font-mono')],
                       [
                         h.h2([h.Class('text-lg font-semibold tracking-tight')], ['Source']),
                         h.p(

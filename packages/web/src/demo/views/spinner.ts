@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { spinner } from '@foldcn/registry/src/ui/spinner'
+import { spinner } from '@foldcn/registry/styles/default/ui/spinner'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

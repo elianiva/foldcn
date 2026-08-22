@@ -172,6 +172,20 @@ pnpm validate       # validate the registry
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+## LLM-friendly
+
+Every page is published as Markdown in addition to HTML, generated automatically at build time (no manual upkeep):
+
+- **`/llms.txt`** — an agent-readable index of the whole site. **`/llms-full.txt`** is the concatenated full text of every page.
+- **`/docs/<name>.md`** — the Markdown twin of any component or block page.
+- **Content negotiation** — request a page with `Accept: text/markdown` (or append `.md`) and the Worker serves the Markdown with `Content-Type: text/markdown`. Browsers keep receiving HTML.
+
+```sh
+curl -H "Accept: text/markdown" https://foldcn.elianiva.com/docs/button
+curl https://foldcn.elianiva.com/docs/button.md
+curl https://foldcn.elianiva.com/llms.txt
+```
+
 ## License
 
 [MIT](LICENSE)

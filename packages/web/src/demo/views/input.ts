@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { input } from '@foldcn/registry/src/ui/input'
+import { input } from '@foldcn/registry/styles/default/ui/input'
 
 import { UpdatedInputValue, type Message } from '../message'
 import type { Model } from '../model'

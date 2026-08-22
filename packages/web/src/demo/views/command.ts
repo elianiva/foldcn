@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { Command, commandGroupHeadingClass } from '@foldcn/registry/src/ui/command'
+import { Command, commandGroupHeadingClass } from '@foldcn/registry/styles/default/ui/command'
 
 import { UpdatedCommandSearch, type Message } from '../message'
 import type { Model } from '../model'

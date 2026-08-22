@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as select from '@foldcn/registry/src/ui/select'
+import * as select from '@foldcn/registry/styles/default/ui/select'
 import { LanguageSelect } from '../bundles'
 
 import { GotSelectMessage, type Message } from '../message'

@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { loginForm } from '@foldcn/registry/src/blocks/login-form/login-form'
+import { loginForm } from '@foldcn/registry/styles/default/blocks/login-form/login-form'
 
 import {
   SubmittedLogin,

@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { Avatar } from '@foldcn/registry/src/ui/avatar'
+import { Avatar } from '@foldcn/registry/styles/default/ui/avatar'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

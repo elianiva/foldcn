@@ -3,11 +3,14 @@ import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import { cn } from '@/lib/utils'
 
+/** Derived from the shadcn v4 BASE registry:
+ *  apps/v4/registry/bases/base/ui/textarea.tsx. */
 export const textareaClass =
-  'flex field-sizing-content min-h-16 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:ring-destructive/40'
+  'cn-textarea flex field-sizing-content min-h-16 w-full outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50'
 
+/** Same string as the `label` item's component classes (upstream label.tsx). */
 export const textareaLabelClass =
-  'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+  'cn-label flex items-center select-none group-data-[disabled=true]:pointer-events-none peer-disabled:cursor-not-allowed'
 
 export const textareaDescriptionClass = 'text-sm text-muted-foreground'
 
@@ -52,7 +55,11 @@ export const textarea = <M>(config: TextareaConfig<M>, h: HtmlBuilder<M>): Html 
           [h.Class(cn(textareaWrapperClass, config.wrapperClass))],
           [
             h.label(
-              [...attributes.label, h.Class(cn(textareaLabelClass, config.labelClass))],
+              [
+                ...attributes.label,
+                h.DataAttribute('slot', 'label'),
+                h.Class(cn(textareaLabelClass, config.labelClass)),
+              ],
               [config.label],
             ),
             h.textarea([

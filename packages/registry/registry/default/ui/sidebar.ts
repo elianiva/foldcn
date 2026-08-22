@@ -7,7 +7,17 @@ type Child = Html | string
 // Sidebar is a pure presentational layout primitive (no headless provider).
 // `SidebarProvider` establishes the flex shell; `Sidebar` is the aside rail,
 // and `SidebarInset` is the scrolling content column. Sub-builders are attached
-// as properties on each piece. Mirrors the shadcn `sidebar` base surface.
+// as properties on each piece.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/sidebar.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
+//
+// foldcn gaps vs upstream: static rail only — no collapsible/icon mode, no
+// drag-resize, no off-canvas sheet, no variant=inset choreography (the
+// cn-sidebar-inset margins key off peer collapse state that foldcn does not
+// model), and no rail hot-spot. The aside keeps a hand-written string because
+// upstream's visible-panel classes live inside its collapse-state container.
 
 export const sidebarProviderClass =
   'flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar'
@@ -15,32 +25,42 @@ export const sidebarProviderClass =
 export const sidebarClass =
   'flex h-svh w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground [--sidebar-width:16rem]'
 
-export const sidebarHeaderClass = 'flex flex-col gap-2 p-2'
+/** Upstream SidebarHeader string. */
+export const sidebarHeaderClass = 'cn-sidebar-header flex flex-col gap-2 p-2'
 
+/** Upstream SidebarContent string (collapsible selector kept inert). */
 export const sidebarContentClass =
-  'flex min-h-0 flex-1 flex-col gap-2 overflow-x-hidden p-2'
+  'cn-sidebar-content flex min-h-0 flex-1 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden'
 
-export const sidebarFooterClass = 'flex flex-col gap-2 p-2'
+/** Upstream SidebarFooter string. */
+export const sidebarFooterClass = 'cn-sidebar-footer flex flex-col gap-2 p-2'
 
-export const sidebarGroupClass = 'relative flex w-full min-w-0 flex-col p-2'
+/** Upstream SidebarGroup string. */
+export const sidebarGroupClass = 'cn-sidebar-group relative flex w-full min-w-0 flex-col'
 
+/** Upstream SidebarGroupLabel string (sizing/color from the token). */
 export const sidebarGroupLabelClass =
-  'flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 outline-hidden ring-sidebar-ring transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0'
+  'cn-sidebar-group-label flex shrink-0 items-center outline-hidden [&>svg]:shrink-0'
 
-export const sidebarMenuClass = 'flex w-full min-w-0 flex-col gap-1'
+/** Upstream SidebarMenu string. */
+export const sidebarMenuClass = 'cn-sidebar-menu flex w-full min-w-0 flex-col'
 
 export const sidebarMenuItemClass = 'group/menu-item relative'
 
+/** Upstream SidebarMenuButton cva base + variant=default + size=default. */
 export const sidebarMenuButtonClass =
-  'flex h-8 w-full items-center gap-2 rounded-md px-2 text-sm font-medium text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0'
+  'cn-sidebar-menu-button cn-sidebar-menu-button-variant-default cn-sidebar-menu-button-size-default peer/menu-button group/menu-button flex w-full items-center overflow-hidden outline-hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate'
 
-export const sidebarInsetClass =
-  'flex min-h-svh w-full flex-1 flex-col bg-background'
+/** Upstream SidebarInset string (bg + inset margins from the token). */
+export const sidebarInsetClass = 'cn-sidebar-inset relative flex w-full flex-1 flex-col'
 
-export const sidebarSeparatorClass = '-mx-2 my-2 h-px bg-sidebar-border'
+/** Token color + foldcn's raw-div separator mechanics (upstream delegates to
+ *  its Separator primitive). */
+export const sidebarSeparatorClass = 'cn-sidebar-separator -mx-2 my-2 h-px w-auto'
 
+/** Upstream SidebarTrigger: ghost icon Button + trigger token. */
 export const sidebarTriggerClass =
-  'inline-flex size-7 items-center justify-center rounded-md text-sidebar-foreground outline-hidden ring-sidebar-ring transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2'
+  'cn-button cn-button-variant-ghost cn-button-size-icon cn-sidebar-trigger size-7 text-sidebar-foreground'
 
 type StyleConfig = Readonly<{ className?: string }>
 

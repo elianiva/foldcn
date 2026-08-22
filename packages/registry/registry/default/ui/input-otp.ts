@@ -9,14 +9,28 @@ import { cn } from '@/lib/utils'
 // the way shadcn's `input-otp` base surface does through the `input-otp`
 // library. The slots are purely presentational: each shows one character of
 // `value`, and the active (next-to-fill) slot shows a blinking caret.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/input-otp.tsx (joined-pill slots). Class
+// strings are identical to upstream; visual styling lives in the central foldcn style definition. (cn-input-otp-input / cn-input-otp-caret are intentional no-op
+// hooks upstream — the real input/caret styling is foldcn-specific below).
 
-export const inputOtpClass = 'relative flex items-center gap-2 has-[:disabled]:opacity-50'
+export const inputOtpClass = 'cn-input-otp relative flex items-center has-disabled:opacity-50'
+
+/** Wrapper grouping the joined slots; keys the group's invalid ring off the
+ *  input's aria-invalid. */
+export const inputOtpGroupClass = 'cn-input-otp-group flex items-center'
 
 export const inputOtpInputClass =
-  'absolute inset-0 z-10 h-full w-full rounded-md bg-transparent text-transparent caret-transparent outline-none'
+  'cn-input-otp-input absolute inset-0 z-10 h-full w-full bg-transparent text-transparent caret-transparent outline-none disabled:cursor-not-allowed'
 
 export const inputOtpSlotClass =
-  'relative flex h-10 w-9 items-center justify-center rounded-md border border-input text-base tabular-nums shadow-xs outline-none transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 data-[active=true]:border-ring data-[active=true]:ring-[3px] data-[active=true]:ring-ring/50'
+  'cn-input-otp-slot relative flex size-8 items-center justify-center text-sm tabular-nums transition-all outline-none data-[active=true]:z-10'
+
+export const inputOtpCaretClass =
+  'pointer-events-none absolute inset-0 flex items-center justify-center'
+
+export const inputOtpCaretLineClass = 'h-4 w-px animate-caret-blink duration-1000 bg-foreground'
 
 export type InputOtpConfig<M> = Readonly<{
   length: number
@@ -44,10 +58,7 @@ export const inputOtp = <M>(config: InputOtpConfig<M>, h: HtmlBuilder<M>): Html 
       [
         digits[index] ?? '',
         index === activeIndex
-          ? h.div(
-              [h.Class('pointer-events-none absolute inset-0 flex items-center justify-center')],
-              [h.div([h.Class('h-4 w-px bg-foreground animate-caret-blink duration-1000')], [])],
-            )
+          ? h.div([h.Class(inputOtpCaretClass)], [h.div([h.Class(inputOtpCaretLineClass)], [])])
           : null,
       ],
     )
@@ -77,11 +88,17 @@ export const inputOtp = <M>(config: InputOtpConfig<M>, h: HtmlBuilder<M>): Html 
                 if (config.onInput !== undefined) {
                   return config.onInput(next)
                 }
+                // Only onComplete was provided: it doubles as the update
+                // channel for this controlled input, so it fires on every
+                // change (check `length` before treating it as completion).
                 return config.onComplete!(next)
               }),
             ]),
       ]),
-      ...Array.from({ length: config.length }, (_, index) => slot(index)),
+      h.div(
+        [h.Class(cn(inputOtpGroupClass)), h.DataAttribute('slot', 'input-otp-group')],
+        Array.from({ length: config.length }, (_, index) => slot(index)),
+      ),
     ],
   )
 }

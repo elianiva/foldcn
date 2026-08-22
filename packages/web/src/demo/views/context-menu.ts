@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as ContextMenu from '@foldcn/registry/src/ui/context-menu'
+import * as ContextMenu from '@foldcn/registry/styles/default/ui/context-menu'
 import { DemoMenu } from '../bundles'
 
 import { GotMenuMessage, type Message } from '../message'

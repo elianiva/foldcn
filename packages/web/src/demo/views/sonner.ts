@@ -1,9 +1,9 @@
 import { Option } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { icon } from '@foldcn/registry/src/lib/icons'
+import { icon } from '@foldcn/registry/styles/default/lib/icons'
 import { X } from 'lucide'
-import * as Sonner from '@foldcn/registry/src/ui/sonner'
+import * as Sonner from '@foldcn/registry/styles/default/ui/sonner'
 
 import {
   ClickedDismissAllToasts,

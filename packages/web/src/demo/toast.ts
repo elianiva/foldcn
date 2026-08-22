@@ -1,6 +1,6 @@
 import { Schema as S } from 'effect'
 
-import * as ToastModule from '@foldcn/registry/src/ui/toast'
+import * as ToastModule from '@foldcn/registry/styles/default/ui/toast'
 
 /** Payload for the showcase's toast stack. */
 export const ToastPayload = S.Struct({

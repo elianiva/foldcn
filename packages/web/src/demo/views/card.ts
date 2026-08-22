@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { button } from '@foldcn/registry/src/ui/button'
-import { Card } from '@foldcn/registry/src/ui/card'
+import { button } from '@foldcn/registry/styles/default/ui/button'
+import { Card } from '@foldcn/registry/styles/default/ui/card'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

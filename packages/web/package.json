@@ -5,7 +5,9 @@
   "description": "The foldcn showcase: a Foldkit app (SSG) presenting every registry item with live previews, install commands and source views.",
   "type": "module",
   "scripts": {
+    "predev": "node ../registry/scripts/resolve-styles.mjs",
     "dev": "portless run --name foldcn vite",
+    "prebuild": "node ../registry/scripts/resolve-styles.mjs",
     "build": "node scripts/build.mjs",
     "preview": "vite preview --outDir dist/client",
     "typecheck": "tsc --noEmit",
@@ -30,6 +32,7 @@
     "@foldkit/vite-plugin": "^0.16.0",
     "@types/node": "^26.2.0",
     "happy-dom": "^20.11.2",
+    "node-html-markdown": "^2.0.0",
     "portless": "^0.15.5",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",

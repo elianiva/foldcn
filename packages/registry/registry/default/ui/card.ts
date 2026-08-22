@@ -9,32 +9,30 @@ import { cn } from '@/lib/utils'
 // as properties: Card.header, Card.title, Card.description, Card.action,
 // Card.content, Card.footer.
 //
-// Mirrors the shadcn/ui v4 base Card: every part carries a `data-slot`
-// attribute and the container exposes `data-size` ("default" | "sm"). The
-// container defines --card-spacing, which header/content/footer consume via
-// px-(--card-spacing), so a single data-[size=sm] override resizes the whole
-// card.
+// Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/card.tsx.
+// Class strings are identical to upstream; visual styling lives in the central foldcn style definition. Every part carries a `data-slot` attribute and the
+// container exposes `data-size` ("default" | "sm"). The container defines
+// --card-spacing, which header/content/footer consume via px-(--card-spacing),
+// so a single data-[size=sm] override resizes the whole card.
 
 export const cardSizeKeys = ['default', 'sm'] as const
 export type CardSize = (typeof cardSizeKeys)[number]
 
-export const cardClass =
-  'group/card flex flex-col overflow-hidden rounded-2xl bg-card py-(--card-spacing) text-card-foreground text-sm ring-1 ring-foreground/10 gap-(--card-spacing) [--card-spacing:--spacing(6)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl'
+export const cardClass = 'cn-card group/card flex flex-col'
 
 export const cardHeaderClass =
-  'group/card-header @container/card-header grid auto-rows-min items-start gap-2 rounded-t-xl px-(--card-spacing) [.border-b]:pb-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]'
+  'cn-card-header group/card-header @container/card-header grid auto-rows-min items-start has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]'
 
-export const cardTitleClass = 'text-base font-medium'
+export const cardTitleClass = 'cn-card-title cn-font-heading'
 
-export const cardDescriptionClass = 'text-sm text-muted-foreground'
+export const cardDescriptionClass = 'cn-card-description'
 
-export const cardContentClass = 'px-(--card-spacing)'
+export const cardContentClass = 'cn-card-content'
 
 export const cardActionClass =
-  'col-start-2 row-span-2 row-start-1 self-start justify-self-end'
+  'cn-card-action col-start-2 row-span-2 row-start-1 self-start justify-self-end'
 
-export const cardFooterClass =
-  'flex items-center rounded-b-xl px-(--card-spacing) [.border-t]:pt-(--card-spacing)'
+export const cardFooterClass = 'cn-card-footer flex items-center'
 
 type StyleConfig = Readonly<{ className?: string }>
 

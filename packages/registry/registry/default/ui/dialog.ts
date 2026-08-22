@@ -29,29 +29,37 @@ export type InitConfig = FoldkitDialog.InitConfig
 export type RenderInfo = FoldkitDialog.RenderInfo
 
 // --- Class constants ---
+//
+// Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/dialog.tsx.
+// Keep the class strings identical to upstream — visual styling lives in the central foldcn style definition . See docs/deriving-from-base.md.
 
+/** foldkit delta: the host <dialog> element's own chrome (upstream Root renders
+ *  nothing). Backdrop/panel are fixed-position; this only neutralizes the
+ *  native dialog box. */
 export const dialogClass = 'bg-transparent p-0 open:flex items-center justify-center'
 
-// The @foldkit/ui Dialog defer the Animation submodel attributes onto the
+// The @foldkit/ui Dialog defers Animation submodel attributes onto the
 // backdrop/panel elements: `data-enter` while entering, `data-leave` while
-// leaving (never `data-state`). These map to the enter/exit animation utilities
-// below (tw-animate-css `animate-in`/`animate-out`).
-export const dialogBackdropClass =
-  'fixed inset-0 isolate z-50 bg-black/50 data-[leave]:animate-out data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:fade-in-0'
+// leaving (never `data-state`). The sync script rewrites upstream's
+// `data-open:`/`data-closed:` animation utilities to these windows during token
+// sync; persistent `data-open:` styling passes through untouched.
+export const dialogBackdropClass = 'cn-dialog-overlay fixed inset-0 isolate z-50'
 
 export const dialogPanelClass =
-  'fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[leave]:animate-out data-[leave]:fade-out-0 data-[leave]:zoom-out-95 data-[enter]:animate-in data-[enter]:fade-in-0 data-[enter]:zoom-in-95 sm:max-w-lg'
+  'cn-dialog-content fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none'
 
-export const dialogTitleClass = 'text-lg leading-none font-semibold'
-
-export const dialogDescriptionClass = 'text-sm text-muted-foreground'
-
+/** Upstream renders its close control as `<Button variant="ghost" size="icon-sm"
+ *  className="cn-dialog-close">`; compose the same tokens here. */
 export const dialogCloseButtonClass =
-  "absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-button cn-button-variant-ghost cn-button-size-icon-sm cn-dialog-close'
 
-export const dialogHeaderClass = 'flex flex-col gap-2 text-center sm:text-left'
+export const dialogTitleClass = 'cn-dialog-title cn-font-heading'
 
-export const dialogFooterClass = 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'
+export const dialogDescriptionClass = 'cn-dialog-description'
+
+export const dialogHeaderClass = 'cn-dialog-header flex flex-col'
+
+export const dialogFooterClass = 'cn-dialog-footer flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'
 
 // --- Composable sub-components ---
 //
@@ -74,7 +82,8 @@ export const header = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(dialogHeaderClass, config.className))], children)
+): Html =>
+  h.div([h.DataAttribute('slot', 'dialog-header'), h.Class(cn(dialogHeaderClass, config.className))], children)
 
 /** Dialog title — merges with the submodel's title attributes. */
 export const title = <M>(
@@ -83,7 +92,10 @@ export const title = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.h2([...attributes, h.Class(cn(dialogTitleClass, config.className))], children)
+  h.h2(
+    [...attributes, h.DataAttribute('slot', 'dialog-title'), h.Class(cn(dialogTitleClass, config.className))],
+    children,
+  )
 
 /** Dialog description — merges with the submodel's description attributes. */
 export const description = <M>(
@@ -92,14 +104,22 @@ export const description = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.p([...attributes, h.Class(cn(dialogDescriptionClass, config.className))], children)
+  h.p(
+    [
+      ...attributes,
+      h.DataAttribute('slot', 'dialog-description'),
+      h.Class(cn(dialogDescriptionClass, config.className)),
+    ],
+    children,
+  )
 
 /** Dialog footer wrapper. */
 export const footer = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(dialogFooterClass, config.className))], children)
+): Html =>
+  h.div([h.DataAttribute('slot', 'dialog-footer'), h.Class(cn(dialogFooterClass, config.className))], children)
 
 /** Close button — merges with the submodel's closeButton attributes. */
 export const closeButton = <M>(
@@ -108,7 +128,10 @@ export const closeButton = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.button([...attributes, h.Class(cn(dialogCloseButtonClass, config.className))], children)
+  h.button(
+    [...attributes, h.DataAttribute('slot', 'dialog-close'), h.Class(cn(dialogCloseButtonClass, config.className))],
+    children,
+  )
 
 // --- styledViewInputs factory ---
 
@@ -137,12 +160,20 @@ export const styledViewInputs = <M>(
 ): FoldkitDialog.ViewInputs => ({
   toView: ({ dialog, backdrop, panel, closeButton, title, description, isVisible }) =>
     h.dialog(
-      [...dialog, h.Class(cn(dialogClass, viewInputs.className))],
+      [...dialog, h.DataAttribute('slot', 'dialog'), h.Class(cn(dialogClass, viewInputs.className))],
       isVisible
         ? [
-            h.div([...backdrop, h.Class(cn(dialogBackdropClass, viewInputs.backdropClass))]),
+            h.div([
+              ...backdrop,
+              h.DataAttribute('slot', 'dialog-overlay'),
+              h.Class(cn(dialogBackdropClass, viewInputs.backdropClass)),
+            ]),
             h.div(
-              [...panel, h.Class(cn(dialogPanelClass, viewInputs.panelClass))],
+              [
+                ...panel,
+                h.DataAttribute('slot', 'dialog-content'),
+                h.Class(cn(dialogPanelClass, viewInputs.panelClass)),
+              ],
               viewInputs.content({ closeButton, title, description }, h),
             ),
           ]

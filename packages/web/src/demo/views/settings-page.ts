@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { settingsPage } from '@foldcn/registry/src/blocks/settings-page/settings-page'
+import { settingsPage } from '@foldcn/registry/styles/default/blocks/settings-page/settings-page'
 
 import {
   ClickedSaveSettings,

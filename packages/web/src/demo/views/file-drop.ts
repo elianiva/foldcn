@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as fileDrop from '@foldcn/registry/src/ui/file-drop'
+import * as fileDrop from '@foldcn/registry/styles/default/ui/file-drop'
 
 import {
   ClickedRemoveFile,

@@ -4,23 +4,27 @@ type Child = Html | string
 
 import { cn } from '@/lib/utils'
 
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/marker.tsx.
+ * Keep the class strings identical to upstream — visual styling lives in the central foldcn style definition (cn-marker-variant-default is an intentional
+ * no-op hook upstream too). See docs/deriving-from-base.md.
+ */
+
 export const markerVariantKeys = ['default', 'separator', 'border'] as const
 export type MarkerVariant = (typeof markerVariantKeys)[number]
 
 export const markerVariants: Record<MarkerVariant, string> = {
-  default: '',
+  default: 'cn-marker-variant-default',
   separator:
-    'before:mr-1 before:h-px before:min-w-0 before:flex-1 before:bg-border after:ml-1 after:h-px after:min-w-0 after:flex-1 after:bg-border',
-  border: 'border-b border-border pb-2',
+    'cn-marker-variant-separator',
+  border: 'cn-marker-variant-border',
 }
 
-export const markerClass =
-  "group/marker relative flex min-h-4 w-full items-center gap-2 text-left text-sm text-muted-foreground [&_svg:not([class*='size-'])]:size-4 [a]:underline [a]:underline-offset-3 [a]:hover:text-foreground"
+export const markerClass = 'cn-marker group/marker relative flex w-full items-center'
 
-export const markerIconClass = "size-4 shrink-0 [&_svg:not([class*='size-'])]:size-4"
+export const markerIconClass = 'cn-marker-icon shrink-0'
 
-export const markerContentClass =
-  'min-w-0 wrap-break-word group-data-[variant=separator]/marker:flex-none group-data-[variant=separator]/marker:text-center *:[a]:underline *:[a]:hover:text-foreground'
+export const markerContentClass = 'cn-marker-content min-w-0 wrap-break-word'
 
 type StyleConfig = Readonly<{ className?: string; variant?: MarkerVariant }>
 

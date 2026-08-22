@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as calendar from '@foldcn/registry/src/ui/calendar'
+import * as calendar from '@foldcn/registry/styles/default/ui/calendar'
 
 import { GotCalendarMessage, type Message } from '../message'
 import type { Model } from '../model'

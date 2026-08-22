@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { direction } from '@foldcn/registry/src/ui/direction'
+import { direction } from '@foldcn/registry/styles/default/ui/direction'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

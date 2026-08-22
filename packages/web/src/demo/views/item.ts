@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { Item } from '@foldcn/registry/src/ui/item'
-import { icon } from '@foldcn/registry/src/lib/icons'
+import { Item } from '@foldcn/registry/styles/default/ui/item'
+import { icon } from '@foldcn/registry/styles/default/lib/icons'
 import { User } from 'lucide'
 
 import type { Message } from '../message'

@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { Alert } from '@foldcn/registry/src/ui/alert'
+import { Alert } from '@foldcn/registry/styles/default/ui/alert'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

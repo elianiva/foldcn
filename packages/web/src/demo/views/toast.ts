@@ -1,7 +1,7 @@
 import { Option } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as ToastModule from '@foldcn/registry/src/ui/toast'
+import * as ToastModule from '@foldcn/registry/styles/default/ui/toast'
 
 import {
   ClickedDismissAllToasts,

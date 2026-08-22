@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { NavigationMenu } from '@foldcn/registry/src/ui/navigation-menu'
+import { NavigationMenu } from '@foldcn/registry/styles/default/ui/navigation-menu'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { accordionItem } from '@foldcn/registry/src/ui/accordion'
+import { accordionItem } from '@foldcn/registry/styles/default/ui/accordion'
 
 import { ToggledAccordion, type Message } from '../message'
 import type { Model } from '../model'

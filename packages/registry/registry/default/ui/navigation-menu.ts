@@ -5,31 +5,35 @@ import { cn } from '@/lib/utils'
 type Child = Html | string
 
 // NavigationMenu is a pure presentational top-level nav (a styled horizontal
-// bar). `NavigationMenu` is the container (`nav`); sub-builders are attached as
-// properties: NavigationMenu.list, NavigationMenu.item, NavigationMenu.link,
-// NavigationMenu.trigger, NavigationMenu.content. Content visibility is driven
-// by `data-state` (the demo sets it from model state) — there is no headless
-// primitive behind it, mirroring how shadcn's `navigation-menu` base is mostly
-// CSS + data attributes.
+// bar). `NavigationMenu` is the container (`nav`); sub-builders are attached
+// as properties: NavigationMenu.list, NavigationMenu.item,
+// NavigationMenu.link, NavigationMenu.trigger, NavigationMenu.content.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/navigation-menu.tsx. Class strings are
+// identical to upstream; visual styling lives in the central foldcn style definition.
+//
+// foldcn gaps vs upstream: no Positioner/Viewport/Indicator popup management
+// (content is a per-item absolute dropdown driven by consumer state), and
+// cn-navigation-menu-item is an intentional no-op hook upstream.
 
 export const navigationMenuClass =
-  'group/navigation-menu relative flex max-w-max flex-1 items-center justify-center'
+  'cn-navigation-menu group/navigation-menu relative flex max-w-max flex-1 items-center justify-center'
 
-export const navigationMenuListClass = 'flex flex-1 list-none items-center justify-center gap-1'
+export const navigationMenuListClass = 'cn-navigation-menu-list flex flex-1 list-none items-center justify-center'
 
-export const navigationMenuItemClass = 'relative'
+export const navigationMenuItemClass = 'cn-navigation-menu-item relative'
 
-export const navigationMenuLinkClass =
-  'inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-foreground hover:bg-muted hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[active=true]:bg-muted data-[active=true]:text-accent-foreground'
+/** Upstream link token string; data-active is foldkit's attr name. */
+export const navigationMenuLinkClass = 'cn-navigation-menu-link'
 
+/** Upstream trigger component + token strings. */
 export const navigationMenuTriggerClass =
-  'group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-foreground hover:bg-muted hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted data-[state=open]:text-accent-foreground'
+  'cn-navigation-menu-trigger group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center outline-none disabled:pointer-events-none'
 
-export const navigationMenuContentClass =
-  'absolute top-full left-0 mt-1.5 w-auto rounded-md border bg-popover p-2 text-popover-foreground shadow-md outline-hidden data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
+export const navigationMenuContentClass = 'cn-navigation-menu-content absolute top-full left-0'
 
-export const navigationMenuViewportClass =
-  'absolute top-full left-0 mt-1.5 origin-top-center rounded-md border bg-popover text-popover-foreground shadow'
+export const navigationMenuViewportClass = 'cn-navigation-menu-positioner isolate z-50'
 
 type StyleConfig = Readonly<{ className?: string }>
 

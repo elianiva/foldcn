@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as animation from '@foldcn/registry/src/ui/animation'
+import * as animation from '@foldcn/registry/styles/default/ui/animation'
 
 import { GotAnimationMessage, ToggledAnimation, type Message } from '../message'
 import type { Model } from '../model'

@@ -4,25 +4,34 @@ type Child = Html | string
 
 import { cn } from '@/lib/utils'
 
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/avatar.tsx.
+ * Keep the class strings identical to upstream — visual styling lives in the central foldcn style definition. See docs/deriving-from-base.md.
+ *
+ * Known foldkit gap: upstream swaps image→fallback automatically via the
+ * Base UI Avatar primitive; foldcn's image helper always renders <img>, so
+ * consumers swap children themselves.
+ */
+
 export const avatarSizeKeys = ['default', 'sm', 'lg'] as const
 export type AvatarSize = (typeof avatarSizeKeys)[number]
 
 export const avatarClass =
-  'group/avatar relative flex size-8 shrink-0 overflow-hidden rounded-full select-none data-[size=lg]:size-10 data-[size=sm]:size-6'
+  'cn-avatar group/avatar relative flex shrink-0 select-none after:absolute after:inset-0 after:border after:border-border after:mix-blend-darken dark:after:mix-blend-lighten'
 
-export const avatarImageClass = 'aspect-square size-full'
+export const avatarImageClass = 'cn-avatar-image aspect-square size-full object-cover'
 
 export const avatarFallbackClass =
-  'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs'
+  'cn-avatar-fallback flex size-full items-center justify-center text-sm group-data-[size=sm]/avatar:text-xs'
 
 export const avatarBadgeClass =
-  'absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background select-none group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2 group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2'
+  'cn-avatar-badge absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-blend-color ring-2 select-none group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2 group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2'
 
 export const avatarGroupClass =
-  'group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background'
+  'cn-avatar-group group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background'
 
 export const avatarGroupCountClass =
-  'relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground ring-2 ring-background group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3'
+  'cn-avatar-group-count relative flex shrink-0 items-center justify-center ring-2 ring-background'
 
 type StyleConfig = Readonly<{ className?: string }>
 

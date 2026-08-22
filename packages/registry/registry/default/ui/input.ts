@@ -3,11 +3,17 @@ import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import { cn } from '@/lib/utils'
 
-export const inputClass =
-  'h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40'
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/input.tsx.
+ * Keep the class strings identical to upstream — visual styling lives in the central foldcn style definition . See docs/deriving-from-base.md.
+ */
 
+export const inputClass =
+  'cn-input w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50'
+
+/** Same string as the `label` item's component classes (upstream label.tsx). */
 export const inputLabelClass =
-  'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+  'cn-label flex items-center select-none group-data-[disabled=true]:pointer-events-none peer-disabled:cursor-not-allowed'
 
 export const inputDescriptionClass = 'text-sm text-muted-foreground'
 
@@ -52,7 +58,11 @@ export const input = <M>(config: InputConfig<M>, h: HtmlBuilder<M>): Html =>
           [h.Class(cn(inputWrapperClass, config.wrapperClass))],
           [
             h.label(
-              [...attributes.label, h.Class(cn(inputLabelClass, config.labelClass))],
+              [
+                ...attributes.label,
+                h.DataAttribute('slot', 'label'),
+                h.Class(cn(inputLabelClass, config.labelClass)),
+              ],
               [config.label],
             ),
             h.input([

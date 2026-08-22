@@ -30,60 +30,105 @@ export type InitConfig = FoldkitDialog.InitConfig
 export type RenderInfo = FoldkitDialog.RenderInfo
 
 // --- Class constants ---
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/drawer.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
+//
+// foldcn gaps vs upstream: Base UI's Drawer is a gesture drawer (drag to
+// dismiss, snap points, nested stacks, swipe-progress-driven overlay
+// opacity). foldkit has no drag primitive, so this keeps the static
+// show/hide dialog mechanics and applies the popup/content/handle tokens;
+// motion is the dialog enter/leave fade+zoom. The panel emits
+// data-swipe-direction="down" statically so the token's bottom-edge radius/
+// border variants resolve.
 
 export const drawerClass = 'bg-transparent p-0 open:block'
 
+/** Upstream overlay minus swipe-progress opacity (needs drag state). */
 export const drawerBackdropClass =
-  'fixed inset-0 z-50 bg-black/50 data-[leave]:animate-out data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:fade-in-0'
+  'cn-drawer-overlay fixed inset-0 z-50 transition-opacity duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] select-none data-enter:opacity-0 data-leave:opacity-0'
 
+/** Upstream DrawerPrimitive.Popup base string (nested/bleed/sizing lines
+ *  dropped — they key on drag state foldkit cannot emit). */
 export const drawerPanelClass =
-  'fixed inset-x-0 bottom-0 z-50 flex max-h-[96vh] flex-col gap-4 rounded-t-xl border bg-background p-6 shadow-lg outline-none data-[leave]:animate-out data-[leave]:slide-out-to-bottom data-[leave]:fade-out-0 data-[enter]:animate-in data-[enter]:slide-in-from-bottom data-[enter]:fade-in-0'
+  'cn-drawer-popup group/drawer-popup pointer-events-auto fixed z-50 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] [--drawer-content-max-height:calc(100dvh-6rem)] [--drawer-content-height:auto] duration-200 data-enter:animate-in data-enter:fade-in-0 data-enter:zoom-in-95 data-leave:animate-out data-leave:fade-out-0 data-leave:zoom-out-95'
 
-export const drawerHandleClass = 'mx-auto h-1.5 w-12 shrink-0 rounded-full bg-muted'
+/** Upstream DrawerContent string. */
+export const drawerContentClass =
+  'cn-drawer-content-base flex min-h-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] select-text'
 
-export const drawerHeaderClass = 'flex flex-col gap-1.5'
+/** Upstream DrawerSwipeHandle string. */
+export const drawerHandleClass =
+  'cn-drawer-swipe-handle relative z-10 flex shrink-0 cursor-grab transition-opacity duration-200 active:cursor-grabbing'
 
-export const drawerTitleClass = 'text-lg leading-none font-semibold'
+export const drawerHeaderClass =
+  'cn-drawer-header-base flex shrink-0 flex-col group-data-[swipe-axis=y]/drawer-popup:text-center'
 
-export const drawerDescriptionClass = 'text-sm text-muted-foreground'
+export const drawerTitleClass = 'cn-drawer-title cn-font-heading'
 
-export const drawerFooterClass = 'mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'
+export const drawerDescriptionClass = 'cn-drawer-description text-balance'
 
+export const drawerFooterClass = 'cn-drawer-footer-base mt-auto flex shrink-0 flex-col'
+
+/** Upstream renders close via `<Button variant="ghost" size="icon-sm">`. */
 export const drawerCloseButtonClass =
-  "absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  'cn-button cn-button-variant-ghost cn-button-size-icon-sm'
 
 // --- Composable sub-components ---
 
 type StyleConfig = Readonly<{ className?: string }>
 
+/** Grab handle (upstream DrawerSwipeHandle; aria-hidden). */
 export const handle = <M>(config: StyleConfig, h: HtmlBuilder<M>): Html =>
-  h.div([h.Class(cn(drawerHandleClass, config.className))])
+  h.div(
+    [h.AriaHidden(true), h.DataAttribute('slot', 'drawer-swipe-handle'), h.Class(cn(drawerHandleClass, config.className))],
+    [],
+  )
 
 export const header = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(drawerHeaderClass, config.className))], children)
+): Html =>
+  h.div(
+    [h.DataAttribute('slot', 'drawer-header'), h.Class(cn(drawerHeaderClass, config.className))],
+    children,
+  )
 
 export const title = <M>(
   attributes: ReadonlyArray<Attribute<M> | ChildAttribute>,
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.h2([...attributes, h.Class(cn(drawerTitleClass, config.className))], children)
+): Html => h.h2(
+    [...attributes, h.DataAttribute('slot', 'drawer-title'), h.Class(cn(drawerTitleClass, config.className))],
+    children,
+  )
 
 export const description = <M>(
   attributes: ReadonlyArray<Attribute<M> | ChildAttribute>,
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.p([...attributes, h.Class(cn(drawerDescriptionClass, config.className))], children)
+): Html => h.p(
+    [
+      ...attributes,
+      h.DataAttribute('slot', 'drawer-description'),
+      h.Class(cn(drawerDescriptionClass, config.className)),
+    ],
+    children,
+  )
 
 export const footer = <M>(
   config: StyleConfig,
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
-): Html => h.div([h.Class(cn(drawerFooterClass, config.className))], children)
+): Html =>
+  h.div(
+    [h.DataAttribute('slot', 'drawer-footer'), h.Class(cn(drawerFooterClass, config.className))],
+    children,
+  )
 
 export const closeButton = <M>(
   attributes: ReadonlyArray<Attribute<M> | ChildAttribute>,
@@ -91,7 +136,10 @@ export const closeButton = <M>(
   children: ReadonlyArray<Child>,
   h: HtmlBuilder<M>,
 ): Html =>
-  h.button([...attributes, h.Class(cn(drawerCloseButtonClass, config.className))], children)
+  h.button(
+    [...attributes, h.DataAttribute('slot', 'drawer-close'), h.Class(cn(drawerCloseButtonClass, config.className))],
+    children,
+  )
 
 // --- styledViewInputs factory ---
 
@@ -117,15 +165,30 @@ export const styledViewInputs = <M>(
 ): FoldkitDialog.ViewInputs => ({
   toView: ({ dialog, backdrop, panel, closeButton, title, description, isVisible }) =>
     h.dialog(
-      [...dialog, h.Class(cn(drawerClass, viewInputs.className))],
+      [...dialog, h.DataAttribute('slot', 'drawer'), h.Class(cn(drawerClass, viewInputs.className))],
       isVisible
         ? [
-            h.div([...backdrop, h.Class(cn(drawerBackdropClass, viewInputs.backdropClass))]),
+            h.div([
+              ...backdrop,
+              h.DataAttribute('slot', 'drawer-overlay'),
+              h.Class(cn(drawerBackdropClass, viewInputs.backdropClass)),
+            ]),
             h.div(
-              [...panel, h.Class(cn(drawerPanelClass, viewInputs.panelClass))],
+              [
+                ...panel,
+                h.DataAttribute('slot', 'drawer-popup'),
+                // Static declaration: this sheet dismisses downward (keys the
+                // cn-drawer-popup radius/border variants).
+                h.DataAttribute('swipe-direction', 'down'),
+                h.DataAttribute('swipe-axis', 'y'),
+                h.Class(cn(drawerPanelClass, viewInputs.panelClass)),
+              ],
               [
                 viewInputs.isHandleVisible === true ? handle({}, h) : h.empty,
-                ...viewInputs.content({ closeButton, title, description }, h),
+                h.div(
+                  [h.DataAttribute('slot', 'drawer-content'), h.Class(drawerContentClass)],
+                  viewInputs.content({ closeButton, title, description }, h),
+                ),
               ],
             ),
           ]

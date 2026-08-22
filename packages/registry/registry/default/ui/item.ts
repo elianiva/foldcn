@@ -5,54 +5,60 @@ type Child = Html | string
 import { cn } from '@/lib/utils'
 
 // --- Class constants ---
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/item.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
 
-export const itemGroupClass = 'group/item-group flex flex-col'
+export const itemGroupClass = 'cn-item-group group/item-group flex w-full flex-col'
 
-export const itemSeparatorClass =
-  'my-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px'
+export const itemSeparatorClass = 'cn-item-separator'
 
 export const itemVariantKeys = ['default', 'outline', 'muted'] as const
 export type ItemVariant = (typeof itemVariantKeys)[number]
 
 export const itemVariants: Record<ItemVariant, string> = {
-  default: 'bg-transparent',
-  outline: 'border-border',
-  muted: 'bg-muted/50',
+  default: 'cn-item-variant-default',
+  outline: 'cn-item-variant-outline',
+  muted: 'cn-item-variant-muted',
 }
 
-export const itemSizeKeys = ['default', 'sm'] as const
+export const itemSizeKeys = ['default', 'sm', 'xs'] as const
 export type ItemSize = (typeof itemSizeKeys)[number]
 
 export const itemSizes: Record<ItemSize, string> = {
-  default: 'gap-4 p-4',
-  sm: 'gap-2.5 px-4 py-3',
+  default: 'cn-item-size-default',
+  sm: 'cn-item-size-sm',
+  xs: 'cn-item-size-xs',
 }
 
+/** Upstream cva base string. */
 export const itemClass =
-  'group/item flex flex-wrap items-center rounded-md border border-transparent text-sm transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a]:transition-colors [a]:hover:bg-accent/50'
+  'cn-item group/item flex w-full flex-wrap items-center transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a]:transition-colors'
 
 export const itemMediaVariantKeys = ['default', 'icon', 'image'] as const
 export type ItemMediaVariant = (typeof itemMediaVariantKeys)[number]
 
 export const itemMediaVariants: Record<ItemMediaVariant, string> = {
-  default: 'bg-transparent',
-  icon: "size-8 rounded-sm border bg-muted [&_svg:not([class*='size-'])]:size-4",
-  image: 'size-10 overflow-hidden rounded-sm [&_img]:size-full [&_img]:object-cover',
+  default: 'cn-item-media-variant-default',
+  icon: 'cn-item-media-variant-icon',
+  image: 'cn-item-media-variant-image',
 }
 
 export const itemMediaClass =
-  'flex shrink-0 items-center justify-center gap-2 group-has-[[data-slot=item-description]]/item:translate-y-0.5 group-has-[[data-slot=item-description]]/item:self-start [&_svg]:pointer-events-none'
+  'cn-item-media flex shrink-0 items-center justify-center [&_svg]:pointer-events-none'
 
-export const itemContentClass = 'flex flex-1 flex-col gap-1 [&+[data-slot=item-content]]:flex-none'
+export const itemContentClass =
+  'cn-item-content flex flex-1 flex-col [&+[data-slot=item-content]]:flex-none'
 
-export const itemTitleClass = 'flex w-fit items-center gap-2 text-sm leading-snug font-medium'
+export const itemTitleClass = 'cn-item-title line-clamp-1 flex w-fit items-center'
 
 export const itemDescriptionClass =
-  'line-clamp-2 text-sm leading-normal font-normal text-balance text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary'
+  'cn-item-description line-clamp-2 font-normal [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary'
 
-export const itemActionsClass = 'flex items-center gap-2'
-export const itemHeaderClass = 'flex basis-full items-center justify-between gap-2'
-export const itemFooterClass = 'flex basis-full items-center justify-between gap-2'
+export const itemActionsClass = 'cn-item-actions flex items-center'
+export const itemHeaderClass = 'cn-item-header flex basis-full items-center justify-between'
+export const itemFooterClass = 'cn-item-footer flex basis-full items-center justify-between'
 
 // --- Types ---
 

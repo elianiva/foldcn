@@ -5,3 +5,5 @@ dist/
 public/
 *.tgz
 .DS_Store
+packages/registry/styles/
+

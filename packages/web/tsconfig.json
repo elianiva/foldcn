@@ -13,10 +13,10 @@
     "resolveJsonModule": true,
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["../registry/registry/default/*"],
-      "@/components/ui/*": ["../registry/registry/default/ui/*"],
+      "@/*": ["../registry/styles/default/*"],
+      "@/components/ui/*": ["../registry/styles/default/ui/*"],
       "@foldcn/registry": ["../registry/registry.json"],
-      "@foldcn/registry/src/*": ["../registry/registry/default/*"],
+      "@foldcn/registry/styles/default/*": ["../registry/styles/default/*"],
       "@foldcn/registry/registry/default/ui/registry.json": [
         "../registry/registry/default/ui/registry.json"
       ],

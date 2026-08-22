@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { Breadcrumb } from '@foldcn/registry/src/ui/breadcrumb'
+import { Breadcrumb } from '@foldcn/registry/styles/default/ui/breadcrumb'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

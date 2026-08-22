@@ -3,6 +3,11 @@ import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import { cn } from '@/lib/utils'
 
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/button.tsx.
+ * Keep the class strings identical to upstream — visual styling lives in the central foldcn style definition . See docs/deriving-from-base.md.
+ */
+
 /** Button variant keys — keep in sync with `buttonVariants`. */
 export const buttonVariantKeys = [
   'default',
@@ -14,14 +19,12 @@ export const buttonVariantKeys = [
 ] as const
 
 export const buttonVariants: Record<ButtonVariant, string> = {
-  default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-  destructive:
-    'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
-  outline:
-    'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
-  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-  ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-  link: 'text-primary underline-offset-4 hover:underline',
+  default: 'cn-button-variant-default',
+  destructive: 'cn-button-variant-destructive',
+  outline: 'cn-button-variant-outline',
+  secondary: 'cn-button-variant-secondary',
+  ghost: 'cn-button-variant-ghost',
+  link: 'cn-button-variant-link',
 }
 
 export type ButtonVariant = (typeof buttonVariantKeys)[number]
@@ -39,20 +42,19 @@ export const buttonSizeKeys = [
 ] as const
 
 export const buttonSizes: Record<ButtonSize, string> = {
-  default: 'h-9 gap-1.5 px-4 py-2 has-[>svg]:px-3',
-  xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-  sm: 'h-8 gap-1 rounded-md px-3 has-[>svg]:px-2.5',
-  lg: 'h-10 gap-1.5 rounded-md px-6 has-[>svg]:px-4',
-  icon: 'size-9',
-  'icon-xs': "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-  'icon-sm': 'size-8',
-  'icon-lg': 'size-10',
+  default: 'cn-button-size-default',
+  xs: 'cn-button-size-xs',
+  sm: 'cn-button-size-sm',
+  lg: 'cn-button-size-lg',
+  icon: 'cn-button-size-icon',
+  'icon-xs': 'cn-button-size-icon-xs',
+  'icon-sm': 'cn-button-size-icon-sm',
+  'icon-lg': 'cn-button-size-icon-lg',
 }
 
 export type ButtonSize = (typeof buttonSizeKeys)[number]
 
-const buttonBase =
-  "group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 active:not-aria-[haspopup]:translate-y-px [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+const buttonBase = 'cn-button'
 
 export type ButtonConfig<M> = Readonly<{
   onClick?: M
@@ -85,8 +87,6 @@ export const button = <M>(config: ButtonConfig<M>, label: Html | string, h: Html
               ),
             ),
             h.DataAttribute('slot', 'button'),
-            h.DataAttribute('variant', config.variant ?? 'default'),
-            h.DataAttribute('size', config.size ?? 'default'),
           ],
           [label],
         ),

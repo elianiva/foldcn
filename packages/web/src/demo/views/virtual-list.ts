@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as virtualList from '@foldcn/registry/src/ui/virtual-list'
+import * as virtualList from '@foldcn/registry/styles/default/ui/virtual-list'
 
 import { ClickedScrollToMiddle, GotVirtualListMessage, type Message } from '../message'
 import type { Model } from '../model'

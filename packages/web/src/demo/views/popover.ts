@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as Popover from '@foldcn/registry/src/ui/popover'
+import * as Popover from '@foldcn/registry/styles/default/ui/popover'
 
 import { GotPopoverMessage, type Message } from '../message'
 import type { Model } from '../model'

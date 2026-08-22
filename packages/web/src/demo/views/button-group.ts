@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { buttonGroup, buttonGroupItem } from '@foldcn/registry/src/ui/button-group'
-import { button } from '@foldcn/registry/src/ui/button'
+import { buttonGroup, buttonGroupItem } from '@foldcn/registry/styles/default/ui/button-group'
+import { button } from '@foldcn/registry/styles/default/ui/button'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

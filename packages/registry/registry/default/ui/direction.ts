@@ -8,10 +8,11 @@ export type Direction = 'ltr' | 'rtl'
 
 type DirectionConfig = Readonly<{ dir: Direction; className?: string }>
 
-/** Text-direction wrapper. shadcn's `Direction` is a Radix provider that sets
- *  `dir` on a context; foldcn has no such primitive, so this renders a wrapper
- *  `<div dir=…>` carrying the same `data-slot` surface. Mirrors the shadcn v4
- *  `direction.tsx`. */
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/direction.tsx.
+ * Upstream is a pure context provider (no DOM); foldcn has no context
+ * primitive, so this renders a wrapper `<div dir=…>` descendants inherit.
+ */
 export const direction = <M>(
   config: DirectionConfig,
   children: ReadonlyArray<Child>,

@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { button } from '@foldcn/registry/src/ui/button'
-import * as Sheet from '@foldcn/registry/src/ui/sheet'
+import { button } from '@foldcn/registry/styles/default/ui/button'
+import * as Sheet from '@foldcn/registry/styles/default/ui/sheet'
 
 import { ClickedOpenDialog, GotDialogMessage, type Message } from '../message'
 import type { Model } from '../model'

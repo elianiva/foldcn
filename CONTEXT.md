@@ -73,6 +73,16 @@ Stateful submodels (Dialog, Popover, Tooltip, Tabs, RadioGroup, Slider, Calendar
 
 The registry repo's source files live under `registry/default/` and are the input to `shadcn build`, which emits the flattened catalog + per-item JSON into `public/r/`. Imports use `@/` aliases (`@/lib/utils`, `@/components/ui/*`) so the CLI rewrites them per the user's `components.json` on install.
 
+### ADR-014: Derive from the shadcn v4 BASE registry via a `cn-*` token layer
+
+foldcn components are derivations of `shadcn-ui/ui` `apps/v4/registry/bases/base/ui/*.tsx` (Base UI registry, `nova` style) — not the legacy inline-class registry they were originally seeded from. Authored component files emit only `cn-*` utility-token classes, kept character-identical to upstream so class strings stay diffable. The token definitions are vendored verbatim from upstream (`registry/styles/style-*.css`, see ADR-015), merged with hand-written foldkit deltas (`style/cn-compat.css`). Matching shadcn's own pipeline, `scripts/resolve-styles.mjs` substitutes every token occurrence with its resolved Tailwind classes into the gitignored `styles/default/{ui,lib,blocks}` tree — that tree is what the web demo renders and what `shadcn build` ships, so neither demos nor installs need the token CSS loaded (the style item carries only theme setup). foldkit state-attribute differences (enter/leave animation windows, aria-disabled instead of native disabled, placement vs side) are resolved in the compat layer, by emitting derived attributes in the view, or by rewriting animation-state hooks in the resolve step — never by editing copied class strings or vendored CSS. Recipe: `docs/deriving-from-base.md`.
+
+### ADR-015: Vendor shadcn's per-style token CSS verbatim
+
+The shadcn token layers (`apps/v4/registry/styles/style-*.css`, one file per style) are vendored **byte-identical** into `packages/registry/registry/styles/` and credited to shadcn (MIT). We deliberately do NOT build runtime compatibility against the live shadcn registry: vendored copies keep foldcn self-contained and make syncing a dumb copy (`scripts/sync-styles.mjs`, run periodically against a local checkout; provenance commit + date recorded in `registry/styles/README.md`). Byte-identity is the contract: no headers, no reformatting, no foldkit rewrites inside these files — drift against a fresh checkout is always reviewable with plain `diff`. The foldkit animation-state rewrite (`data-open:`/`data-closed:` → `data-enter:`/`data-leave:`) therefore happens at resolve time in `resolve-styles.mjs`, not in the artifact.
+
+`style-nova.css` is wired as foldcn's default style today. The other seven styles (vega, maia, lyra, mira, luma, sera, rhea) ship as inert data so a future opt-in style needs no new sourcing step — only pipeline wiring (resolved tree + registry item), which is intentionally deferred until there is a product reason.
+
 ## Component Inventory
 
 All ~20 @foldkit/ui components, organized by type:
@@ -140,9 +150,13 @@ foldcn/
 ├── CONTEXT.md                             ← this file
 ├── components.json                        ← recommended config template
 ├── registry/
+│   ├── styles/                           ← VENDORED shadcn style-*.css, byte-identical (ADR-015)
+│   │   ├── README.md                     ← credit + sync provenance (regenerated)
+│   │   └── style-{nova,...}.css          ← synced from shadcn-ui/ui (sync-styles.mjs)
 │   └── default/
 │       ├── style/
-│       │   └── foldcn.json                ← registry:style base item
+│       │   ├── registry.json             ← registry:style base item (cssVars + base css)
+│       │   └── cn-compat.css             ← hand-written foldkit deltas
 │       ├── ui/
 │       │   ├── button.ts                  ← registry:ui
 │       │   ├── input.ts

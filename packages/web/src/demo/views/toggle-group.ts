@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { toggleGroup } from '@foldcn/registry/src/ui/toggle-group'
-import { icon } from '@foldcn/registry/src/lib/icons'
+import { toggleGroup } from '@foldcn/registry/styles/default/ui/toggle-group'
+import { icon } from '@foldcn/registry/styles/default/lib/icons'
 import { Bold, Italic, Underline } from 'lucide'
 
 import { SelectedToggleGroup, type Message } from '../message'

@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as slider from '@foldcn/registry/src/ui/slider'
+import * as slider from '@foldcn/registry/styles/default/ui/slider'
 
 import { GotSliderRatingMessage, GotSliderVolumeMessage, type Message } from '../message'
 import type { Model } from '../model'

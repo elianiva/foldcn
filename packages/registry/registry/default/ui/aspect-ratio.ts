@@ -4,13 +4,16 @@ type Child = Html | string
 
 import { cn } from '@/lib/utils'
 
-export const aspectRatioClass = 'relative w-full'
+export const aspectRatioClass = 'relative aspect-(--ratio)'
 
-type AspectRatioConfig = Readonly<{ ratio?: number; className?: string }>
+type AspectRatioConfig = Readonly<{ ratio: number; className?: string }>
 
-/** Styled aspect-ratio box. Without a Radix primitive the foldcn registry sets
- *  the `aspect-ratio` CSS property on a wrapper; place an `<img>`/`<iframe>` as
- *  a child. Mirrors the shadcn v4 `aspect-ratio.tsx` behavior. */
+/**
+ * Derived from the shadcn v4 BASE registry:
+ * apps/v4/registry/bases/base/ui/aspect-ratio.tsx (ratio drives the same
+ * `--ratio` custom property; upstream requires it, so it is required here).
+ * Place an `<img>`/`<iframe>` as a child.
+ */
 export const aspectRatio = <M>(
   config: AspectRatioConfig,
   children: ReadonlyArray<Child>,
@@ -20,9 +23,7 @@ export const aspectRatio = <M>(
     [
       h.Class(cn(aspectRatioClass, config.className)),
       h.DataAttribute('slot', 'aspect-ratio'),
-      ...(config.ratio === undefined
-        ? []
-        : [h.Style({ aspectRatio: String(config.ratio) })]),
+      h.Style({ '--ratio': String(config.ratio) }),
     ],
     children,
   )

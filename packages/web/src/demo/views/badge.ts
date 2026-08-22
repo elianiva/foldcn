@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { badge, badgeVariantKeys } from '@foldcn/registry/src/ui/badge'
+import { badge, badgeVariantKeys } from '@foldcn/registry/styles/default/ui/badge'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

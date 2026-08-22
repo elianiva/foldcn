@@ -6,35 +6,35 @@ type Child = Html | string
 
 // Table is a pure presentational primitive. `Table` is the container
 // (`table`); sub-builders are attached as properties: Table.header, Table.body,
-// Table.footer, Table.row, Table.head, Table.cell, Table.caption. Mirrors the
-// shadcn v4 `table` base exactly.
+// Table.footer, Table.row, Table.head, Table.cell, Table.caption.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/table.tsx. Class strings are identical to
+// upstream; visual styling lives in the central foldcn style definition.
 
-export const tableClass =
-  'w-full caption-bottom text-sm border-collapse *:border-border'
+export const tableContainerClass = 'cn-table-container'
 
-export const tableHeaderClass = '[&_tr]:border-b'
+export const tableClass = 'cn-table'
 
-export const tableBodyClass = '[&_tr:last-child]:border-0'
+export const tableHeaderClass = 'cn-table-header'
 
-export const tableFooterClass =
-  'border-t bg-muted/50 font-medium [&>tr]:last:border-b-0'
+export const tableBodyClass = 'cn-table-body'
 
-export const tableRowClass =
-  'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted'
+export const tableFooterClass = 'cn-table-footer'
 
-export const tableHeadClass =
-  'h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]'
+export const tableRowClass = 'cn-table-row has-aria-expanded:bg-muted/50'
 
-export const tableCellClass =
-  'p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]'
+export const tableHeadClass = 'cn-table-head'
 
-export const tableCaptionClass = 'mt-4 text-sm text-muted-foreground'
+export const tableCellClass = 'cn-table-cell'
+
+export const tableCaptionClass = 'cn-table-caption'
 
 type StyleConfig = Readonly<{ className?: string }>
 
 const tableContainer = <M>(config: StyleConfig, children: ReadonlyArray<Child>, h: HtmlBuilder<M>): Html =>
   h.div(
-    [h.Class('relative w-full overflow-x-auto'), h.DataAttribute('slot', 'table-container')],
+    [h.Class(cn(tableContainerClass)), h.DataAttribute('slot', 'table-container')],
     [h.table([h.Class(cn(tableClass, config.className)), h.DataAttribute('slot', 'table')], children)],
   )
 

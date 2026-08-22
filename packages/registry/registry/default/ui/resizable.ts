@@ -6,20 +6,33 @@ type Child = Html | string
 
 // Resizable is a two-pane split with a draggable handle. The handle carries a
 // visually hidden range input so the split stays accessible and keyboard
-// operable; `onValueChange` reports the first pane's size as a percentage
-// (mirrors shadcn's `resizable` base surface).
+// operable; `onValueChange` reports the first pane's size as a percentage.
+//
+// Derived from the shadcn v4 BASE registry:
+// apps/v4/registry/bases/base/ui/resizable.tsx. Class strings are identical
+// to upstream; visual styling lives in the central foldcn style definition
+// (cn-resizable-panel-group / cn-resizable-handle are intentional no-op
+// hooks upstream — the effective classes are the literal strings).
+//
+// foldcn gaps vs upstream: fixed two panes (no N panels), no min/max/collapse
+// constraints, no autoSaveId persistence; the handle is a range input rather
+// than a pointer-drag separator.
 
-export const resizableContainerClass = 'flex h-full w-full'
+export const resizableContainerClass =
+  'cn-resizable-panel-group flex h-full w-full aria-[orientation=vertical]:flex-col'
 
-export const resizableContainerVerticalClass = 'flex h-full w-full flex-col'
+export const resizableContainerVerticalClass = resizableContainerClass
 
 export const resizablePanelClass = 'overflow-auto'
 
-export const resizableHandleClass = 'relative flex items-center justify-center bg-border'
+/** Upstream Separator string (aria-[orientation] variants key on the emitted
+ *  aria-orientation attr). */
+export const resizableHandleClass =
+  'cn-resizable-handle relative flex w-px items-center justify-center bg-border ring-offset-background after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:after:left-0 aria-[orientation=horizontal]:after:h-1 aria-[orientation=horizontal]:after:w-full aria-[orientation=horizontal]:after:translate-x-0 aria-[orientation=horizontal]:after:-translate-y-1/2 [&[aria-orientation=horizontal]>div]:rotate-90'
 
-export const resizableHandleHorizontalClass = 'w-px'
+export const resizableHandleHorizontalClass = ''
 
-export const resizableHandleVerticalClass = 'h-px'
+export const resizableHandleVerticalClass = ''
 
 export type ResizablePane = Readonly<{ content: Child; className?: string }>
 
@@ -47,6 +60,7 @@ export const resizable = <M>(config: ResizableConfig<M>, h: HtmlBuilder<M>): Htm
           isHorizontal ? resizableHandleHorizontalClass : resizableHandleVerticalClass,
         ),
       ),
+      h.AriaOrientation(isHorizontal ? 'vertical' : 'horizontal'),
       h.DataAttribute('slot', 'resizable-handle'),
     ],
     [

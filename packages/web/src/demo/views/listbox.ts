@@ -1,7 +1,7 @@
 import { Option } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import * as listbox from '@foldcn/registry/src/ui/listbox'
+import * as listbox from '@foldcn/registry/styles/default/ui/listbox'
 import { ItemListbox } from '../bundles'
 
 import { GotListboxMessage, type Message } from '../message'

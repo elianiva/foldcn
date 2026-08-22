@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { toggle } from '@foldcn/registry/src/ui/toggle'
-import { icon } from '@foldcn/registry/src/lib/icons'
+import { toggle } from '@foldcn/registry/styles/default/ui/toggle'
+import { icon } from '@foldcn/registry/styles/default/lib/icons'
 import { Bold } from 'lucide'
 
 import { ToggledToggle, type Message } from '../message'

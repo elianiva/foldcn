@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { Kbd } from '@foldcn/registry/src/ui/kbd'
+import { Kbd } from '@foldcn/registry/styles/default/ui/kbd'
 
 import type { Message } from '../message'
 import type { Model } from '../model'

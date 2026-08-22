@@ -20,12 +20,18 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        // Blocks compose components via the user-facing `@/components/ui`
+        // alias (kept intact for shadcn installs); in the demo app it resolves
+        // to the resolved tree.
         find: '@/components/ui',
-        replacement: path.resolve(here, '../registry/registry/default/ui'),
+        replacement: path.resolve(here, '../registry/styles/default/ui'),
       },
       {
+        // Everything the demos render resolves inside the resolved tree:
+        // components import `@/lib/utils`, lib helpers import `@/ui/*` —
+        // all served from styles/default so no raw cn-* code ever loads.
         find: '@/',
-        replacement: `${path.resolve(here, '../registry/registry/default')}/`,
+        replacement: `${path.resolve(here, '../registry/styles/default')}/`,
       },
     ],
   },

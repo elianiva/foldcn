@@ -1,0 +1,73 @@
+/* Hand-maintained foldkit compatibility deltas — concatenated AHEAD of the
+ * vendored shadcn style CSS (registry/styles/style-nova.css, byte-identical
+ * to upstream) by scripts/resolve-styles.mjs when building the style map
+ * (so delta utilities win tailwind-merge conflicts), then inlined into every
+ * resolved component. Do not regenerate this file.
+ *
+ * Convention: keep component class strings identical to the upstream base
+ * registry files; where foldkit cannot reproduce a Base UI attribute that
+ * upstream tokens rely on, add the adapted rule here instead of editing the
+ * component.
+ *
+ * Known foldkit deltas:
+ *  - Controls: Foldkit helpers emit `aria-disabled="true"` + `data-disabled`
+ *    and never the native `disabled` attribute (they stay focusable on
+ *    purpose). Upstream tokens style `disabled:` only, so each affected
+ *    control token needs aria-/data- twins below.
+ */
+
+/* Upstream defines cn-font-heading app-side (shadcn docs globals.css).
+ * Point it at your heading font; font-sans keeps the default look. */
+.cn-font-heading {
+  @apply font-sans;
+}
+
+/* Upstream rewrites this marker to rtl:rotate-180 at install time via the
+ * shadcn CLI (transform-rtl.ts). foldcn ships it as a real rule instead. */
+.cn-rtl-flip {
+  @apply rtl:rotate-180;
+}
+
+/* App-level utility from upstream (shadcn packages/shadcn/src/tailwind.css,
+ * also defined in the docs app globals) referenced by sidebar/command tokens. */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* button: native :disabled never matches under foldkit. */
+.cn-button {
+  @apply aria-disabled:pointer-events-none aria-disabled:opacity-50 data-disabled:pointer-events-none data-disabled:opacity-50;
+}
+
+/* checkbox: component string styles native :disabled; foldkit emits
+ * aria-disabled/data-disabled instead. */
+.cn-checkbox {
+  @apply aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-disabled:cursor-not-allowed data-disabled:opacity-50;
+}
+
+/* radio-group item: same native-:disabled delta as checkbox. */
+.cn-radio-group-item {
+  @apply aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-disabled:cursor-not-allowed data-disabled:opacity-50;
+}
+
+/* slider thumb: same native-:disabled delta (foldkit emits aria-disabled on
+ * the thumb while dragging is gated in the helper). */
+.cn-slider-thumb {
+  @apply aria-disabled:pointer-events-none aria-disabled:opacity-50 data-disabled:pointer-events-none data-disabled:opacity-50;
+}
+
+/* sheet: upstream keys enter/exit motion on data-starting-style/
+ * data-ending-style, which foldkit cannot emit — mapped to its
+ * data-enter/data-leave transition windows instead. */
+.cn-sheet-overlay {
+  @apply data-enter:opacity-0 data-leave:opacity-0;
+}
+
+.cn-sheet-content {
+  @apply data-enter:opacity-0 data-leave:opacity-0 data-[side=bottom]:data-enter:translate-y-[2.5rem] data-[side=bottom]:data-leave:translate-y-[2.5rem] data-[side=left]:data-enter:translate-x-[-2.5rem] data-[side=left]:data-leave:translate-x-[-2.5rem] data-[side=right]:data-enter:translate-x-[2.5rem] data-[side=right]:data-leave:translate-x-[2.5rem] data-[side=top]:data-enter:translate-y-[-2.5rem] data-[side=top]:data-leave:translate-y-[-2.5rem];
+}

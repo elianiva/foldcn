@@ -3,6 +3,15 @@ import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import { cn } from '@/lib/utils'
 
+/**
+ * Derived from the shadcn v4 BASE registry: apps/v4/registry/bases/base/ui/slider.tsx.
+ * Class strings are identical to upstream; visual styling lives in the central foldcn style definition. See docs/deriving-from-base.md.
+ *
+ * foldcn gap vs upstream: single value / single thumb only (upstream is
+ * multi-thumb); vertical layout is configured but the styled view renders
+ * horizontal.
+ */
+
 // Re-export the @foldkit/ui Slider submodel surface.
 
 export const init = FoldkitSlider.init
@@ -25,17 +34,21 @@ export type InitConfig = FoldkitSlider.InitConfig
 export type ViewInputs = FoldkitSlider.ViewInputs
 export type SliderAttributes = FoldkitSlider.SliderAttributes
 
+/** Upstream SliderPrimitive.Control string. */
 export const sliderRootClass =
-  'relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-40 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col'
+  'cn-slider relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:w-auto data-vertical:flex-col'
 
-export const sliderTrackClass =
-  'relative grow overflow-hidden select-none rounded-full bg-muted h-1.5 w-full data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5'
+/** Upstream SliderPrimitive.Track string. */
+export const sliderTrackClass = 'cn-slider-track relative grow overflow-hidden select-none'
 
+/** Upstream SliderPrimitive.Indicator string. */
 export const sliderFilledTrackClass =
-  'absolute select-none bg-primary h-full w-full data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full'
+  'cn-slider-range select-none data-horizontal:h-full data-vertical:w-full'
 
+/** Upstream SliderPrimitive.Thumb string. The disabled: variants are inert
+ *  under foldkit (aria-/data- twins are inlined at style resolution). */
 export const sliderThumbClass =
-  'block size-4 shrink-0 select-none rounded-full border border-primary bg-white shadow-sm ring-ring/50 transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50'
+  'cn-slider-thumb block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50'
 
 export const sliderLabelClass = 'text-sm font-medium'
 
@@ -119,6 +132,7 @@ export const styledViewInputs = <M>(
                 ...attributes.track,
                 h.DataAttribute('slot', 'slider-track'),
                 h.DataAttribute('orientation', 'horizontal'),
+                h.DataAttribute('horizontal', ''),
                 h.Class(cn(sliderTrackClass, viewInputs.trackClass)),
               ],
               [
@@ -126,6 +140,7 @@ export const styledViewInputs = <M>(
                   ...attributes.filledTrack,
                   h.DataAttribute('slot', 'slider-range'),
                   h.DataAttribute('orientation', 'horizontal'),
+                  h.DataAttribute('horizontal', ''),
                   h.Class(cn(sliderFilledTrackClass, viewInputs.filledTrackClass)),
                 ]),
               ],

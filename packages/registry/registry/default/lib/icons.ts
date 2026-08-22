@@ -9,7 +9,7 @@ import type { IconNode, SVGProps } from 'lucide'
  * Foldkit VNodes with no string parsing involved.
  *
  * ```ts
- * import { icon } from '@foldcn/registry/src/lib/icons'
+ * import { icon } from '@foldcn/registry/styles/default/lib/icons'
  * import { ChevronDown } from 'lucide'
  *
  * // Default size (size-4 shrink-0)
