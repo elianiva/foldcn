@@ -281,6 +281,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ...accordionSlice.handlers(model),
       ...alertDialogSlice.handlers(model),
       ...animationSlice.handlers(model),
+      ...avatarSlice.handlers(model),
       ...buttonSlice.handlers(model),
       ...calendarSlice.handlers(model),
       ...cardSlice.handlers(model),
