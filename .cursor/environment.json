@@ -1,0 +1,18 @@
+{
+  "name": "foldcn",
+  "install": "pnpm install --frozen-lockfile",
+  "start": "pnpm --filter @foldcn/web exec portless proxy start --port 1355 --https",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "pnpm dev",
+      "description": "foldcn showcase site (Foldkit SSG). Its predev hook re-resolves styles and regenerates the style shims, then Vite runs behind the portless proxy. Open the printed https://foldcn.localhost:1355 URL, or hit the raw Vite port shown as 'Local:' directly."
+    }
+  ],
+  "ports": [
+    {
+      "name": "portless-proxy",
+      "port": 1355
+    }
+  ]
+}
