@@ -90,14 +90,14 @@ export const slice = defineSlice({
     GotVirtualListMessage: (payload: typeof Message.GotVirtualListMessage.Type): UpdateReturn =>
       foldVirtualList(model, payload.message),
     ClickedScrollToMiddle: (): UpdateReturn => {
-      const [next, commands] = FoldkitVirtualList.scrollToIndex(
+      const { model: next, commands = [] } = FoldkitVirtualList.scrollToIndex(
         model.virtualList,
         Math.floor(VIRTUAL_LIST_ROW_COUNT / 2),
       )
-      return [
-        evo(model, { virtualList: () => next }),
-        Command.mapMessages(commands, (message) => Message.GotVirtualListMessage({ message })),
-      ]
+      return {
+        model: evo(model, { virtualList: () => next }),
+        commands: Command.mapMessages(commands, (message) => Message.GotVirtualListMessage({ message })),
+      }
     },
   }),
   samples: [],

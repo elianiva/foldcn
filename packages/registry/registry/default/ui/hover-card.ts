@@ -157,11 +157,7 @@ export const description = <M>(
 // popover's button.
 export const buttonId = FoldkitPopover.buttonId
 
-type UpdateReturn = readonly [
-  Model,
-  ReadonlyArray<Command.Command<Message>>,
-  Option.Option<OutMessage>,
-]
+type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 /** Waits for the open delay before emitting `CompletedWaitBeforeShow`.
  *  Stale invocations are filtered by version in update. */
@@ -192,37 +188,33 @@ const foldPopover = Update.foldChild({
   read: (model: Model) => Option.some(model.popover),
   write: (model, nextPopover) => evo(model, { popover: () => nextPopover }),
   toParentMessage: toGotPopoverMessage,
-  toParentOutMessage: (outMessage: FoldkitPopover.OutMessage): Option.Option<OutMessage> =>
-    outMessage._tag === 'Opened'
-      ? Option.some(OutMessage.Opened())
-      : Option.some(OutMessage.Closed()),
+  toParentOutMessage: (outMessage: FoldkitPopover.OutMessage): OutMessage =>
+    outMessage._tag === 'Opened' ? OutMessage.Opened() : OutMessage.Closed(),
 })
 
 const scheduleShow = (model: Model): UpdateReturn => {
   const version = model.pendingShowVersion + 1
-  return [
-    evo(model, { pendingShowVersion: () => version }),
-    [WaitBeforeShow({ delay: model.openDelay, version })],
-    Option.none(),
-  ]
+  return {
+    model: evo(model, { pendingShowVersion: () => version }),
+    commands: [WaitBeforeShow({ delay: model.openDelay, version })],
+  }
 }
 
 const scheduleHide = (model: Model): UpdateReturn => {
   const version = model.pendingHideVersion + 1
-  return [
-    evo(model, { pendingHideVersion: () => version }),
-    [WaitBeforeHide({ delay: model.closeDelay, version })],
-    Option.none(),
-  ]
+  return {
+    model: evo(model, { pendingHideVersion: () => version }),
+    commands: [WaitBeforeHide({ delay: model.closeDelay, version })],
+  }
 }
 
 const openNow = (model: Model): UpdateReturn => {
-  const [nextPopover, popoverCommands] = FoldkitPopover.open(model.popover)
-  return [
-    evo(model, { popover: () => nextPopover }),
-    Command.mapMessages(popoverCommands, toGotPopoverMessage),
-    Option.some(OutMessage.Opened()),
-  ]
+  const { model: nextPopover, commands: popoverCommands = [] } = FoldkitPopover.open(model.popover)
+  return {
+    model: evo(model, { popover: () => nextPopover }),
+    commands: Command.mapMessages(popoverCommands, toGotPopoverMessage),
+    outMessage: OutMessage.Opened(),
+  }
 }
 
 const closeNow = (model: Model): UpdateReturn => {
@@ -230,18 +222,18 @@ const closeNow = (model: Model): UpdateReturn => {
   // FocusButton command: a pointer- or blur-driven dismissal must not yank
   // focus back to the trigger — the returned focus would fire FocusedTrigger
   // and immediately re-open the card.
-  const [nextPopover, popoverCommands] = FoldkitPopover.update(
+  const { model: nextPopover, commands: popoverCommands = [] } = FoldkitPopover.update(
     model.popover,
     FoldkitPopover.Message.RequestedClose(),
   )
-  return [
-    evo(model, { popover: () => nextPopover }),
-    Command.mapMessages(
+  return {
+    model: evo(model, { popover: () => nextPopover }),
+    commands: Command.mapMessages(
       popoverCommands.filter((command) => command.name !== 'FocusButton'),
       toGotPopoverMessage,
     ),
-    Option.some(OutMessage.Closed()),
-  ]
+    outMessage: OutMessage.Closed(),
+  }
 }
 
 const withUpdateReturn = M.withReturnType<UpdateReturn>()
@@ -260,7 +252,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
           pendingHideVersion: () => model.pendingHideVersion + 1,
         })
         if (isOpen(entered)) {
-          return [entered, [], Option.none()]
+          return { model: entered }
         }
         return scheduleShow(entered)
       },
@@ -271,7 +263,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         })
         // Focus keeps the card open until blur.
         if (!isOpen(left) || left.isTriggerFocused) {
-          return [left, [], Option.none()]
+          return { model: left }
         }
         return scheduleHide(left)
       },
@@ -282,7 +274,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
           pendingHideVersion: () => model.pendingHideVersion + 1,
         })
         if (isOpen(focused)) {
-          return [focused, [], Option.none()]
+          return { model: focused }
         }
         // Focus opens immediately, without the hover delay.
         return openNow(focused)
@@ -294,7 +286,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         })
         // Hover keeps the card open until leave.
         if (!isOpen(blurred) || blurred.isPointerOverCard) {
-          return [blurred, [], Option.none()]
+          return { model: blurred }
         }
         return scheduleHide(blurred)
       },
@@ -307,13 +299,13 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         ),
       CompletedWaitBeforeShow: ({ version }) => {
         if (version !== model.pendingShowVersion || !model.isPointerOverCard || isOpen(model)) {
-          return [model, [], Option.none()]
+          return { model }
         }
         return openNow(model)
       },
       CompletedWaitBeforeHide: ({ version }) => {
         if (version !== model.pendingHideVersion || model.isPointerOverCard || !isOpen(model)) {
-          return [model, [], Option.none()]
+          return { model }
         }
         return closeNow(model)
       },

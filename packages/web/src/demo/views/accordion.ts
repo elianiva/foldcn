@@ -233,7 +233,7 @@ export const accordionView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
 const foldNoOp =
   <Out>(): ((out: Out) => Update.Step<State, unknown>) =>
   () =>
-  (model) => [model, []]
+  (model) => ({ model })
 
 const foldOut = M.type<accordion.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),

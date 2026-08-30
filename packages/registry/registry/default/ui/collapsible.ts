@@ -4,8 +4,8 @@
  */
 import { Function, Option, Schema as S } from 'effect'
 import { Disclosure as FoldkitDisclosure } from '@foldkit/ui'
-import type { Command } from 'foldkit/command'
 import type { Html } from 'foldkit/html'
+import * as Update from 'foldkit/update'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
@@ -86,7 +86,7 @@ export const reflect: Reflect<Model, boolean> = Function.dual(
   (model: Model, isOpen: boolean): Model => evo(model, { isOpen: () => isOpen }),
 )
 
-type UpdateReturn = readonly [Model, ReadonlyArray<Command<Message>>, Option.Option<OutMessage>]
+type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 /** Processes a collapsible message and returns the next model, commands, and
  *  an optional out-message for the parent. */
@@ -94,11 +94,10 @@ export const update = (model: Model, message: Message): UpdateReturn => {
   switch (message._tag) {
     case 'Toggled': {
       const isOpen = !model.isOpen
-      return [
-        evo(model, { isOpen: () => isOpen }),
-        [],
-        Option.some(OutMessage.ChangedOpen({ isOpen })),
-      ]
+      return {
+        model: evo(model, { isOpen: () => isOpen }),
+        outMessage: OutMessage.ChangedOpen({ isOpen }),
+      }
     }
   }
 }

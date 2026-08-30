@@ -198,10 +198,9 @@ export const slice = defineSlice({
   init: { isSwitchChecked: false },
   messages: [Message.ToggledSwitch],
   handlers: (model: State) => ({
-    ToggledSwitch: ({ isChecked }: typeof Message.ToggledSwitch.Type): UpdateReturn => [
-      evo(model, { isSwitchChecked: () => isChecked }),
-      [],
-    ],
+    ToggledSwitch: ({ isChecked }: typeof Message.ToggledSwitch.Type): UpdateReturn => ({
+      model: evo(model, { isSwitchChecked: () => isChecked }),
+    }),
   }),
   samples: [Message.ToggledSwitch({ isChecked: true })],
 })

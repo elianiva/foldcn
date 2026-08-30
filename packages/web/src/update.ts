@@ -2,6 +2,7 @@ import { Effect, Match as M, Option, pipe, Schema as S } from 'effect'
 import { Command, Url } from 'foldkit'
 import { load, pushUrl } from 'foldkit/navigation'
 import { evo } from 'foldkit/struct'
+import type * as Update from 'foldkit/update'
 import * as Tabs from '@foldkit/ui/tabs'
 
 import * as Demo from './demo'
@@ -18,7 +19,7 @@ export const PACKAGE_MANAGER_STORAGE_KEY = 'foldcn-package-manager'
 // Create a tabs bundle for package manager selection
 const PackageManagerTabs = Tabs.create<PackageManager>()
 
-type UpdateReturn = readonly [Model, ReadonlyArray<Command.Command<AppMessage>>]
+type UpdateReturn = Update.Return<Model, AppMessage>
 const withUpdateReturn = M.withReturnType<UpdateReturn>()
 
 const ApplyTheme = Command.define('ApplyTheme', {
@@ -145,37 +146,43 @@ const resolveTheme = (model: Model, preference: ThemePreference): ResolvedTheme 
  *  it, persists it, and mirrors the selection onto the header's ToggleGroup
  *  submodel. Shared by the direct SelectedThemePreference message and the
  *  ToggleGroup's ChangedValue out-message. */
-const applyThemePreference = (model: Model, preference: ThemePreference): UpdateReturn => [
-  evo(model, {
+const applyThemePreference = (model: Model, preference: ThemePreference): UpdateReturn => ({
+  model: evo(model, {
     maybeThemePreference: () => Option.some(preference),
     resolvedTheme: () => resolveTheme(model, preference),
     themeToggleGroup: () => ToggleGroup.reflect(model.themeToggleGroup, [preference]),
   }),
-  [ApplyTheme({ theme: resolveTheme(model, preference) }), SaveThemePreference({ preference })],
-]
+  commands: [
+    ApplyTheme({ theme: resolveTheme(model, preference) }),
+    SaveThemePreference({ preference }),
+  ],
+})
 
 const foldThemeToggleGroup = (model: Model, message: ToggleGroup.Message): UpdateReturn => {
-  const [next, commands, maybeOutMessage] = ToggleGroup.update(model.themeToggleGroup, message)
+  const {
+    model: next,
+    commands = [],
+    outMessage,
+  } = ToggleGroup.update(model.themeToggleGroup, message)
   const mappedCommands = Command.mapMessages(commands, (m) =>
     Message.GotThemeToggleGroupMessage({ message: m }),
   )
 
-  return Option.match(maybeOutMessage, {
-    onNone: () => [evo(model, { themeToggleGroup: () => next }), mappedCommands],
-    onSome: (outMessage) => {
-      switch (outMessage._tag) {
-        case 'ChangedValue': {
-          const raw = outMessage.value[0]
-          const preference =
-            raw === 'Light' || raw === 'Dark' || raw === 'System'
-              ? raw
-              : // Ignore deselect (single toggle clears on re-click) — keep current preference.
-                (Option.getOrUndefined(model.maybeThemePreference) ?? 'System')
-          return applyThemePreference(model, preference)
-        }
-      }
-    },
-  })
+  if (outMessage === undefined) {
+    return { model: evo(model, { themeToggleGroup: () => next }), commands: mappedCommands }
+  }
+
+  switch (outMessage._tag) {
+    case 'ChangedValue': {
+      const raw = outMessage.value[0]
+      const preference =
+        raw === 'Light' || raw === 'Dark' || raw === 'System'
+          ? raw
+          : // Ignore deselect (single toggle clears on re-click) — keep current preference.
+            (Option.getOrUndefined(model.maybeThemePreference) ?? 'System')
+      return applyThemePreference(model, preference)
+    }
+  }
 }
 
 /** Boot-time load of everything only the browser knows: the stored theme
@@ -195,41 +202,40 @@ export const LoadBrowserEnvironment = Command.define('LoadBrowserEnvironment', {
 })
 
 const foldDemo = (model: Model, message: Demo.DemoMessage): UpdateReturn => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const [nextDemo, demoCommands] = Demo.update(model.demo, message) as unknown as [
-    Demo.DemoModel,
-    ReadonlyArray<Command.Command<Demo.DemoMessage>>,
-  ]
-  return [
-    evo(model, { demo: () => nextDemo }),
-    Command.mapMessages(demoCommands, (m) => Message.GotDemoMessage({ message: m })),
-  ]
+  const { model: nextDemo, commands: demoCommands = [] } = Demo.update(model.demo, message)
+  return {
+    model: evo(model, { demo: () => nextDemo }),
+    commands: Command.mapMessages(demoCommands, (m) => Message.GotDemoMessage({ message: m })),
+  }
 }
 
 const foldInstallTabs = (model: Model, message: Tabs.Message): UpdateReturn => {
-  const [next, commands, maybeOutMessage] = PackageManagerTabs.update(model.installTabs, message)
+  const {
+    model: next,
+    commands = [],
+    outMessage,
+  } = PackageManagerTabs.update(model.installTabs, message)
   const mappedCommands = Command.mapMessages(commands, (m) =>
     Message.GotInstallTabsMessage({ message: m }),
   )
 
-  return Option.match(maybeOutMessage, {
-    onNone: () => [evo(model, { installTabs: () => next }), mappedCommands],
-    onSome: (outMessage) => {
-      switch (outMessage._tag) {
-        case 'Selected':
-          return [
-            evo(model, {
-              installTabs: () => next,
-              selectedPackageManager: () => outMessage.value satisfies PackageManager,
-            }),
-            [
-              ...mappedCommands,
-              SavePackageManager({ packageManager: outMessage.value satisfies PackageManager }),
-            ],
-          ]
+  if (outMessage === undefined) {
+    return { model: evo(model, { installTabs: () => next }), commands: mappedCommands }
+  }
+
+  switch (outMessage._tag) {
+    case 'Selected':
+      return {
+        model: evo(model, {
+          installTabs: () => next,
+          selectedPackageManager: () => outMessage.value satisfies PackageManager,
+        }),
+        commands: [
+          ...mappedCommands,
+          SavePackageManager({ packageManager: outMessage.value satisfies PackageManager }),
+        ],
       }
-    },
-  })
+  }
 }
 
 export const update = (model: Model, message: AppMessage): UpdateReturn =>
@@ -240,11 +246,17 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
         M.value(request).pipe(
           withUpdateReturn,
           M.tagsExhaustive({
-            Internal: ({ url }) => [model, [NavigateInternal({ url: Url.toString(url) })]],
-            External: ({ href }) => [model, [LoadExternal({ href })]],
+            Internal: ({ url }) => ({
+              model,
+              commands: [NavigateInternal({ url: Url.toString(url) })],
+            }),
+            External: ({ href }) => ({ model, commands: [LoadExternal({ href })] }),
           }),
         ),
-      ChangedUrl: ({ url }) => [evo(model, { route: () => parseRoute(url) }), [ScrollToTop()]],
+      ChangedUrl: ({ url }) => ({
+        model: evo(model, { route: () => parseRoute(url) }),
+        commands: [ScrollToTop()],
+      }),
       GotDemoMessage: ({ message }) => foldDemo(model, message),
       GotInstallTabsMessage: ({ message }) => foldInstallTabs(model, message),
       GotThemeToggleGroupMessage: ({ message }) => foldThemeToggleGroup(model, message),
@@ -252,19 +264,19 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
       SelectedThemePreference: ({ preference }) => applyThemePreference(model, preference),
       ChangedSystemTheme: ({ theme }) =>
         Option.exists(model.maybeThemePreference, (p) => p === 'System')
-          ? [evo(model, { resolvedTheme: () => theme }), [ApplyTheme({ theme })]]
-          : [model, []],
-      CompletedApplyTheme: () => [model, []],
-      CompletedSaveThemePreference: () => [model, []],
-      CompletedSavePackageManager: () => [model, []],
+          ? { model: evo(model, { resolvedTheme: () => theme }), commands: [ApplyTheme({ theme })] }
+          : { model },
+      CompletedApplyTheme: () => ({ model }),
+      CompletedSaveThemePreference: () => ({ model }),
+      CompletedSavePackageManager: () => ({ model }),
 
       LoadedBrowserEnvironment: ({ maybePreference, systemTheme, packageManager, style }) => {
         const resolvedTheme = Option.match(maybePreference, {
           onNone: () => systemTheme,
           onSome: (preference) => (preference === 'System' ? systemTheme : preference),
         })
-        return [
-          evo(model, {
+        return {
+          model: evo(model, {
             maybeThemePreference: () => maybePreference,
             resolvedTheme: () => resolvedTheme,
             selectedPackageManager: () => packageManager,
@@ -280,35 +292,37 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
           }),
           // Re-applies the class the inline head script already set pre-paint,
           // keeping documentElement and the meta theme-color on one code path.
-          [ApplyTheme({ theme: resolvedTheme })],
-        ]
+          commands: [ApplyTheme({ theme: resolvedTheme })],
+        }
       },
 
       ClickedCopy: ({ value }) =>
         // Guard: ignore clicks while already in the copied state (prevents spam).
         Option.isSome(model.maybeCopiedValue)
-          ? [model, []]
-          : [evo(model, { maybeCopiedValue: () => Option.some(value) }), [CopyText({ value })]],
-      CompletedCopy: () => [evo(model, { maybeCopiedValue: () => Option.none() }), []],
-      ToggledCodeBlock: ({ id }) => [
-        evo(model, {
+          ? { model }
+          : {
+              model: evo(model, { maybeCopiedValue: () => Option.some(value) }),
+              commands: [CopyText({ value })],
+            },
+      CompletedCopy: () => ({ model: evo(model, { maybeCopiedValue: () => Option.none() }) }),
+      ToggledCodeBlock: ({ id }) => ({
+        model: evo(model, {
           expandedCodeBlocks: () =>
             model.expandedCodeBlocks.has(id)
               ? new Set([...model.expandedCodeBlocks].filter((v) => v !== id))
               : new Set([...model.expandedCodeBlocks, id]),
         }),
-        [],
-      ],
+      }),
       SelectedRegistryStyle: ({ style }) => {
         // Synchronous side effect before returning: the runtime re-renders the
         // view right after update, and the re-render must observe the shim
         // exports rebound to the new tree. Persistence lives inside
         // setActiveStyle — no reload, so demo state survives the switch.
         setActiveStyle(style)
-        return [evo(model, { selectedStyle: () => style }), []]
+        return { model: evo(model, { selectedStyle: () => style }) }
       },
-      CompletedNavigateInternal: () => [model, []],
-      CompletedLoadExternal: () => [model, []],
-      CompletedScrollToTop: () => [model, []],
+      CompletedNavigateInternal: () => ({ model }),
+      CompletedLoadExternal: () => ({ model }),
+      CompletedScrollToTop: () => ({ model }),
     }),
   )

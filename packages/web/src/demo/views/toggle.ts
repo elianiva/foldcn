@@ -205,7 +205,7 @@ export const toggleView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
 const foldNoOp =
   <Out>(): ((out: Out) => Update.Step<State, unknown>) =>
   () =>
-  (model) => [model, []]
+  (model) => ({ model })
 
 const foldToggleOutMessage = M.type<toggle.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),

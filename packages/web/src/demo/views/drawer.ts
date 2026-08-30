@@ -169,10 +169,7 @@ export const drawerView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
     ],
   )
 
-const foldNoOp = (): ((out: Drawer.OutMessage) => Update.Step<State, unknown>) => () => (model) => [
-  model,
-  [],
-]
+const foldNoOp = (): ((out: Drawer.OutMessage) => Update.Step<State, unknown>) => () => (model) => ({ model })
 
 const foldDrawerOutMessage = M.type<Drawer.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),
@@ -200,11 +197,11 @@ export const slice = defineSlice({
     GotDialogMessage: (payload: typeof Message.GotDialogMessage.Type): UpdateReturn =>
       foldDrawer(model, payload.message),
     ClickedOpenDialog: (): UpdateReturn => {
-      const [next, commands] = Drawer.open(model.dialog)
-      return [
-        evo(model, { dialog: () => next }),
-        Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
-      ]
+      const { model: next, commands = [] } = Drawer.open(model.dialog)
+      return {
+        model: evo(model, { dialog: () => next }),
+        commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
+      }
     },
   }),
   samples: [Message.ClickedOpenDialog()],

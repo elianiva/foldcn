@@ -192,7 +192,7 @@ const foldRadioGroupOutMessage = M.type<FoldkitRadioGroup.OutMessage<RadioValue>
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => [evo(model, { maybeRadioValue: () => Option.some(value) }), []],
+      (model) => ({ model: evo(model, { maybeRadioValue: () => Option.some(value) }) }),
   }),
 )
 

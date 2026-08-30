@@ -238,7 +238,7 @@ const foldNavigationMenu = Update.foldChild({
   read: (model: State) => Option.some(model.navigationMenu),
   write: (model, next) => evo(model, { navigationMenu: () => next }),
   toParentMessage,
-  foldOutMessage: (): Update.Step<State, unknown> => (model) => [model, []],
+  foldOutMessage: (): Update.Step<State, unknown> => (model) => ({ model }),
 })
 
 export const slice = defineSlice({

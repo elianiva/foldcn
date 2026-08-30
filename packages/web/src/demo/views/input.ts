@@ -491,10 +491,9 @@ export const slice = defineSlice({
   init: { inputValue: '' },
   messages: [Message.UpdatedInputValue],
   handlers: (model: State) => ({
-    UpdatedInputValue: ({ value }: typeof Message.UpdatedInputValue.Type): UpdateReturn => [
-      evo(model, { inputValue: () => value }),
-      [],
-    ],
+    UpdatedInputValue: ({ value }: typeof Message.UpdatedInputValue.Type): UpdateReturn => ({
+      model: evo(model, { inputValue: () => value }),
+    }),
   }),
   samples: [Message.UpdatedInputValue({ value: 'sk-1234' })],
 })

@@ -90,35 +90,29 @@ export const slice = defineSlice({
     Message.ClickedSaveSettings,
   ],
   handlers: (model: State) => ({
-    UpdatedSettingsName: ({ value }: typeof Message.UpdatedSettingsName.Type): UpdateReturn => [
-      evo(model, { settingsName: () => value }),
-      [],
-    ],
-    UpdatedSettingsEmail: ({ value }: typeof Message.UpdatedSettingsEmail.Type): UpdateReturn => [
-      evo(model, { settingsEmail: () => value }),
-      [],
-    ],
-    UpdatedSettingsBio: ({ value }: typeof Message.UpdatedSettingsBio.Type): UpdateReturn => [
-      evo(model, { settingsBio: () => value }),
-      [],
-    ],
+    UpdatedSettingsName: ({ value }: typeof Message.UpdatedSettingsName.Type): UpdateReturn => ({
+      model: evo(model, { settingsName: () => value }),
+    }),
+    UpdatedSettingsEmail: ({ value }: typeof Message.UpdatedSettingsEmail.Type): UpdateReturn => ({
+      model: evo(model, { settingsEmail: () => value }),
+    }),
+    UpdatedSettingsBio: ({ value }: typeof Message.UpdatedSettingsBio.Type): UpdateReturn => ({
+      model: evo(model, { settingsBio: () => value }),
+    }),
     UpdatedSettingsLanguage: ({
       value,
-    }: typeof Message.UpdatedSettingsLanguage.Type): UpdateReturn => [
-      evo(model, { settingsLanguage: () => value }),
-      [],
-    ],
+    }: typeof Message.UpdatedSettingsLanguage.Type): UpdateReturn => ({
+      model: evo(model, { settingsLanguage: () => value }),
+    }),
     ToggledSettingsEmailNotifs: ({
       isChecked,
-    }: typeof Message.ToggledSettingsEmailNotifs.Type): UpdateReturn => [
-      evo(model, { settingsEmailNotifs: () => isChecked }),
-      [],
-    ],
-    ToggledSettingsTfa: ({ isChecked }: typeof Message.ToggledSettingsTfa.Type): UpdateReturn => [
-      evo(model, { settingsTfa: () => isChecked }),
-      [],
-    ],
-    ClickedSaveSettings: (): UpdateReturn => [evo(model, { settingsSaved: () => true }), []],
+    }: typeof Message.ToggledSettingsEmailNotifs.Type): UpdateReturn => ({
+      model: evo(model, { settingsEmailNotifs: () => isChecked }),
+    }),
+    ToggledSettingsTfa: ({ isChecked }: typeof Message.ToggledSettingsTfa.Type): UpdateReturn => ({
+      model: evo(model, { settingsTfa: () => isChecked }),
+    }),
+    ClickedSaveSettings: (): UpdateReturn => ({ model: evo(model, { settingsSaved: () => true }) }),
   }),
   samples: [
     Message.UpdatedSettingsName({ value: 'Ada' }),

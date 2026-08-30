@@ -76,8 +76,8 @@ const foldComboboxOutMessage = M.type<FoldkitCombobox.OutMessage<City>>().pipe(
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => [evo(model, { maybeComboboxValue: () => Option.some(value) }), []],
-    ClearedSelection: () => (model) => [model, []],
+      (model) => ({ model: evo(model, { maybeComboboxValue: () => Option.some(value) }) }),
+    ClearedSelection: () => (model) => ({ model }),
   }),
 )
 

@@ -267,7 +267,7 @@ const foldTabsOutMessage = M.type<FoldkitTabs.OutMessage<DemoTab>>().pipe(
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => [evo(model, { activeTab: () => value }), []],
+      (model) => ({ model: evo(model, { activeTab: () => value }) }),
   }),
 )
 

@@ -249,10 +249,9 @@ export const slice = defineSlice({
   init: { otp: '123456' },
   messages: [Message.UpdatedOtp],
   handlers: (model: State) => ({
-    UpdatedOtp: ({ value }: typeof Message.UpdatedOtp.Type): UpdateReturn => [
-      evo(model, { otp: () => value }),
-      [],
-    ],
+    UpdatedOtp: ({ value }: typeof Message.UpdatedOtp.Type): UpdateReturn => ({
+      model: evo(model, { otp: () => value }),
+    }),
   }),
   samples: [Message.UpdatedOtp({ value: '1234' })],
 })

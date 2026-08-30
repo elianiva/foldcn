@@ -154,10 +154,9 @@ export const slice = defineSlice({
   init: { textareaValue: '' },
   messages: [Message.UpdatedTextareaValue],
   handlers: (model: State) => ({
-    UpdatedTextareaValue: ({ value }: typeof Message.UpdatedTextareaValue.Type): UpdateReturn => [
-      evo(model, { textareaValue: () => value }),
-      [],
-    ],
+    UpdatedTextareaValue: ({ value }: typeof Message.UpdatedTextareaValue.Type): UpdateReturn => ({
+      model: evo(model, { textareaValue: () => value }),
+    }),
   }),
   samples: [Message.UpdatedTextareaValue({ value: 'Hello, world!' })],
 })

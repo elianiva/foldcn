@@ -77,10 +77,9 @@ export const slice = defineSlice({
   init: { tableSearch: '' },
   messages: [Message.UpdatedTableSearch],
   handlers: (model: State) => ({
-    UpdatedTableSearch: ({ value }: typeof Message.UpdatedTableSearch.Type): UpdateReturn => [
-      evo(model, { tableSearch: () => value }),
-      [],
-    ],
+    UpdatedTableSearch: ({ value }: typeof Message.UpdatedTableSearch.Type): UpdateReturn => ({
+      model: evo(model, { tableSearch: () => value }),
+    }),
   }),
   samples: [Message.UpdatedTableSearch({ value: 'ada' })],
 })

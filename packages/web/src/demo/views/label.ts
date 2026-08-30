@@ -40,10 +40,9 @@ export const slice = defineSlice({
   handlers: (model: State) => ({
     ToggledLabelCheckbox: ({
       isChecked,
-    }: typeof Message.ToggledLabelCheckbox.Type): UpdateReturn => [
-      evo(model, { isLabelChecked: () => isChecked }),
-      [],
-    ],
+    }: typeof Message.ToggledLabelCheckbox.Type): UpdateReturn => ({
+      model: evo(model, { isLabelChecked: () => isChecked }),
+    }),
   }),
   samples: [Message.ToggledLabelCheckbox({ isChecked: true })],
 })

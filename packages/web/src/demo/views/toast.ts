@@ -108,10 +108,7 @@ const hButton = (h: HtmlBuilder<AppMessage>, label: string, message: AppMessage)
   )
 
 const foldNoOp =
-  (): ((out: typeof Toast.OutMessage.Type) => Update.Step<State, unknown>) => () => (model) => [
-    model,
-    [],
-  ]
+  (): ((out: typeof Toast.OutMessage.Type) => Update.Step<State, unknown>) => () => (model) => ({ model })
 
 const foldToastOutMessage = M.type<typeof Toast.OutMessage.Type>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),
@@ -134,14 +131,14 @@ const showToast = (
   title: string,
   description: Option.Option<string>,
 ): UpdateReturn => {
-  const [next, commands] = Toast.show(model.toast, {
+  const { model: next, commands = [] } = Toast.show(model.toast, {
     variant,
     payload: { title, description },
   })
-  return [
-    evo(model, { toast: () => next }),
-    Command.mapMessages(commands, (message) => Message.GotToastMessage({ message })),
-  ]
+  return {
+    model: evo(model, { toast: () => next }),
+    commands: Command.mapMessages(commands, (message) => Message.GotToastMessage({ message })),
+  }
 }
 
 const fields = { toast: Toast.Model }
@@ -187,11 +184,11 @@ export const slice = defineSlice({
         Option.some('Check your connection and try again.'),
       ),
     ClickedDismissAllToasts: (): UpdateReturn => {
-      const [next, commands] = Toast.dismissAll(model.toast)
-      return [
-        evo(model, { toast: () => next }),
-        Command.mapMessages(commands, (message) => Message.GotToastMessage({ message })),
-      ]
+      const { model: next, commands = [] } = Toast.dismissAll(model.toast)
+      return {
+        model: evo(model, { toast: () => next }),
+        commands: Command.mapMessages(commands, (message) => Message.GotToastMessage({ message })),
+      }
     },
   }),
   samples: [Message.ClickedShowInfoToast()],

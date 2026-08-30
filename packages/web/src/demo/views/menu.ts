@@ -84,7 +84,7 @@ export const menuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
 const foldNoOp =
   <Out>(): ((out: Out) => Update.Step<State, unknown>) =>
   () =>
-  (model) => [model, []]
+  (model) => ({ model })
 
 const foldMenuOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),

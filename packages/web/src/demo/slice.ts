@@ -16,22 +16,21 @@
 //    assemble.ts.
 //  - Narrow payloads inside handlers via the slice's own local message
 //    schemas (`({ value }: typeof Renamed.Type)`).
-import type { Schema as S } from 'effect'
-import type { Command } from 'foldkit'
+import type * as Update from 'foldkit/update'
 
-/** `[nextModel, commands]` — the shape every foldkit update returns. Typed
+/** `{ model, commands? }` — the shape every foldkit update returns. Typed
  *  loosely here so slices never reference the assembled Model/Message (that
  *  would re-create the inference cycle); assemble.ts re-tightens at the
  *  dispatch site. */
-export type UpdateReturn = readonly [unknown, ReadonlyArray<Command.Command<unknown>>]
+export type UpdateReturn = Update.Return<unknown, unknown>
 
 export type DemoSlice = {
   /** Schema fields contributed to the shared demo Model struct. */
-  fields: Record<string, S.Schema<unknown>>
+  fields: Record<string, import('effect').Schema.Schema<unknown>>
   /** Initial values for this slice's fields (validated by the smoke test). */
   init: Record<string, unknown>
   /** Message schemas contributed to the shared demo Message union. */
-  messages: ReadonlyArray<S.Schema<unknown>>
+  messages: ReadonlyArray<import('effect').Schema.Schema<unknown>>
   /**
    * Handler factory closing over this slice's state. Keep the returned
    * object a literal (no `Record<string, …>` annotation): tagsExhaustive

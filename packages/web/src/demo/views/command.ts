@@ -124,10 +124,9 @@ export const slice = defineSlice({
   init: { commandSearch: '' },
   messages: [Message.UpdatedCommandSearch],
   handlers: (model: State) => ({
-    UpdatedCommandSearch: ({ value }: typeof Message.UpdatedCommandSearch.Type): UpdateReturn => [
-      evo(model, { commandSearch: () => value }),
-      [],
-    ],
+    UpdatedCommandSearch: ({ value }: typeof Message.UpdatedCommandSearch.Type): UpdateReturn => ({
+      model: evo(model, { commandSearch: () => value }),
+    }),
   }),
   samples: [Message.UpdatedCommandSearch({ value: 'cal' })],
 })

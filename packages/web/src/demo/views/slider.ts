@@ -235,7 +235,7 @@ const foldOutMessage = M.type<Slider.OutMessage>().pipe(
   M.tagsExhaustive({
     ChangedValue:
       ({ value }) =>
-      (model) => [evo(model, { sliderValue: () => value }), []],
+      (model) => ({ model: evo(model, { sliderValue: () => value }) }),
   }),
 )
 

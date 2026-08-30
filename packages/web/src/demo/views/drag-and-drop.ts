@@ -233,14 +233,13 @@ const foldDragAndDropOutMessage = M.type<DragAndDrop.OutMessage>().pipe(
   M.tagsExhaustive({
     Reordered:
       ({ itemId, fromContainerId, toContainerId, toIndex }) =>
-      (model) => [
-        evo(model, {
+      (model) => ({
+        model: evo(model, {
           dragColumns: () =>
             reorderColumns(model.dragColumns, itemId, fromContainerId, toContainerId, toIndex),
         }),
-        [],
-      ],
-    Cancelled: () => (model) => [model, []],
+      }),
+    Cancelled: () => (model) => ({ model }),
   }),
 )
 

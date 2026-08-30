@@ -4,6 +4,7 @@ import { Option, Schema as S } from 'effect'
 import * as Command from 'foldkit/command'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
+import * as Update from 'foldkit/update'
 import { ChevronDown } from 'lucide'
 import { icon } from '@/lib/icons'
 
@@ -60,11 +61,7 @@ export type OutMessage = typeof OutMessage.Type
  *  calls built from `dropdownViewInputs`. */
 export const view = FoldkitPopover.view
 
-type UpdateReturn = readonly [
-  Model,
-  ReadonlyArray<Command.Command<Message>>,
-  Option.Option<OutMessage>,
-]
+type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 /** Looks up the Popover model for `id`, throwing a message that names the
  *  bad id and the ids that were actually passed to `init` — the mismatch is
@@ -94,42 +91,46 @@ export const update = (model: Model, message: Message): UpdateReturn => {
   const { id, message: popoverMessage } = message
   const current = model.popovers[id]
   if (current === undefined) {
-    return [model, [], Option.none()]
+    return { model }
   }
 
-  const [nextPopover, popoverCommands, outMessage] = FoldkitPopover.update(current, popoverMessage)
-  const justOpened = Option.isSome(outMessage) && outMessage.value._tag === 'Opened'
+  const {
+    model: nextPopover,
+    commands: popoverCommands = [],
+    outMessage,
+  } = FoldkitPopover.update(current, popoverMessage)
+  const justOpened = outMessage?._tag === 'Opened'
 
   if (!justOpened) {
-    return [
-      { popovers: { ...model.popovers, [id]: nextPopover } },
-      Command.mapMessages(popoverCommands, toItemMessage(id)),
-      Option.map(outMessage, (out) =>
-        out._tag === 'Opened' ? OutMessage.Opened({ id }) : OutMessage.Closed({ id }),
-      ),
-    ]
+    return {
+      model: { popovers: { ...model.popovers, [id]: nextPopover } },
+      commands: Command.mapMessages(popoverCommands, toItemMessage(id)),
+      ...(outMessage === undefined ? {} : { outMessage: OutMessage.Closed({ id }) }),
+    }
   }
 
   const closedOthers = Object.entries(model.popovers).flatMap(([key, popover]) =>
     key === id || !popover.isOpen ? [] : [[key, FoldkitPopover.close(popover)] as const],
   )
 
-  return [
-    {
+  return {
+    model: {
       popovers: {
         ...model.popovers,
         [id]: nextPopover,
-        ...Object.fromEntries(closedOthers.map(([key, [closedPopover]]) => [key, closedPopover])),
+        ...Object.fromEntries(
+          closedOthers.map(([key, { model: closedPopover }]) => [key, closedPopover]),
+        ),
       },
     },
-    [
+    commands: [
       ...Command.mapMessages(popoverCommands, toItemMessage(id)),
-      ...closedOthers.flatMap(([key, [, closeCommands]]) =>
+      ...closedOthers.flatMap(([key, { commands: closeCommands = [] }]) =>
         Command.mapMessages(closeCommands, toItemMessage(key)),
       ),
     ],
-    Option.some(OutMessage.Opened({ id })),
-  ]
+    outMessage: OutMessage.Opened({ id }),
+  }
 }
 
 export const navigationMenuClass =

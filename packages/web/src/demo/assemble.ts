@@ -73,6 +73,7 @@ import { slice as tooltipSlice } from './views/tooltip'
 import { slice as virtualListSlice } from './views/virtual-list'
 
 import type { UpdateReturn } from './slice'
+import type * as Update from 'foldkit/update'
 
 const ModelSchema = S.Struct({
   ...accordionSlice.fields,
@@ -212,7 +213,9 @@ const MessageSchema = S.Union([
 export type Message = typeof MessageSchema.Type
 export const Message = MessageSchema
 
-export const init = (): [Model, []] => {
+type DemoUpdateReturn = Update.Return<Model, Message>
+
+export const init = (): DemoUpdateReturn => {
   // oxlint-disable-next-line typescript/consistent-type-assertions
   const model = {
     ...accordionSlice.init,
@@ -280,10 +283,10 @@ export const init = (): [Model, []] => {
     ...tooltipSlice.init,
     ...virtualListSlice.init,
   } as Model
-  return [model, []]
+  return { model }
 }
 
-export const update = (model: Model, message: Message): UpdateReturn =>
+export const update = (model: Model, message: Message): DemoUpdateReturn =>
   M.value(message).pipe(
     M.withReturnType<UpdateReturn>(),
     M.tagsExhaustive({
@@ -333,4 +336,4 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ...tooltipSlice.handlers(model),
       ...virtualListSlice.handlers(model),
     }),
-  )
+  ) as DemoUpdateReturn

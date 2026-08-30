@@ -263,22 +263,19 @@ export const slice = defineSlice({
     Message.ToggledCheckboxNotifications,
   ],
   handlers: (model: State) => ({
-    ToggledCheckbox: ({ isChecked }: typeof Message.ToggledCheckbox.Type): UpdateReturn => [
-      evo(model, { isCheckboxChecked: () => isChecked }),
-      [],
-    ],
+    ToggledCheckbox: ({ isChecked }: typeof Message.ToggledCheckbox.Type): UpdateReturn => ({
+      model: evo(model, { isCheckboxChecked: () => isChecked }),
+    }),
     ToggledCheckboxWithDescription: ({
       isChecked,
-    }: typeof Message.ToggledCheckboxWithDescription.Type): UpdateReturn => [
-      evo(model, { isCheckboxWithDescriptionChecked: () => isChecked }),
-      [],
-    ],
+    }: typeof Message.ToggledCheckboxWithDescription.Type): UpdateReturn => ({
+      model: evo(model, { isCheckboxWithDescriptionChecked: () => isChecked }),
+    }),
     ToggledCheckboxNotifications: ({
       isChecked,
-    }: typeof Message.ToggledCheckboxNotifications.Type): UpdateReturn => [
-      evo(model, { isCheckboxNotificationsChecked: () => isChecked }),
-      [],
-    ],
+    }: typeof Message.ToggledCheckboxNotifications.Type): UpdateReturn => ({
+      model: evo(model, { isCheckboxNotificationsChecked: () => isChecked }),
+    }),
   }),
   samples: [Message.ToggledCheckbox({ isChecked: true })],
 })

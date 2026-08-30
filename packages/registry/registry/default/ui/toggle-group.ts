@@ -3,11 +3,11 @@
  *  `import * as ToggleGroup from '@/components/ui/toggle-group'`
  */
 import { Function, Option, Schema as S } from 'effect'
-import type { Command } from 'foldkit/command'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
 import { evo } from 'foldkit/struct'
+import * as Update from 'foldkit/update'
 
 import { cn } from '@/lib/utils'
 import { icon } from '@/lib/icons'
@@ -106,7 +106,7 @@ export const reflect: Reflect<Model, ReadonlyArray<string>> = Function.dual(
   (model: Model, value: ReadonlyArray<string>): Model => evo(model, { value: () => [...value] }),
 )
 
-type UpdateReturn = readonly [Model, ReadonlyArray<Command<Message>>, Option.Option<OutMessage>]
+type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 /** Processes a toggle group message and returns the next model, commands, and
  *  an optional out-message for the parent. */
@@ -114,11 +114,10 @@ export const update = (model: Model, message: Message): UpdateReturn => {
   switch (message._tag) {
     case 'ToggledItem': {
       const value = nextValue(model.value, message.value, model.type)
-      return [
-        evo(model, { value: () => [...value] }),
-        [],
-        Option.some(OutMessage.ChangedValue({ value })),
-      ]
+      return {
+        model: evo(model, { value: () => [...value] }),
+        outMessage: OutMessage.ChangedValue({ value }),
+      }
     }
   }
 }

@@ -3,8 +3,8 @@
  *  `import * as Toggle from '@/components/ui/toggle'`
  */
 import { Function, Option, Schema as S } from 'effect'
-import type { Command } from 'foldkit/command'
 import type { Html } from 'foldkit/html'
+import * as Update from 'foldkit/update'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
@@ -81,7 +81,7 @@ export const reflect: Reflect<Model, boolean> = Function.dual(
   (model: Model, isPressed: boolean): Model => evo(model, { isPressed: () => isPressed }),
 )
 
-type UpdateReturn = readonly [Model, ReadonlyArray<Command<Message>>, Option.Option<OutMessage>]
+type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 /** Processes a toggle message and returns the next model, commands, and an
  *  optional out-message for the parent. */
@@ -89,11 +89,10 @@ export const update = (model: Model, message: Message): UpdateReturn => {
   switch (message._tag) {
     case 'Toggled': {
       const isPressed = !model.isPressed
-      return [
-        evo(model, { isPressed: () => isPressed }),
-        [],
-        Option.some(OutMessage.ChangedPressed({ isPressed })),
-      ]
+      return {
+        model: evo(model, { isPressed: () => isPressed }),
+        outMessage: OutMessage.ChangedPressed({ isPressed }),
+      }
     }
   }
 }

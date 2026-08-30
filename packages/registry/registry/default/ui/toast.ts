@@ -389,11 +389,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
   })
   type OutMessage = typeof OutMessage.Type
 
-  type UpdateReturn = readonly [
-    Model,
-    ReadonlyArray<Command.Command<Message>>,
-    Option.Option<OutMessage>,
-  ]
+  type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
   /** Measures the stack after paint and reports natural card heights. */
   const MeasureHeights = Command.define('MeasureToastHeights', {
@@ -413,8 +409,8 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     read: (model: Model) => Option.some(model.toast),
     write: (model, nextToast) => evo(model, { toast: () => nextToast }),
     toParentMessage: toGotToastMessage,
-    toParentOutMessage: (outMessage: BoundOutMessage): Option.Option<OutMessage> =>
-      Option.some(OutMessage.DismissedToast({ payload: outMessage.payload })),
+    toParentOutMessage: (outMessage: BoundOutMessage): OutMessage =>
+      OutMessage.DismissedToast({ payload: outMessage.payload }),
   })
 
   /** Merges newly measured heights. Heights of known entries are kept —
@@ -440,46 +436,71 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
    *  schedules a height measurement whenever an entry is added. */
   const update = (model: Model, message: Message): UpdateReturn =>
     Message.match<UpdateReturn>(message, {
-      GotHeights: ({ heights }) => [mergeHeights(model, heights), [], Option.none()],
+      GotHeights: ({ heights }) => ({ model: mergeHeights(model, heights) }),
       GotToastMessage: ({ message: toastMessage }) => {
-        const [nextModel, commands, out] = foldToast(model, toastMessage)
+        const {
+          model: nextModel,
+          commands = [],
+          outMessage: out,
+        } = foldToast(model, toastMessage)
         const measure =
           toastMessage._tag === 'Added' ? [MeasureHeights({ containerId: nextModel.toast.id })] : []
-        return [nextModel, [...commands, ...measure], out]
+        return Update.withOutMessage(
+          { model: nextModel, commands: [...commands, ...measure] },
+          out,
+        )
       },
     })
 
   /** Adds a toast entry and schedules its height measurement. */
   const show = (model: Model, input: FoldkitToast.ShowInput<A>): UpdateReturn => {
-    const [nextToast, commands, out] = Bound.show(model.toast, input)
-    return [
-      evo(model, { toast: () => nextToast }),
-      [
-        ...Command.mapMessages(commands, toGotToastMessage),
-        MeasureHeights({ containerId: nextToast.id }),
-      ],
+    const {
+      model: nextToast,
+      commands = [],
+      outMessage: out,
+    } = Bound.show(model.toast, input)
+    return Update.withOutMessage(
+      {
+        model: evo(model, { toast: () => nextToast }),
+        commands: [
+          ...Command.mapMessages(commands, toGotToastMessage),
+          MeasureHeights({ containerId: nextToast.id }),
+        ],
+      },
       out,
-    ]
+    )
   }
 
   /** Begins dismissing a specific entry. */
   const dismiss = (model: Model, entryId: string): UpdateReturn => {
-    const [nextToast, commands, out] = Bound.dismiss(model.toast, entryId)
-    return [
-      evo(model, { toast: () => nextToast }),
-      Command.mapMessages(commands, toGotToastMessage),
+    const {
+      model: nextToast,
+      commands = [],
+      outMessage: out,
+    } = Bound.dismiss(model.toast, entryId)
+    return Update.withOutMessage(
+      {
+        model: evo(model, { toast: () => nextToast }),
+        commands: Command.mapMessages(commands, toGotToastMessage),
+      },
       out,
-    ]
+    )
   }
 
   /** Begins dismissing every currently-visible entry. */
   const dismissAll = (model: Model): UpdateReturn => {
-    const [nextToast, commands, out] = Bound.dismissAll(model.toast)
-    return [
-      evo(model, { toast: () => nextToast }),
-      Command.mapMessages(commands, toGotToastMessage),
+    const {
+      model: nextToast,
+      commands = [],
+      outMessage: out,
+    } = Bound.dismissAll(model.toast)
+    return Update.withOutMessage(
+      {
+        model: evo(model, { toast: () => nextToast }),
+        commands: Command.mapMessages(commands, toGotToastMessage),
+      },
       out,
-    ]
+    )
   }
 
   /** Creates an initial toast container model from a config. Starts empty

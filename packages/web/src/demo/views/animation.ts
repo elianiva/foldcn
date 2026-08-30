@@ -59,11 +59,11 @@ const foldAnimationOutMessage: (
   M.value(outMessage).pipe(
     M.withReturnType<Update.Step<State, unknown>>(),
     M.tagsExhaustive({
-      StartedLeaveAnimating: () => (model) => [
+      StartedLeaveAnimating: () => (model) => ({
         model,
-        [liftCommand(FoldkitAnimation.defaultLeaveCommand(model.animation))],
-      ],
-      TransitionedOut: () => (model) => [model, []],
+        commands: [liftCommand(FoldkitAnimation.defaultLeaveCommand(model.animation))],
+      }),
+      TransitionedOut: () => (model) => ({ model }),
     }),
   )
 

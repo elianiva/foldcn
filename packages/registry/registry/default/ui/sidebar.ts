@@ -103,11 +103,11 @@ export const setOpen = (model: Model, isOpen: boolean): Model =>
 
 const mapSheet = (
   model: Model,
-  [next, commands]: Update.ReturnWithOutMessage<Sheet.Model, Sheet.Message, Sheet.OutMessage>,
-): Update.Return<Model, Message> => [
-  evo(model, { sheet: () => next }),
-  Command.mapMessages(commands, (message) => Message.GotSheetMessage({ message })),
-]
+  { model: next, commands = [] }: Update.ReturnWithOutMessage<Sheet.Model, Sheet.Message, Sheet.OutMessage>,
+): Update.Return<Model, Message> => ({
+  model: evo(model, { sheet: () => next }),
+  commands: Command.mapMessages(commands, (message) => Message.GotSheetMessage({ message })),
+})
 
 /** Open the off-canvas mobile sidebar. */
 export const openMobile = (model: Model): Update.Return<Model, Message> =>
@@ -124,9 +124,9 @@ export const toggle = (model: Model): Update.Return<Model, Message> =>
     ? model.sheet.isOpen
       ? closeMobile(model)
       : openMobile(model)
-    : [setOpen(model, !model.isOpen), []]
+    : { model: setOpen(model, !model.isOpen) }
 
-const foldNoOpStep = (): Update.Step<Model, Message> => (model) => [model, []]
+const foldNoOpStep = (): Update.Step<Model, Message> => (model) => ({ model })
 
 const foldSheetOutMessage = Match.type<Sheet.OutMessage>().pipe(
   Match.withReturnType<Update.Step<Model, Message>>(),
@@ -149,8 +149,8 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     Match.withReturnType<Update.Return<Model, Message>>(),
     Match.tagsExhaustive({
       Toggled: () => toggle(model),
-      SetIsOpen: ({ isOpen }) => [setOpen(model, isOpen), []],
-      SetIsMobile: ({ isMobile }) => [evo(model, { isMobile: () => isMobile }), []],
+      SetIsOpen: ({ isOpen }) => ({ model: setOpen(model, isOpen) }),
+      SetIsMobile: ({ isMobile }) => ({ model: evo(model, { isMobile: () => isMobile }) }),
       GotSheetMessage: ({ message }) => foldSheet(model, message),
     }),
   )

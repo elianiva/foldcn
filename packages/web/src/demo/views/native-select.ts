@@ -170,10 +170,9 @@ export const slice = defineSlice({
   init: { fruit: 'Apple' },
   messages: [Message.ChangedFruit],
   handlers: (model: State) => ({
-    ChangedFruit: ({ value }: typeof Message.ChangedFruit.Type): UpdateReturn => [
-      evo(model, { fruit: () => value }),
-      [],
-    ],
+    ChangedFruit: ({ value }: typeof Message.ChangedFruit.Type): UpdateReturn => ({
+      model: evo(model, { fruit: () => value }),
+    }),
   }),
   samples: [Message.ChangedFruit({ value: 'Blueberry' })],
 })

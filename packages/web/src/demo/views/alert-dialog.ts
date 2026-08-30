@@ -86,7 +86,7 @@ export const alertDialogView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
   )
 
 const foldNoOp =
-  (): ((out: AlertDialog.OutMessage) => Update.Step<State, unknown>) => () => (model) => [model, []]
+  (): ((out: AlertDialog.OutMessage) => Update.Step<State, unknown>) => () => (model) => ({ model })
 
 const foldAlertDialogOutMessage = M.type<AlertDialog.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),
@@ -114,11 +114,11 @@ export const slice = defineSlice({
     GotDialogMessage: (payload: typeof Message.GotDialogMessage.Type): UpdateReturn =>
       foldAlertDialog(model, payload.message),
     ClickedOpenDialog: (): UpdateReturn => {
-      const [next, commands] = AlertDialog.open(model.dialog)
-      return [
-        evo(model, { dialog: () => next }),
-        Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
-      ]
+      const { model: next, commands = [] } = AlertDialog.open(model.dialog)
+      return {
+        model: evo(model, { dialog: () => next }),
+        commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
+      }
     },
   }),
   samples: [Message.ClickedOpenDialog()],

@@ -57,15 +57,13 @@ export const slice = defineSlice({
   },
   messages: [Message.UpdatedLoginEmail, Message.UpdatedLoginPassword, Message.SubmittedLogin],
   handlers: (model: State) => ({
-    UpdatedLoginEmail: ({ value }: typeof Message.UpdatedLoginEmail.Type): UpdateReturn => [
-      evo(model, { loginEmail: () => value }),
-      [],
-    ],
-    UpdatedLoginPassword: ({ value }: typeof Message.UpdatedLoginPassword.Type): UpdateReturn => [
-      evo(model, { loginPassword: () => value }),
-      [],
-    ],
-    SubmittedLogin: (): UpdateReturn => [evo(model, { loginSubmitted: () => true }), []],
+    UpdatedLoginEmail: ({ value }: typeof Message.UpdatedLoginEmail.Type): UpdateReturn => ({
+      model: evo(model, { loginEmail: () => value }),
+    }),
+    UpdatedLoginPassword: ({ value }: typeof Message.UpdatedLoginPassword.Type): UpdateReturn => ({
+      model: evo(model, { loginPassword: () => value }),
+    }),
+    SubmittedLogin: (): UpdateReturn => ({ model: evo(model, { loginSubmitted: () => true }) }),
   }),
   samples: [Message.UpdatedLoginEmail({ value: 'ada@example.com' }), Message.SubmittedLogin()],
 })

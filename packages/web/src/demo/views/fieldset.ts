@@ -155,7 +155,7 @@ const foldSelectOutMessage = M.type<FoldkitListbox.OutMessage<string>>().pipe(
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => [evo(model, { maybeSelectValue: () => Option.some(value) }), []],
+      (model) => ({ model: evo(model, { maybeSelectValue: () => Option.some(value) }) }),
   }),
 )
 
@@ -185,10 +185,9 @@ export const slice = defineSlice({
   },
   messages: [Message.GotSelectMessage, Message.UpdatedInputValue],
   handlers: (model: State) => ({
-    UpdatedInputValue: ({ value }: typeof Message.UpdatedInputValue.Type): UpdateReturn => [
-      evo(model, { inputValue: () => value }),
-      [],
-    ],
+    UpdatedInputValue: ({ value }: typeof Message.UpdatedInputValue.Type): UpdateReturn => ({
+      model: evo(model, { inputValue: () => value }),
+    }),
     GotSelectMessage: (payload: typeof Message.GotSelectMessage.Type): UpdateReturn =>
       foldSelect(model, payload.message),
   }),

@@ -30,9 +30,9 @@ const foldDatePickerOutMessage = M.type<datePicker.OutMessage>().pipe(
   M.tagsExhaustive({
     SelectedDate:
       ({ date }) =>
-      (model) => [evo(model, { maybePickedDate: () => Option.some(date) }), []],
-    ClearedDate: () => (model) => [evo(model, { maybePickedDate: () => Option.none() }), []],
-    ChangedViewMonth: () => (model) => [model, []],
+      (model) => ({ model: evo(model, { maybePickedDate: () => Option.some(date) }) }),
+    ClearedDate: () => (model) => ({ model: evo(model, { maybePickedDate: () => Option.none() }) }),
+    ChangedViewMonth: () => (model) => ({ model }),
   }),
 )
 

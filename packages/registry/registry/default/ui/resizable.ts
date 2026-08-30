@@ -3,8 +3,8 @@
  *  `import * as Resizable from '@/components/ui/resizable'`
  */
 import { Function, Option, Schema as S } from 'effect'
-import type { Command } from 'foldkit/command'
 import type { Html } from 'foldkit/html'
+import * as Update from 'foldkit/update'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
@@ -88,7 +88,7 @@ export const reflect: Reflect<Model, number> = Function.dual(
   (model: Model, value: number): Model => evo(model, { value: () => clamp(value) }),
 )
 
-type UpdateReturn = readonly [Model, ReadonlyArray<Command<Message>>, Option.Option<OutMessage>]
+type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 /** Processes a resizable message and returns the next model, commands, and an
  *  optional out-message for the parent. */
@@ -96,11 +96,10 @@ export const update = (model: Model, message: Message): UpdateReturn => {
   switch (message._tag) {
     case 'Resized': {
       const value = clamp(message.value)
-      return [
-        evo(model, { value: () => value }),
-        [],
-        Option.some(OutMessage.ChangedValue({ value })),
-      ]
+      return {
+        model: evo(model, { value: () => value }),
+        outMessage: OutMessage.ChangedValue({ value }),
+      }
     }
   }
 }

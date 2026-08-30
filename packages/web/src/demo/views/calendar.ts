@@ -34,8 +34,8 @@ const foldCalendarOutMessage = M.type<calendar.OutMessage>().pipe(
   M.tagsExhaustive({
     SelectedDate:
       ({ date }) =>
-      (model) => [evo(model, { maybeSelectedDate: () => Option.some(date) }), []],
-    ChangedViewMonth: () => (model) => [model, []],
+      (model) => ({ model: evo(model, { maybeSelectedDate: () => Option.some(date) }) }),
+    ChangedViewMonth: () => (model) => ({ model }),
   }),
 )
 

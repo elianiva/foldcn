@@ -4,12 +4,12 @@
  */
 import { Function, Option, Schema as S } from 'effect'
 import { Disclosure as FoldkitDisclosure } from '@foldkit/ui'
-import type { Command } from 'foldkit/command'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
 import { evo } from 'foldkit/struct'
+import * as Update from 'foldkit/update'
 
 type Child = Html | string
 
@@ -111,7 +111,7 @@ export const reflect: Reflect<Model, ReadonlyArray<boolean>> = Function.dual(
   (model: Model, value: ReadonlyArray<boolean>): Model => evo(model, { value: () => [...value] }),
 )
 
-type UpdateReturn = readonly [Model, ReadonlyArray<Command<Message>>, Option.Option<OutMessage>]
+type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 /** Processes an accordion message and returns the next model, commands, and
  *  an optional out-message for the parent. */
@@ -119,11 +119,10 @@ export const update = (model: Model, message: Message): UpdateReturn => {
   switch (message._tag) {
     case 'ToggledItem': {
       const value = nextAccordionOpen(model.value, message.index, message.isOpen, model.type)
-      return [
-        evo(model, { value: () => [...value] }),
-        [],
-        Option.some(OutMessage.ChangedValue({ value })),
-      ]
+      return {
+        model: evo(model, { value: () => [...value] }),
+        outMessage: OutMessage.ChangedValue({ value }),
+      }
     }
   }
 }

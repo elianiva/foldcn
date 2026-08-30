@@ -59,7 +59,7 @@ export const tooltipView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
 const foldNoOp =
   <Out>(): ((out: Out) => Update.Step<State, unknown>) =>
   () =>
-  (model) => [model, []]
+  (model) => ({ model })
 
 const foldTooltipOutMessage = M.type<tooltip.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),

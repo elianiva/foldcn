@@ -38,10 +38,9 @@ export const slice = defineSlice({
   init: { activeNav: 'Components' },
   messages: [Message.SelectedNav],
   handlers: (model: State) => ({
-    SelectedNav: ({ value }: typeof Message.SelectedNav.Type): UpdateReturn => [
-      evo(model, { activeNav: () => value }),
-      [],
-    ],
+    SelectedNav: ({ value }: typeof Message.SelectedNav.Type): UpdateReturn => ({
+      model: evo(model, { activeNav: () => value }),
+    }),
   }),
   samples: [Message.SelectedNav({ value: 'Docs' })],
 })

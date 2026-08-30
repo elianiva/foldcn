@@ -1,6 +1,7 @@
 import { Option } from 'effect'
 import { Command } from 'foldkit'
 import type { Url } from 'foldkit'
+import type * as Update from 'foldkit/update'
 import * as Tabs from '@foldkit/ui/tabs'
 
 import * as ToggleGroup from './generated/registry/ui/toggle-group'
@@ -12,7 +13,7 @@ import type { Message as MessageType } from './message'
 import { Model } from './model'
 import { LoadBrowserEnvironment } from './update'
 
-export type InitReturn = readonly [Model, ReadonlyArray<Command.Command<MessageType>>]
+export type InitReturn = Update.Return<Model, MessageType>
 
 /**
  * Builds the same first Model on the server and in the browser: every field
@@ -22,15 +23,11 @@ export type InitReturn = readonly [Model, ReadonlyArray<Command.Command<MessageT
  * boot Command, which the runtime runs once hydration has completed.
  */
 export const init = (url: Url.Url): InitReturn => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const [demo, demoCommands] = Demo.init() as unknown as [
-    Demo.DemoModel,
-    ReadonlyArray<Command.Command<Demo.DemoMessage>>,
-  ]
+  const { model: demo, commands: demoCommands = [] } = Demo.init()
   const installTabs = Tabs.init({ id: 'install-tabs' })
 
-  return [
-    {
+  return {
+    model: {
       route: parseRoute(url),
       maybeThemePreference: Option.none(),
       resolvedTheme: 'Light',
@@ -42,9 +39,9 @@ export const init = (url: Url.Url): InitReturn => {
       selectedStyle: 'default',
       expandedCodeBlocks: new Set<string>(),
     },
-    [
+    commands: [
       LoadBrowserEnvironment(),
       ...Command.mapMessages(demoCommands, (message) => Message.GotDemoMessage({ message })),
     ],
-  ]
+  }
 }

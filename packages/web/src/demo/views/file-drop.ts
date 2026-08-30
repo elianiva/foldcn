@@ -64,14 +64,14 @@ export const fileDropView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   )
 
 const foldNoOp =
-  (): ((out: fileDrop.OutMessage) => Update.Step<State, unknown>) => () => (model) => [model, []]
+  (): ((out: fileDrop.OutMessage) => Update.Step<State, unknown>) => () => (model) => ({ model })
 
 const foldFileDropOutMessage = M.type<fileDrop.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),
   M.tagsExhaustive({
     ReceivedFiles:
       ({ files }) =>
-      (model) => [evo(model, { fileDropFiles: () => [...model.fileDropFiles, ...files] }), []],
+      (model) => ({ model: evo(model, { fileDropFiles: () => [...model.fileDropFiles, ...files] }) }),
     RejectedNonFiles: foldNoOp(),
   }),
 )
@@ -102,11 +102,10 @@ export const slice = defineSlice({
   handlers: (model: State) => ({
     GotFileDropMessage: (payload: typeof Message.GotFileDropMessage.Type): UpdateReturn =>
       foldFileDrop(model, payload.message),
-    ClickedRemoveFile: ({ fileIndex }: typeof Message.ClickedRemoveFile.Type): UpdateReturn => [
-      evo(model, {
+    ClickedRemoveFile: ({ fileIndex }: typeof Message.ClickedRemoveFile.Type): UpdateReturn => ({
+      model: evo(model, {
         fileDropFiles: () => Array.remove(model.fileDropFiles, fileIndex),
       }),
-      [],
-    ],
+    }),
   }),
 })

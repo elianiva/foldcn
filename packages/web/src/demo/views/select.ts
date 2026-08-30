@@ -56,7 +56,7 @@ const foldSelectOutMessage = M.type<FoldkitListbox.OutMessage<string>>().pipe(
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => [evo(model, { maybeSelectValue: () => Option.some(value) }), []],
+      (model) => ({ model: evo(model, { maybeSelectValue: () => Option.some(value) }) }),
   }),
 )
 
