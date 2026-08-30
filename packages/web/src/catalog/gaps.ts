@@ -37,7 +37,6 @@ export const gapsByItem: Readonly<Record<string, ReadonlyArray<string>>> = {
     'Each dropdown is its own independently-anchored Popover panel — no shared/morphing Viewport panel or slide-direction indicator like upstream.',
   ],
   calendar: ['Single-date selection — no ranges or week numbers.'],
-  slider: ['Single thumb, horizontal orientation only.'],
   combobox: ['Filtering is owned by your model — no built-in chips UI for multi-select.'],
   'input-group': [
     'Addons do not focus the input on click — foldkit has no scoped click-to-focus primitive yet.',

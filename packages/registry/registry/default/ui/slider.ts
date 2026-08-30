@@ -2,19 +2,18 @@
  *  Model/Message/init/update into your app:
  *  `import * as Slider from '@/components/ui/slider'`
  */
+import { Effect, Match as M, Option, Schema as S, Stream } from 'effect'
 import { Slider as FoldkitSlider } from '@foldkit/ui'
-import type { Html, HtmlBuilder } from 'foldkit/html'
+import { childAttributes, type ChildAttribute, type Html, type HtmlBuilder } from 'foldkit/html'
+import * as Subscription from 'foldkit/subscription'
 
 import { cn } from '@/lib/utils'
 
 /**
  * foldcn gap vs upstream: single value / single thumb only (upstream is
- * multi-thumb; foldcn renders one thumb). Vertical orientation is now wired
- * through `orientation` on `styledViewInputs` (tokens already contain
- * `data-vertical` selectors); omit it for horizontal (default).
+ * multi-thumb; foldcn renders one thumb). Vertical orientation is wired
+ * through `orientation` on `styledViewInputs`.
  */
-
-// Re-export the @foldkit/ui Slider submodel surface.
 
 export const init = FoldkitSlider.init
 export const update = FoldkitSlider.update
@@ -26,8 +25,6 @@ export type Message = typeof Message.Type
 export const OutMessage = FoldkitSlider.OutMessage
 export type OutMessage = typeof OutMessage.Type
 
-export const subscriptions = FoldkitSlider.subscriptions
-export const subscriptionsForRoot = FoldkitSlider.subscriptionsForRoot
 export const snapAndClamp = FoldkitSlider.snapAndClamp
 export const fractionOfValue = FoldkitSlider.fractionOfValue
 export const reflectRange = FoldkitSlider.reflectRange
@@ -60,8 +57,243 @@ export const sliderRowClass = 'flex flex-col gap-2 w-full'
 
 export const sliderHeaderClass = 'flex items-center justify-between'
 
+const LEFT_MOUSE_BUTTON = 0
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max)
+
+const percentString = (fraction: number): string =>
+  `${String(Math.round(fraction * 10000) / 100)}%`
+
+const isVerticalTrack = (element: Element): boolean =>
+  element.hasAttribute('data-vertical') || element.closest('[data-vertical]') !== null
+
+const trackElement = (id: string, root: Document | ShadowRoot): Option.Option<Element> =>
+  Option.fromNullishOr(root.querySelector(`[data-slider-track-id="${CSS.escape(id)}"]`))
+
+export const valueFromPointer = (
+  clientX: number,
+  clientY: number,
+  track: Element,
+  min: number,
+  max: number,
+): number => {
+  const rect = track.getBoundingClientRect()
+  if (isVerticalTrack(track)) {
+    if (rect.height === 0) return min
+    const fraction = clamp(1 - (clientY - rect.top) / rect.height, 0, 1)
+    return min + fraction * (max - min)
+  }
+  if (rect.width === 0) return min
+  const fraction = clamp((clientX - rect.left) / rect.width, 0, 1)
+  return min + fraction * (max - min)
+}
+
+const DragActivity = S.Literals(['Idle', 'Active'])
+
+const dragActivityFromModel = (model: Model): 'Idle' | 'Active' =>
+  M.value(model.dragState).pipe(
+    M.withReturnType<'Idle' | 'Active'>(),
+    M.tag('Dragging', () => 'Active' as const),
+    M.orElse(() => 'Idle' as const),
+  )
+
+/** Drag subscriptions that map pointer position along the track axis, including
+ *  vertical sliders marked with `data-vertical`. */
+export const subscriptionsForRoot = (getTrackRoot: () => Document | ShadowRoot) =>
+  Subscription.make<Model, Message>()(entry => ({
+    dragPointer: entry(
+      {
+        dragActivity: DragActivity,
+        id: S.String,
+        min: S.Number,
+        max: S.Number,
+      },
+      {
+        modelToDependencies: model => ({
+          dragActivity: dragActivityFromModel(model),
+          id: model.id,
+          min: model.min,
+          max: model.max,
+        }),
+        dependenciesToStream: ({ dragActivity, id, min, max }): Stream.Stream<Message> => {
+          const pointerEvents = Stream.merge(
+            Stream.fromEventListener(document, 'pointermove').pipe(
+              Stream.mapEffect((event: Event) =>
+                Effect.sync(() => {
+                  const pointerEvent = event as PointerEvent
+                  return Option.flatMap(trackElement(id, getTrackRoot()), element =>
+                    Option.some(
+                      Message.MovedDragPointer({
+                        value: valueFromPointer(
+                          pointerEvent.clientX,
+                          pointerEvent.clientY,
+                          element,
+                          min,
+                          max,
+                        ),
+                      }),
+                    ),
+                  )
+                }),
+              ),
+              Stream.filter(Option.isSome),
+              Stream.map(option => option.value),
+            ),
+            Stream.fromEventListener(document, 'pointerup').pipe(
+              Stream.map(() => Message.ReleasedDragPointer()),
+            ),
+          )
+
+          const documentDragStyles = Stream.callback(() =>
+            Effect.acquireRelease(
+              Effect.sync(() => {
+                document.documentElement.style.setProperty('user-select', 'none')
+                document.documentElement.style.setProperty('-webkit-user-select', 'none')
+                const cursorStyle = document.createElement('style')
+                cursorStyle.textContent = '* { cursor: grabbing !important; }'
+                document.head.appendChild(cursorStyle)
+                return cursorStyle
+              }),
+              cursorStyle =>
+                Effect.sync(() => {
+                  document.documentElement.style.removeProperty('user-select')
+                  document.documentElement.style.removeProperty('-webkit-user-select')
+                  cursorStyle.remove()
+                }),
+            ).pipe(Effect.flatMap(() => Effect.never)),
+          )
+
+          return Stream.when(
+            Stream.merge(pointerEvents, documentDragStyles),
+            Effect.sync(() => dragActivity === 'Active'),
+          ) as Stream.Stream<Message>
+        },
+      },
+    ),
+    dragEscape: entry(
+      { dragActivity: DragActivity },
+      {
+        modelToDependencies: model => ({
+          dragActivity: dragActivityFromModel(model),
+        }),
+        dependenciesToStream: ({ dragActivity }): Stream.Stream<Message> =>
+          Stream.when(
+            Stream.fromEventListener(document, 'keydown').pipe(
+              Stream.filter((event: Event) => (event as KeyboardEvent).key === 'Escape'),
+              Stream.map(() => Message.CancelledDrag()),
+            ),
+            Effect.sync(() => dragActivity === 'Active'),
+          ) as Stream.Stream<Message>,
+      },
+    ),
+  }))
+
+export const subscriptions = subscriptionsForRoot(() => document)
+
+type AttributeTag = string
+
+const childAttributeTag = (child: ChildAttribute): AttributeTag =>
+  (child.attribute as { readonly _tag: AttributeTag })._tag
+
+const withoutAttributeTags = (
+  attributes: ReadonlyArray<ChildAttribute>,
+  tags: ReadonlySet<AttributeTag>,
+): ReadonlyArray<ChildAttribute> =>
+  attributes.filter(child => !tags.has(childAttributeTag(child)))
+
+const patchVerticalTrackPointer = (
+  track: ReadonlyArray<ChildAttribute>,
+  id: string,
+  min: number,
+  max: number,
+  currentValue: number,
+  getTrackRoot: () => Document | ShadowRoot,
+): ReadonlyArray<ChildAttribute> =>
+  track.map(child => {
+    if (childAttributeTag(child) !== 'OnPointerDown') return child
+    return {
+      ...child,
+      attribute: {
+        _tag: 'OnPointerDown' as const,
+        toMaybeMessage: (
+          _pointerType: string,
+          button: number,
+          _screenX: number,
+          _screenY: number,
+          _timeStamp: number,
+          clientX: number,
+          clientY: number,
+        ) => {
+          if (button !== LEFT_MOUSE_BUTTON) return Option.none()
+          return Option.flatMap(trackElement(id, getTrackRoot()), element =>
+            Option.some(
+              Message.PressedPointer({
+                value: valueFromPointer(clientX, clientY, element, min, max),
+                originValue: currentValue,
+              }),
+            ),
+          )
+        },
+      },
+    }
+  })
+
+const orientAttributes = (
+  attributes: SliderAttributes,
+  orientation: 'horizontal' | 'vertical',
+  fraction: number,
+  model: { id: string; min: number; max: number },
+  currentValue: number,
+  getTrackRoot: () => Document | ShadowRoot,
+  h: HtmlBuilder<unknown>,
+): SliderAttributes => {
+  if (orientation === 'horizontal') return attributes
+
+  return {
+    ...attributes,
+    track: patchVerticalTrackPointer(
+      attributes.track,
+      model.id,
+      model.min,
+      model.max,
+      currentValue,
+      getTrackRoot,
+    ),
+    filledTrack: [
+      ...withoutAttributeTags(attributes.filledTrack, new Set(['Style'])),
+      ...childAttributes([
+        h.Style({
+          position: 'absolute',
+          bottom: '0',
+          left: '0',
+          right: '0',
+          height: percentString(fraction),
+          width: '100%',
+          'pointer-events': 'none',
+        }),
+      ]),
+    ],
+    thumb: [
+      ...withoutAttributeTags(attributes.thumb, new Set(['Style', 'AriaOrientation'])),
+      ...childAttributes([
+        h.Style({
+          position: 'absolute',
+          bottom: percentString(fraction),
+          left: '50%',
+          transform: 'translateX(-50%) translateY(50%)',
+          'touch-action': 'none',
+        }),
+        h.AriaOrientation('vertical'),
+      ]),
+    ],
+  }
+}
+
 export type StyledViewInputs = Readonly<{
   value: number
+  min?: number
+  max?: number
   orientation?: 'horizontal' | 'vertical'
   label?: string
   formatValue?: (value: number) => string
@@ -96,6 +328,31 @@ export const styledViewInputs = <M>(
   getTrackRoot: viewInputs.getTrackRoot,
   toView: (attributes): Html => {
     const orientation = viewInputs.orientation ?? 'horizontal'
+    const min = viewInputs.min ?? 0
+    const max = viewInputs.max ?? 100
+    const fraction = fractionOfValue(viewInputs.value, min, max)
+    const getTrackRoot = viewInputs.getTrackRoot ?? (() => document)
+    const sliderId = attributes.root
+      .map(child => {
+        if (childAttributeTag(child) !== 'DataAttribute') return undefined
+        const attr = child.attribute as { readonly name?: string; readonly value?: string }
+        return attr.name === 'slider-id' ? attr.value : undefined
+      })
+      .find((id): id is string => id !== undefined)
+
+    const orientedAttributes =
+      sliderId === undefined
+        ? attributes
+        : orientAttributes(
+            attributes,
+            orientation,
+            fraction,
+            { id: sliderId, min, max },
+            viewInputs.value,
+            getTrackRoot,
+            h as HtmlBuilder<unknown>,
+          )
+
     const maybeHeader: Html =
       viewInputs.label === undefined
         ? h.empty
@@ -103,7 +360,7 @@ export const styledViewInputs = <M>(
             [h.Class(cn(sliderHeaderClass, viewInputs.headerClass))],
             [
               h.label(
-                [...attributes.label, h.Class(cn(sliderLabelClass, viewInputs.labelClass))],
+                [...orientedAttributes.label, h.Class(cn(sliderLabelClass, viewInputs.labelClass))],
                 [viewInputs.label],
               ),
               h.span(
@@ -118,7 +375,9 @@ export const styledViewInputs = <M>(
           )
 
     const maybeHiddenInput: Html =
-      attributes.hiddenInput.length > 0 ? h.input([...attributes.hiddenInput]) : h.empty
+      orientedAttributes.hiddenInput.length > 0
+        ? h.input([...orientedAttributes.hiddenInput])
+        : h.empty
 
     return h.div(
       [h.Class(cn(sliderRowClass, viewInputs.rowClass))],
@@ -126,7 +385,7 @@ export const styledViewInputs = <M>(
         maybeHeader,
         h.div(
           [
-            ...attributes.root,
+            ...orientedAttributes.root,
             h.DataAttribute('slot', 'slider'),
             h.DataAttribute('orientation', orientation),
             h.DataAttribute(orientation, ''),
@@ -135,7 +394,7 @@ export const styledViewInputs = <M>(
           [
             h.div(
               [
-                ...attributes.track,
+                ...orientedAttributes.track,
                 h.DataAttribute('slot', 'slider-track'),
                 h.DataAttribute('orientation', orientation),
                 h.DataAttribute(orientation, ''),
@@ -143,7 +402,7 @@ export const styledViewInputs = <M>(
               ],
               [
                 h.div([
-                  ...attributes.filledTrack,
+                  ...orientedAttributes.filledTrack,
                   h.DataAttribute('slot', 'slider-range'),
                   h.DataAttribute('orientation', orientation),
                   h.DataAttribute(orientation, ''),
@@ -152,7 +411,7 @@ export const styledViewInputs = <M>(
               ],
             ),
             h.div([
-              ...attributes.thumb,
+              ...orientedAttributes.thumb,
               h.DataAttribute('slot', 'slider-thumb'),
               h.Class(cn(sliderThumbClass, viewInputs.thumbClass)),
             ]),
