@@ -5,7 +5,7 @@
     {
       "name": "web",
       "command": "pnpm --filter @foldcn/web run predev && pnpm --filter @foldcn/web exec vite --port 5173 --strictPort --host 127.0.0.1",
-      "description": "foldcn showcase site on a fixed port (5173). Cursor Desktop auto-forwards this port to your machine at http://localhost:5173 (use the plug icon in the Agents window). The predev step re-resolves styles and regenerates the style shims first. Note: the repo's own `pnpm dev` wraps Vite in portless for local .localhost URLs; that layer is skipped here since it is useless off the VM."
+      "description": "foldcn showcase site on a fixed port (5173). Cursor Desktop auto-forwards this port to your machine at http://localhost:5173 (use the plug icon in the Agents window). The predev step re-resolves styles and regenerates the style shims first. Use `pnpm dev:local` in the repo for portless .localhost URLs; this terminal runs plain Vite instead."
     }
   ],
   "ports": [

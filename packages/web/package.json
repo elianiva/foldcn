@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "predev": "node ../registry/scripts/resolve-styles.mjs && node scripts/generate-style-shims.mjs",
-    "dev": "portless run --name foldcn vite",
+    "dev": "vite",
+    "predev:local": "node ../registry/scripts/resolve-styles.mjs && node scripts/generate-style-shims.mjs",
+    "dev:local": "portless run --name foldcn vite",
     "prebuild": "node ../registry/scripts/resolve-styles.mjs && node scripts/generate-style-shims.mjs",
     "pretypecheck": "node ../registry/scripts/resolve-styles.mjs && node scripts/generate-style-shims.mjs",
     "pretest": "node ../registry/scripts/resolve-styles.mjs && node scripts/generate-style-shims.mjs",
