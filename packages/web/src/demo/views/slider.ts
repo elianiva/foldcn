@@ -3,6 +3,7 @@ import { Match as M, Option, Schema as S } from 'effect'
 import { evo } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
+import { Slider as FoldkitSlider } from '@foldkit/ui'
 
 import * as Slider from '../../generated/registry/ui/slider'
 import { field, fieldDescription, fieldLabel } from '../../generated/registry/ui/fieldset'
@@ -289,10 +290,11 @@ const liftSliderSubscriptions = (
   name: string,
   read: (model: State) => Slider.Model,
   toParentMessage: (message: Slider.Message) => SliderMessage,
+  source: typeof FoldkitSlider.subscriptions | typeof Slider.subscriptions = FoldkitSlider.subscriptions,
 ) => {
   const lifted = Subscription.lift({
-    dragPointer: Slider.subscriptions.dragPointer,
-    dragEscape: Slider.subscriptions.dragEscape,
+    dragPointer: source.dragPointer,
+    dragEscape: source.dragEscape,
   })<State, SliderMessage>({
     toChildModel: read,
     toParentMessage,
@@ -318,11 +320,13 @@ const sliderSubscriptions = Subscription.aggregate<State, SliderMessage>()(
     'verticalA',
     (model) => model.sliderVerticalA,
     (message) => Message.GotSliderVerticalAMessage({ message }),
+    Slider.subscriptions,
   ),
   liftSliderSubscriptions(
     'verticalB',
     (model) => model.sliderVerticalB,
     (message) => Message.GotSliderVerticalBMessage({ message }),
+    Slider.subscriptions,
   ),
   liftSliderSubscriptions(
     'controlled',

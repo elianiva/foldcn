@@ -202,7 +202,10 @@ const withoutAttributeTags = (
 ): ReadonlyArray<ChildAttribute> =>
   attributes.filter(child => !tags.has(childAttributeTag(child)))
 
-const patchVerticalTrackPointer = (
+const THUMB_SIZE = '0.75rem'
+const THUMB_HALF = '0.375rem'
+
+const patchTrackPointer = (
   track: ReadonlyArray<ChildAttribute>,
   id: string,
   min: number,
@@ -239,7 +242,8 @@ const patchVerticalTrackPointer = (
     }
   })
 
-const orientAttributes = (
+/** Remap foldkit's center-aligned geometry to upstream edge-aligned thumb + range. */
+const patchSliderAttributes = (
   attributes: SliderAttributes,
   orientation: 'horizontal' | 'vertical',
   fraction: number,
@@ -248,43 +252,73 @@ const orientAttributes = (
   getTrackRoot: () => Document | ShadowRoot,
   h: HtmlBuilder<unknown>,
 ): SliderAttributes => {
-  if (orientation === 'horizontal') return attributes
+  const track = patchTrackPointer(
+    attributes.track,
+    model.id,
+    model.min,
+    model.max,
+    currentValue,
+    getTrackRoot,
+  )
+
+  if (orientation === 'vertical') {
+    return {
+      ...attributes,
+      track,
+      filledTrack: [
+        ...withoutAttributeTags(attributes.filledTrack, new Set(['Style'])),
+        ...childAttributes([
+          h.Style({
+            position: 'absolute',
+            bottom: '0',
+            left: '0',
+            right: '0',
+            height: percentString(fraction),
+            width: '100%',
+            'pointer-events': 'none',
+          }),
+        ]),
+      ],
+      thumb: [
+        ...withoutAttributeTags(attributes.thumb, new Set(['Style', 'AriaOrientation'])),
+        ...childAttributes([
+          h.Style({
+            position: 'absolute',
+            bottom: percentString(fraction),
+            left: '50%',
+            transform: 'translateX(-50%) translateY(-50%)',
+            'touch-action': 'none',
+          }),
+          h.AriaOrientation('vertical'),
+        ]),
+      ],
+    }
+  }
 
   return {
     ...attributes,
-    track: patchVerticalTrackPointer(
-      attributes.track,
-      model.id,
-      model.min,
-      model.max,
-      currentValue,
-      getTrackRoot,
-    ),
+    track,
     filledTrack: [
       ...withoutAttributeTags(attributes.filledTrack, new Set(['Style'])),
       ...childAttributes([
         h.Style({
           position: 'absolute',
-          bottom: '0',
           left: '0',
-          right: '0',
-          height: percentString(fraction),
-          width: '100%',
+          top: '0',
+          bottom: '0',
+          width: `calc((100% - ${THUMB_SIZE}) * ${fraction} + ${THUMB_HALF})`,
           'pointer-events': 'none',
         }),
       ]),
     ],
     thumb: [
-      ...withoutAttributeTags(attributes.thumb, new Set(['Style', 'AriaOrientation'])),
+      ...withoutAttributeTags(attributes.thumb, new Set(['Style'])),
       ...childAttributes([
         h.Style({
           position: 'absolute',
-          bottom: percentString(fraction),
-          left: '50%',
-          transform: 'translateX(-50%) translateY(-50%)',
+          left: `calc((100% - ${THUMB_SIZE}) * ${fraction})`,
           'touch-action': 'none',
         }),
-        h.AriaOrientation('vertical'),
       ]),
     ],
   }
@@ -343,7 +377,7 @@ export const styledViewInputs = <M>(
     const orientedAttributes =
       sliderId === undefined
         ? attributes
-        : orientAttributes(
+        : patchSliderAttributes(
             attributes,
             orientation,
             fraction,
