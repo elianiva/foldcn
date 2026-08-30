@@ -281,7 +281,7 @@ const orientAttributes = (
           position: 'absolute',
           bottom: percentString(fraction),
           left: '50%',
-          transform: 'translateX(-50%) translateY(50%)',
+          transform: 'translateX(-50%) translateY(-50%)',
           'touch-action': 'none',
         }),
         h.AriaOrientation('vertical'),
@@ -335,8 +335,8 @@ export const styledViewInputs = <M>(
     const sliderId = attributes.root
       .map(child => {
         if (childAttributeTag(child) !== 'DataAttribute') return undefined
-        const attr = child.attribute as { readonly name?: string; readonly value?: string }
-        return attr.name === 'slider-id' ? attr.value : undefined
+        const attr = child.attribute as { readonly key?: string; readonly value?: string }
+        return attr.key === 'slider-id' ? attr.value : undefined
       })
       .find((id): id is string => id !== undefined)
 
