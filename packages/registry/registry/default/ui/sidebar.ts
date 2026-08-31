@@ -103,7 +103,10 @@ export const setOpen = (model: Model, isOpen: boolean): Model =>
 
 const mapSheet = (
   model: Model,
-  { model: next, commands = [] }: Update.ReturnWithOutMessage<Sheet.Model, Sheet.Message, Sheet.OutMessage>,
+  {
+    model: next,
+    commands = [],
+  }: Update.ReturnWithOutMessage<Sheet.Model, Sheet.Message, Sheet.OutMessage>,
 ): Update.Return<Model, Message> => ({
   model: evo(model, { sheet: () => next }),
   commands: Command.mapMessages(commands, (message) => Message.GotSheetMessage({ message })),

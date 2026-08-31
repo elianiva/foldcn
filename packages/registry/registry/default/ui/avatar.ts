@@ -76,10 +76,9 @@ export const Message = defineMessageUnion({
 })
 export type Message = typeof Message.Type
 
-export const update = (
-  _model: Model,
-  _message: Message,
-): Update.Return<Model, Message> => ({ model: { hasError: true } })
+export const update = (_model: Model, _message: Message): Update.Return<Model, Message> => ({
+  model: { hasError: true },
+})
 
 export type PictureConfig = Readonly<{
   id: string

@@ -108,7 +108,9 @@ const hButton = (h: HtmlBuilder<AppMessage>, label: string, message: AppMessage)
   )
 
 const foldNoOp =
-  (): ((out: typeof Toast.OutMessage.Type) => Update.Step<State, unknown>) => () => (model) => ({ model })
+  (): ((out: typeof Toast.OutMessage.Type) => Update.Step<State, unknown>) => () => (model) => ({
+    model,
+  })
 
 const foldToastOutMessage = M.type<typeof Toast.OutMessage.Type>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),

@@ -438,27 +438,16 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     Message.match<UpdateReturn>(message, {
       GotHeights: ({ heights }) => ({ model: mergeHeights(model, heights) }),
       GotToastMessage: ({ message: toastMessage }) => {
-        const {
-          model: nextModel,
-          commands = [],
-          outMessage: out,
-        } = foldToast(model, toastMessage)
+        const { model: nextModel, commands = [], outMessage: out } = foldToast(model, toastMessage)
         const measure =
           toastMessage._tag === 'Added' ? [MeasureHeights({ containerId: nextModel.toast.id })] : []
-        return Update.withOutMessage(
-          { model: nextModel, commands: [...commands, ...measure] },
-          out,
-        )
+        return Update.withOutMessage({ model: nextModel, commands: [...commands, ...measure] }, out)
       },
     })
 
   /** Adds a toast entry and schedules its height measurement. */
   const show = (model: Model, input: FoldkitToast.ShowInput<A>): UpdateReturn => {
-    const {
-      model: nextToast,
-      commands = [],
-      outMessage: out,
-    } = Bound.show(model.toast, input)
+    const { model: nextToast, commands = [], outMessage: out } = Bound.show(model.toast, input)
     return Update.withOutMessage(
       {
         model: evo(model, { toast: () => nextToast }),
@@ -473,11 +462,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
 
   /** Begins dismissing a specific entry. */
   const dismiss = (model: Model, entryId: string): UpdateReturn => {
-    const {
-      model: nextToast,
-      commands = [],
-      outMessage: out,
-    } = Bound.dismiss(model.toast, entryId)
+    const { model: nextToast, commands = [], outMessage: out } = Bound.dismiss(model.toast, entryId)
     return Update.withOutMessage(
       {
         model: evo(model, { toast: () => nextToast }),
@@ -489,11 +474,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
 
   /** Begins dismissing every currently-visible entry. */
   const dismissAll = (model: Model): UpdateReturn => {
-    const {
-      model: nextToast,
-      commands = [],
-      outMessage: out,
-    } = Bound.dismissAll(model.toast)
+    const { model: nextToast, commands = [], outMessage: out } = Bound.dismissAll(model.toast)
     return Update.withOutMessage(
       {
         model: evo(model, { toast: () => nextToast }),

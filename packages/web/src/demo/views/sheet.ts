@@ -150,7 +150,9 @@ export const sheetView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
     ],
   )
 
-const foldNoOp = (): ((out: Sheet.OutMessage) => Update.Step<State, unknown>) => () => (model) => ({ model })
+const foldNoOp = (): ((out: Sheet.OutMessage) => Update.Step<State, unknown>) => () => (model) => ({
+  model,
+})
 
 const foldSheetOutMessage = M.type<Sheet.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),

@@ -96,7 +96,9 @@ export const slice = defineSlice({
       )
       return {
         model: evo(model, { virtualList: () => next }),
-        commands: Command.mapMessages(commands, (message) => Message.GotVirtualListMessage({ message })),
+        commands: Command.mapMessages(commands, (message) =>
+          Message.GotVirtualListMessage({ message }),
+        ),
       }
     },
   }),

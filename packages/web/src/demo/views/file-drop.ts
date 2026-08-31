@@ -71,7 +71,9 @@ const foldFileDropOutMessage = M.type<fileDrop.OutMessage>().pipe(
   M.tagsExhaustive({
     ReceivedFiles:
       ({ files }) =>
-      (model) => ({ model: evo(model, { fileDropFiles: () => [...model.fileDropFiles, ...files] }) }),
+      (model) => ({
+        model: evo(model, { fileDropFiles: () => [...model.fileDropFiles, ...files] }),
+      }),
     RejectedNonFiles: foldNoOp(),
   }),
 )
