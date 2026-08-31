@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as Collapsible from '@/components/ui/collapsible'`
  */
-import { Function, Option, Schema as S } from 'effect'
+import { Function, Schema as S } from 'effect'
 import { Disclosure as FoldkitDisclosure } from '@foldkit/ui'
 import type { Html } from 'foldkit/html'
 import * as Update from 'foldkit/update'

@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as Resizable from '@/components/ui/resizable'`
  */
-import { Function, Option, Schema as S } from 'effect'
+import { Function, Schema as S } from 'effect'
 import type { Html } from 'foldkit/html'
 import * as Update from 'foldkit/update'
 import { defineMessageUnion } from 'foldkit/message'

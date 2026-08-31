@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as ToggleGroup from '@/components/ui/toggle-group'`
  */
-import { Function, Option, Schema as S } from 'effect'
+import { Function, Schema as S } from 'effect'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'

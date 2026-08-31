@@ -1,6 +1,6 @@
 import { Popover as FoldkitPopover } from '@foldkit/ui'
 import type { AnchorConfig } from '@foldkit/ui/popover'
-import { Option, Schema as S } from 'effect'
+import { Schema as S } from 'effect'
 import * as Command from 'foldkit/command'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'

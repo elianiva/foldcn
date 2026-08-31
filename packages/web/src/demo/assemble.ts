@@ -216,7 +216,7 @@ export const Message = MessageSchema
 type DemoUpdateReturn = Update.Return<Model, Message>
 
 export const init = (): DemoUpdateReturn => {
-  // oxlint-disable-next-line typescript/consistent-type-assertions
+  // eslint-disable-next-line typescript/consistent-type-assertions -- assembled init object is structurally Model
   const model = {
     ...accordionSlice.init,
     ...alertDialogSlice.init,
@@ -282,12 +282,14 @@ export const init = (): DemoUpdateReturn => {
     ...toggleSlice.init,
     ...tooltipSlice.init,
     ...virtualListSlice.init,
+    // eslint-disable-next-line typescript/consistent-type-assertions -- assembled init object is structurally Model
   } as Model
   return { model }
 }
 
-export const update = (model: Model, message: Message): DemoUpdateReturn =>
-  M.value(message).pipe(
+export const update = (model: Model, message: Message): DemoUpdateReturn => {
+  // eslint-disable-next-line typescript/consistent-type-assertions -- slice handlers return loosely typed UpdateReturn
+  return M.value(message).pipe(
     M.withReturnType<UpdateReturn>(),
     M.tagsExhaustive({
       ...accordionSlice.handlers(model),
@@ -337,3 +339,4 @@ export const update = (model: Model, message: Message): DemoUpdateReturn =>
       ...virtualListSlice.handlers(model),
     }),
   ) as DemoUpdateReturn
+}
