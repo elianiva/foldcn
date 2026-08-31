@@ -1,6 +1,6 @@
 {
   "name": "foldcn",
-  "install": "pnpm install --frozen-lockfile",
+  "install": "set -euo pipefail\n# Prefer nvm Node 22.22.3 when present; otherwise the latest nvm v22 on this image.\nif [ -d \"$HOME/.nvm/versions/node/v22.22.3/bin\" ]; then\n  export PATH=\"$HOME/.nvm/versions/node/v22.22.3/bin:$PATH\"\nelse\n  nvm_node_bin=\"$(ls -d \"$HOME/.nvm/versions/node\"/v22.*/bin 2>/dev/null | sort -V | tail -n1 || true)\"\n  if [ -n \"$nvm_node_bin\" ]; then\n    export PATH=\"$nvm_node_bin:$PATH\"\n  fi\nfi\npnpm install --frozen-lockfile\n# pstack: home directory only, never the foldcn checkout\nmkdir -p \"$HOME/.cursor/plugins\" \"$HOME/.cursor/skills\"\nif [ ! -d \"$HOME/.cache/cursor-plugins/.git\" ]; then\n  git clone --depth 1 --filter=blob:none --sparse https://github.com/cursor/plugins.git \"$HOME/.cache/cursor-plugins\"\nfi\ngit -C \"$HOME/.cache/cursor-plugins\" fetch --depth 1 origin\ngit -C \"$HOME/.cache/cursor-plugins\" reset --hard origin/HEAD\ngit -C \"$HOME/.cache/cursor-plugins\" sparse-checkout set pstack\nrm -rf \"$HOME/.cursor/plugins/pstack\"\ncp -a \"$HOME/.cache/cursor-plugins/pstack\" \"$HOME/.cursor/plugins/pstack\"\nshopt -s nullglob\nfor skill_dir in \"$HOME/.cursor/plugins/pstack/skills\"/*/; do\n  ln -sfn \"$skill_dir\" \"$HOME/.cursor/skills/$(basename \"$skill_dir\")\"\ndone\n",
   "terminals": [
     {
       "name": "web",
