@@ -294,6 +294,7 @@ export const update = (model: Model, message: Message): DemoUpdateReturn => {
     M.tagsExhaustive({
       ...accordionSlice.handlers(model),
       ...alertDialogSlice.handlers(model),
+      ...breadcrumbSlice.handlers(model),
       ...animationSlice.handlers(model),
       ...avatarSlice.handlers(model),
       ...buttonSlice.handlers(model),
