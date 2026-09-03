@@ -78,7 +78,7 @@ Persistent open styling keyed on `data-open:` is intentionally untouched.
 
 Hand-maintained foldkit deltas. `resolve-styles.mjs` concatenates this file
 AHEAD of the vendored style CSS when building the style map, so delta utilities win
-tailwind-merge conflicts and land at the end of each resolved string. Put a
+cn conflicts and land at the end of each resolved string. Put a
 rule here when:
 
 - foldkit cannot emit an attribute upstream styles (e.g. `.cn-button` gained

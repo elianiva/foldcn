@@ -21,7 +21,7 @@ Foldcn is a shadcn-compatible registry for Foldkit (not React). Follow these ste
 
 3. Register the @foldcn namespace: Run npx shadcn@latest registry add @foldcn=https://foldcn.elianiva.com/r/{name}.json — or add "registries": { "@foldcn": "https://foldcn.elianiva.com/r/{name}.json" } to components.json manually.
 
-4. Install the base style: npx shadcn@latest add @foldcn/foldcn — this writes the theme variables (:root/.dark + @theme inline) and installs foldkit, effect, @foldkit/ui, clsx, tailwind-merge, lucide, tw-animate-css.
+4. Install the base style: npx shadcn@latest add @foldcn/foldcn — this writes the theme variables (:root/.dark + @theme inline) and installs foldkit, effect, @foldkit/ui, cn, lucide, tw-animate-css.
 
 5. Add components as needed: npx shadcn@latest add @foldcn/button @foldcn/dialog (replace with the components you need). pnpm dlx / bunx work too.
 
@@ -256,7 +256,7 @@ export const homeView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                       h.code([h.Class('font-mono text-[0.9em]')], ['.dark']),
                       ' + ',
                       h.code([h.Class('font-mono text-[0.9em]')], ['@theme inline']),
-                      ') and installs core deps (foldkit, effect, @foldkit/ui, clsx, tailwind-merge, lucide, tw-animate-css):',
+                      ') and installs core deps (foldkit, effect, @foldkit/ui, cn, lucide, tw-animate-css):',
                     ],
                   ),
                   registryCodeBlock<Message>(

@@ -5,8 +5,8 @@
       "name": "utils",
       "type": "registry:lib",
       "title": "cn",
-      "description": "Class name merger built on clsx and tailwind-merge. Used by every foldcn component.",
-      "dependencies": ["clsx", "tailwind-merge"],
+      "description": "Class name merger built on cn. Used by every foldcn component.",
+      "dependencies": ["cn"],
       "files": [
         {
           "path": "utils.ts",

@@ -6,14 +6,7 @@
       "type": "registry:style",
       "title": "foldcn base style",
       "description": "The foldcn design system base: CSS variables, Tailwind v4 theme mapping, base CSS and core dependencies. Install this first.",
-      "dependencies": [
-        "foldkit",
-        "effect@4.0.0-rc.109",
-        "@foldkit/ui",
-        "clsx",
-        "tailwind-merge",
-        "lucide"
-      ],
+      "dependencies": ["foldkit", "effect@4.0.0-rc.109", "@foldkit/ui", "cn", "lucide"],
       "devDependencies": ["tw-animate-css"],
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [],

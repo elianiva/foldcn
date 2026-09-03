@@ -13,7 +13,7 @@
  *   registry/styles/style-*.css           vendored verbatim from shadcn-ui/ui,
  *                                         refreshed by scripts/sync-styles.mjs
  *   registry/default/style/cn-compat.css  hand-written foldkit deltas, merged
- *                                         FIRST so they win tailwind-merge conflicts
+ *                                         FIRST so they win cn conflicts
  *
  * The foldkit animation-state rewrite (data-open:<enter anim> → data-enter:,
  * data-closed:<exit anim> → data-leave:) is applied HERE, to the style-map
@@ -55,7 +55,7 @@ import {
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { Node, Project } from 'ts-morph'
-import { twMerge } from 'tailwind-merge'
+import { twMerge } from 'cn'
 
 import { createStyleMap } from './lib/create-style-map.mjs'
 
@@ -66,7 +66,7 @@ const STYLES_OUT_ROOT = join(REGISTRY_DIR, 'styles')
 /**
  * Style combinations to emit. All eight are derived from the vendored shadcn
  * style tokens (registry/styles/style-*.css — see ADR-015); compat CSS
- * concatenates FIRST so its deltas win tailwind-merge conflicts against the
+ * concatenates FIRST so its deltas win cn conflicts against the
  * vendored layer.
  *
  *   - "default" (nova) feeds the web demo imports
@@ -193,7 +193,7 @@ export function resolveStyles() {
       .join('\n')
 
     // Compat deltas concatenated first land LAST in merged duplicate values
-    // (createStyleMap prepends later duplicates), so under tailwind-merge's
+    // (createStyleMap prepends later duplicates), so under cn's
     // last-wins rule the delta wins. Vendored classes get the foldkit
     // animation-state rewrite applied uniformly over the merged map.
     const rawStyleMap = createStyleMap(cssText)

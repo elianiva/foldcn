@@ -9,7 +9,7 @@
  * before calling this, so both contribute to the same map. Deltas are
  * concatenated FIRST: createStyleMap prepends later duplicate selectors, so
  * processing compat first leaves it last in the merged string — and under
- * tailwind-merge's last-wins conflict resolution the delta wins.
+ * cn's last-wins conflict resolution the delta wins.
  *
  * Only `.selector { @apply … }` rules whose subject class starts with `cn-`
  * are collected. Nested selectors are flattened by stripping `&`.

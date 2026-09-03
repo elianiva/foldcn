@@ -50,6 +50,14 @@ const valueExports = (source) => {
   )) {
     names.push(match[1])
   }
+  for (const match of source.matchAll(/^export\s*\{([^}]+)\}/gm)) {
+    for (const part of match[1].split(',')) {
+      const trimmed = part.trim()
+      if (!trimmed || trimmed.startsWith('type ')) continue
+      const alias = trimmed.split(/\s+as\s+/)[1] ?? trimmed.split(/\s+/)[0]
+      if (alias) names.push(alias.trim())
+    }
+  }
   return names
 }
 

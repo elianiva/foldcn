@@ -54,7 +54,7 @@ Three things:
 Self-contained module: types, logic, styled view in one file. Match the pattern of a nearby component (helper vs submodel vs presentational — see `docs/adr/011-styled-view-factories.md`).
 
 **2. Manifest** - `packages/registry/registry/default/ui/registry.json`
-Add `name`, `type`, `title`, `description`, `files`. Only declare `dependencies` beyond what the base style already provides (`foldkit`, `effect`, `@foldkit/ui`, `clsx`, `tailwind-merge`, `lucide`, `tw-animate-css`). If it intentionally diverges from shadcn (primitive ceiling, no pointer anchoring, etc.), add a short note to `packages/web/src/catalog/gaps.ts`.
+Add `name`, `type`, `title`, `description`, `files`. Only declare `dependencies` beyond what the base style already provides (`foldkit`, `effect`, `@foldkit/ui`, `cn`, `lucide`, `tw-animate-css`). If it intentionally diverges from shadcn (primitive ceiling, no pointer anchoring, etc.), add a short note to `packages/web/src/catalog/gaps.ts`.
 
 **3. Demo** - `packages/web/src/demo/views/<name>.ts`
 Export a `slice` + view. Import from `@foldcn/registry/styles/default/ui/<name>` (the resolved path, not the authored one). `assemble.ts` picks it up automatically. See any existing file in `demo/views/`. The shape is always the same.

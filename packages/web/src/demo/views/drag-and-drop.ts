@@ -1,4 +1,3 @@
-import { clsx } from 'clsx'
 import { Array, Match as M, Option, pipe } from 'effect'
 import { Subscription, Update } from 'foldkit'
 import { Schema as S } from 'effect'
@@ -91,7 +90,7 @@ const cardView = (
     card.id,
     [
       h.Class(
-        clsx(cn(DragAndDrop.dragCardClass), {
+        cn(DragAndDrop.dragCardClass, {
           'opacity-40': isPointerDragged,
           'data-[keyboard-dragging]': isKeyboardDragged,
         }),
@@ -137,7 +136,7 @@ const renderColumn = (
       h.div(
         [
           h.Class(
-            clsx(cn(DragAndDrop.dragContainerClass), {
+            cn(DragAndDrop.dragContainerClass, {
               'border-dashed !border-primary/50': isDropTarget,
             }),
           ),

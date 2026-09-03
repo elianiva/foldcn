@@ -55,7 +55,7 @@ Or add it manually to `components.json`:
 npx shadcn@latest add @foldcn/foldcn
 ```
 
-This writes the theme variables (all shadcn tokens — `background`, `foreground`, `primary`, etc. as CSS variables in `:root` / `.dark` with Tailwind v4 `@theme inline` mappings) into your CSS and installs the core dependencies: `foldkit`, `effect`, `@foldkit/ui`, `clsx`, `tailwind-merge`, `lucide`, `tw-animate-css`.
+This writes the theme variables (all shadcn tokens — `background`, `foreground`, `primary`, etc. as CSS variables in `:root` / `.dark` with Tailwind v4 `@theme inline` mappings) into your CSS and installs the core dependencies: `foldkit`, `effect`, `@foldkit/ui`, `cn`, `lucide`, `tw-animate-css`.
 
 **4. Add components as you need them**
 
