@@ -7,12 +7,14 @@ import { Server } from 'foldkit/experimental'
 
 import type * as ServerEntry from '../src/entry.server'
 import { buildLlmsFull, buildLlmsTxt, htmlToMarkdown, loadRegistryItems } from './markdown'
+import { generateOgImages } from './og-image'
+import { buildSitemap, injectMetaTags } from './seo'
+import { SITE_ORIGIN } from '../src/seo'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const PROJECT_DIR = resolve(SCRIPT_DIR, '..')
 const CLIENT_DIR = resolve(PROJECT_DIR, 'dist/client')
 const SERVER_ENTRY_PATH = resolve(PROJECT_DIR, 'dist/server/entry.server.js')
-const SITE_ORIGIN = 'https://foldcn.elianiva.com'
 
 const loadServerEntry = Effect.tryPromise({
   try: () => import(pathToFileURL(SERVER_ENTRY_PATH).href),
@@ -97,8 +99,9 @@ const prerenderPage = (
     const rendered = yield* ensureStaticRenderable(result, path)
 
     const html = Server.injectIntoTemplate(template, rendered.application)
+    const taggedHtml = injectMetaTags(html, path)
     const htmlFile = outputFileFor(path)
-    yield* writeFileEnsuringDir(fs, htmlFile, html)
+    yield* writeFileEnsuringDir(fs, htmlFile, taggedHtml)
     yield* Console.log(`Generated ${path} [${index + 1}/${total}] → ${htmlFile}`)
 
     // LLM-friendly Markdown twin of this page (via Defuddle).
@@ -117,6 +120,7 @@ const program = Effect.gen(function* () {
   const serverEntry = yield* loadServerEntry
 
   const total = serverEntry.prerenderPaths.length
+  yield* generateOgImages(serverEntry.prerenderPaths, CLIENT_DIR)
   const sections: Array<PrerenderSection> = []
   for (const [index, path] of serverEntry.prerenderPaths.entries()) {
     const section = yield* prerenderPage(fs, template, serverEntry, path, index, total)
@@ -126,6 +130,14 @@ const program = Effect.gen(function* () {
   const items = yield* loadRegistryItems()
   yield* writeFileEnsuringDir(fs, resolve(CLIENT_DIR, 'llms.txt'), buildLlmsTxt(items, SITE_ORIGIN))
   yield* Console.log('Generated /llms.txt')
+
+  const today = new Date().toISOString().slice(0, 10)
+  yield* writeFileEnsuringDir(
+    fs,
+    resolve(CLIENT_DIR, 'sitemap.xml'),
+    buildSitemap(serverEntry.prerenderPaths, today),
+  )
+  yield* Console.log('Generated /sitemap.xml')
 
   yield* writeFileEnsuringDir(
     fs,
