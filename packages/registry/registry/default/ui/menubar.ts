@@ -29,7 +29,9 @@ export type OutMessage = typeof OutMessage.Type
 // foldcn gaps vs upstream: each trigger is an independent Menu bundle — no
 // cross-menu arrow traversal or open-on-hover-of-next-trigger (needs a
 // menubar behavior primitive). Menubar content/item/label/separator/shortcut
-// now use correct cn-menubar-* family (was cn-dropdown-menu-*). Flat item
+// now use correct cn-menubar-* family (was cn-dropdown-menu-*). Items
+// highlight via data-active (upstream focus:) per the derivation mapping; the
+// panel's data-side is emitted from the anchor placement. Flat item
 // path only; checkbox/radio/submenu/destructive/inset require primitive work.
 // Per-item data-slot (menubar-item etc) cannot be stamped — primitive has no
 // per-item attribute hook.
@@ -78,12 +80,15 @@ export type MenubarViewInputsConfig<Item extends string> = Readonly<{
   itemToSearchText?: (item: Item, index: number) => string
   isButtonDisabled?: boolean
   isAnimated?: boolean
+  itemGroupKey?: (item: Item, index: number) => string
+  groupToHeading?: (groupKey: string) => GroupHeading | undefined
   triggerClass?: string
   itemsClass?: string
   itemClass?: string
   backdropClass?: string
   wrapperClass?: string
   separatorClass?: string
+  groupClass?: string
   ariaLabel?: string
   ariaLabelledBy?: string
 }>
@@ -91,32 +96,54 @@ export type MenubarViewInputsConfig<Item extends string> = Readonly<{
 /** Build styled `Menu.ViewInputs` for a menubar trigger's dropdown. */
 export const viewInputs = <Item extends string>(
   config: MenubarViewInputsConfig<Item>,
-): ViewInputs<Item> => ({
-  items: config.items,
-  anchor: config.anchor ?? MENUBAR_ANCHOR,
-  isItemDisabled: config.isItemDisabled,
-  itemToSearchText: config.itemToSearchText,
-  isButtonDisabled: config.isButtonDisabled,
-  buttonContent: config.buttonContent,
-  ariaLabel: config.ariaLabel,
-  ariaLabelledBy: config.ariaLabelledBy,
-  buttonClassName: cn(menubarTriggerClass, config.triggerClass),
-  buttonAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-trigger')]),
-  itemsClassName: cn(
-    config.isAnimated !== false ? menubarContentAnimatedClass : menubarContentClass,
-    config.itemsClass,
-  ),
-  itemsAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-content')]),
-  itemToConfig: (item, context) => {
-    const { className, content } = config.itemToConfig(item, context)
-    return { className: cn(menubarItemClass, config.itemClass, className), content }
-  },
-  separatorClassName: cn(menubarSeparatorClass, config.separatorClass),
-  separatorAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-separator')]),
-  backdropClassName: cn(menubarBackdropClass, config.backdropClass),
-  className: cn(menubarWrapperClass, config.wrapperClass),
-  attributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar')]),
-})
+): ViewInputs<Item> => {
+  // Upstream slide-in variants key on data-side; foldkit anchors expose
+  // placement ("bottom-start"), so derive the physical side here.
+  const anchor = config.anchor ?? MENUBAR_ANCHOR
+  const side = (anchor.placement ?? 'bottom').split('-')[0] || 'bottom'
+  return {
+    items: config.items,
+    anchor,
+    isItemDisabled: config.isItemDisabled,
+    itemToSearchText: config.itemToSearchText,
+    isButtonDisabled: config.isButtonDisabled,
+    buttonContent: config.buttonContent,
+    itemGroupKey: config.itemGroupKey,
+    groupToHeading: config.groupToHeading
+      ? (groupKey) => {
+          const heading = config.groupToHeading!(groupKey)
+          if (!heading) return undefined
+          return {
+            content: heading.content,
+            className: cn(menubarHeadingClass, heading.className),
+          }
+        }
+      : undefined,
+    ariaLabel: config.ariaLabel,
+    ariaLabelledBy: config.ariaLabelledBy,
+    buttonClassName: cn(menubarTriggerClass, config.triggerClass),
+    buttonAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-trigger')]),
+    itemsClassName: cn(
+      config.isAnimated !== false ? menubarContentAnimatedClass : menubarContentClass,
+      config.itemsClass,
+    ),
+    itemsAttributes: childAttributes([
+      inertHtml.DataAttribute('slot', 'menubar-content'),
+      inertHtml.DataAttribute('side', side),
+    ]),
+    itemToConfig: (item, context) => {
+      const { className, content } = config.itemToConfig(item, context)
+      return { className: cn(menubarItemClass, config.itemClass, className), content }
+    },
+    separatorClassName: cn(menubarSeparatorClass, config.separatorClass),
+    separatorAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-separator')]),
+    groupClassName: config.groupClass,
+    groupAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-group')]),
+    backdropClassName: cn(menubarBackdropClass, config.backdropClass),
+    className: cn(menubarWrapperClass, config.wrapperClass),
+    attributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar')]),
+  }
+}
 
 /** Wrap a single menubar trigger's menu in the bar container. */
 export const menubar = <M>(children: ReadonlyArray<Html>, h: HtmlBuilder<M>): Html =>

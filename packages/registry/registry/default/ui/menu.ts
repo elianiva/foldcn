@@ -13,8 +13,9 @@ import { cn } from '@/lib/utils'
 //   export const ActionMenu = Menu.create<"Edit" | "Delete">()
 //
 // foldkit deltas: items highlight via data-active (upstream uses focus:) —
-// prefix adjusted per docs/deriving-from-base.md; panels emit data-side
-// derived from anchor placement. Gaps vs upstream: no checkbox/radio/submenu/
+// prefix adjusted per docs/deriving-from-base.md; the panel's data-side is
+// emitted here from the anchor placement (foldkit anchors expose placement,
+// not side). Gaps vs upstream: no checkbox/radio/submenu/
 // destructive/inset item kinds (primitive-level). Flat item path uses correct
 // tokens/slots; per-item data-slot (dropdown-menu-item etc) cannot be stamped —
 // primitive has no per-item attribute hook (documented gap). Sub-trigger uses
@@ -101,44 +102,53 @@ export type MenuViewInputsConfig<Item extends string> = Readonly<{
 /** Build styled `Menu.ViewInputs` with foldcn's classes baked in. */
 export const viewInputs = <Item extends string>(
   config: MenuViewInputsConfig<Item>,
-): ViewInputs<Item> => ({
-  items: config.items,
-  anchor: config.anchor ?? MENU_ANCHOR,
-  isItemDisabled: config.isItemDisabled,
-  itemToSearchText: config.itemToSearchText,
-  isButtonDisabled: config.isButtonDisabled,
-  buttonContent: config.buttonContent,
-  itemGroupKey: config.itemGroupKey,
-  groupToHeading: config.groupToHeading
-    ? (groupKey) => {
-        const heading = config.groupToHeading!(groupKey)
-        if (!heading) return undefined
-        return {
-          content: heading.content,
-          className: cn(menuHeadingClass, heading.className),
+): ViewInputs<Item> => {
+  // Upstream slide-in variants key on data-side; foldkit anchors expose
+  // placement ("bottom-start"), so derive the physical side here.
+  const anchor = config.anchor ?? MENU_ANCHOR
+  const side = (anchor.placement ?? 'bottom').split('-')[0] || 'bottom'
+  return {
+    items: config.items,
+    anchor,
+    isItemDisabled: config.isItemDisabled,
+    itemToSearchText: config.itemToSearchText,
+    isButtonDisabled: config.isButtonDisabled,
+    buttonContent: config.buttonContent,
+    itemGroupKey: config.itemGroupKey,
+    groupToHeading: config.groupToHeading
+      ? (groupKey) => {
+          const heading = config.groupToHeading!(groupKey)
+          if (!heading) return undefined
+          return {
+            content: heading.content,
+            className: cn(menuHeadingClass, heading.className),
+          }
         }
-      }
-    : undefined,
-  ariaLabel: config.ariaLabel,
-  ariaLabelledBy: config.ariaLabelledBy,
-  buttonClassName: cn(menuTriggerClass, config.triggerClass),
-  buttonAttributes: childAttributes([inertHtml.DataAttribute('slot', 'dropdown-menu-trigger')]),
-  itemsClassName: cn(
-    config.isAnimated !== false ? menuItemsAnimatedClass : menuItemsClass,
-    config.itemsClass,
-  ),
-  itemsAttributes: childAttributes([inertHtml.DataAttribute('slot', 'dropdown-menu-content')]),
-  itemToConfig: (item, context) => {
-    const { className, content } = config.itemToConfig(item, context)
-    return { className: cn(menuItemClass, config.itemClass, className), content }
-  },
-  separatorClassName: cn(menuSeparatorClass, config.separatorClass),
-  separatorAttributes: childAttributes([
-    inertHtml.DataAttribute('slot', 'dropdown-menu-separator'),
-  ]),
-  groupClassName: config.groupClass,
-  groupAttributes: childAttributes([inertHtml.DataAttribute('slot', 'dropdown-menu-group')]),
-  backdropClassName: cn(menuBackdropClass, config.backdropClass),
-  className: cn(menuWrapperClass, config.wrapperClass),
-  attributes: childAttributes([inertHtml.DataAttribute('slot', 'dropdown-menu')]),
-})
+      : undefined,
+    ariaLabel: config.ariaLabel,
+    ariaLabelledBy: config.ariaLabelledBy,
+    buttonClassName: cn(menuTriggerClass, config.triggerClass),
+    buttonAttributes: childAttributes([inertHtml.DataAttribute('slot', 'dropdown-menu-trigger')]),
+    itemsClassName: cn(
+      config.isAnimated !== false ? menuItemsAnimatedClass : menuItemsClass,
+      config.itemsClass,
+    ),
+    itemsAttributes: childAttributes([
+      inertHtml.DataAttribute('slot', 'dropdown-menu-content'),
+      inertHtml.DataAttribute('side', side),
+    ]),
+    itemToConfig: (item, context) => {
+      const { className, content } = config.itemToConfig(item, context)
+      return { className: cn(menuItemClass, config.itemClass, className), content }
+    },
+    separatorClassName: cn(menuSeparatorClass, config.separatorClass),
+    separatorAttributes: childAttributes([
+      inertHtml.DataAttribute('slot', 'dropdown-menu-separator'),
+    ]),
+    groupClassName: config.groupClass,
+    groupAttributes: childAttributes([inertHtml.DataAttribute('slot', 'dropdown-menu-group')]),
+    backdropClassName: cn(menuBackdropClass, config.backdropClass),
+    className: cn(menuWrapperClass, config.wrapperClass),
+    attributes: childAttributes([inertHtml.DataAttribute('slot', 'dropdown-menu')]),
+  }
+}

@@ -31,11 +31,12 @@ export type OutMessage = typeof OutMessage.Type
 // foldcn gap vs upstream: opens on activation at a fixed anchor — foldkit has
 // no right-click/pointer-position anchoring primitive (wire a region trigger
 // yourself). Items highlight via data-active (upstream focus:) per the
-// derivation mapping. Flat item path uses correct tokens/slots; per-item
-// data-slot (context-menu-item etc) cannot be stamped — primitive has no
-// per-item attribute hook. Submenu/checkbox/radio/destructive/inset kinds
-// require primitive work. Pointer-anchoring is primitive ceiling — tokens/slots
-// only.
+// derivation mapping. The panel's data-side is emitted from the anchor
+// placement (foldkit anchors expose placement, not side). Flat item path uses
+// correct tokens/slots; per-item data-slot (context-menu-item etc) cannot be
+// stamped — primitive has no per-item attribute hook. Submenu/checkbox/radio/
+// destructive/inset kinds require primitive work. Pointer-anchoring is
+// primitive ceiling — tokens/slots only.
 
 export type Bundle<Item extends string = string> = FoldkitMenu.Bundle<Item>
 export type InitConfig = FoldkitMenu.InitConfig
@@ -97,42 +98,53 @@ export type ContextMenuViewInputsConfig<Item extends string> = Readonly<{
 /** Build styled `Menu.ViewInputs` for a context menu with foldcn's classes. */
 export const viewInputs = <Item extends string>(
   config: ContextMenuViewInputsConfig<Item>,
-): ViewInputs<Item> => ({
-  items: config.items,
-  anchor: config.anchor ?? CONTEXT_MENU_ANCHOR,
-  isItemDisabled: config.isItemDisabled,
-  itemToSearchText: config.itemToSearchText,
-  isButtonDisabled: config.isButtonDisabled,
-  buttonContent: config.buttonContent,
-  itemGroupKey: config.itemGroupKey,
-  groupToHeading: config.groupToHeading
-    ? (groupKey) => {
-        const heading = config.groupToHeading!(groupKey)
-        if (!heading) return undefined
-        return {
-          content: heading.content,
-          className: cn(contextMenuHeadingClass, heading.className),
+): ViewInputs<Item> => {
+  // Upstream slide-in variants key on data-side; foldkit anchors expose
+  // placement ("bottom-start"), so derive the physical side here.
+  const anchor = config.anchor ?? CONTEXT_MENU_ANCHOR
+  const side = (anchor.placement ?? 'bottom').split('-')[0] || 'bottom'
+  return {
+    items: config.items,
+    anchor,
+    isItemDisabled: config.isItemDisabled,
+    itemToSearchText: config.itemToSearchText,
+    isButtonDisabled: config.isButtonDisabled,
+    buttonContent: config.buttonContent,
+    itemGroupKey: config.itemGroupKey,
+    groupToHeading: config.groupToHeading
+      ? (groupKey) => {
+          const heading = config.groupToHeading!(groupKey)
+          if (!heading) return undefined
+          return {
+            content: heading.content,
+            className: cn(contextMenuHeadingClass, heading.className),
+          }
         }
-      }
-    : undefined,
-  ariaLabel: config.ariaLabel,
-  ariaLabelledBy: config.ariaLabelledBy,
-  buttonClassName: cn(contextMenuTriggerClass, config.triggerClass),
-  buttonAttributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu-trigger')]),
-  itemsClassName: cn(
-    config.isAnimated !== false ? contextMenuItemsAnimatedClass : contextMenuItemsClass,
-    config.itemsClass,
-  ),
-  itemsAttributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu-content')]),
-  itemToConfig: (item, context) => {
-    const { className, content } = config.itemToConfig(item, context)
-    return { className: cn(contextMenuItemClass, config.itemClass, className), content }
-  },
-  separatorClassName: cn(contextMenuSeparatorClass, config.separatorClass),
-  separatorAttributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu-separator')]),
-  groupClassName: config.groupClass,
-  groupAttributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu-group')]),
-  backdropClassName: cn(contextMenuBackdropClass, config.backdropClass),
-  className: cn(contextMenuWrapperClass, config.wrapperClass),
-  attributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu')]),
-})
+      : undefined,
+    ariaLabel: config.ariaLabel,
+    ariaLabelledBy: config.ariaLabelledBy,
+    buttonClassName: cn(contextMenuTriggerClass, config.triggerClass),
+    buttonAttributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu-trigger')]),
+    itemsClassName: cn(
+      config.isAnimated !== false ? contextMenuItemsAnimatedClass : contextMenuItemsClass,
+      config.itemsClass,
+    ),
+    itemsAttributes: childAttributes([
+      inertHtml.DataAttribute('slot', 'context-menu-content'),
+      inertHtml.DataAttribute('side', side),
+    ]),
+    itemToConfig: (item, context) => {
+      const { className, content } = config.itemToConfig(item, context)
+      return { className: cn(contextMenuItemClass, config.itemClass, className), content }
+    },
+    separatorClassName: cn(contextMenuSeparatorClass, config.separatorClass),
+    separatorAttributes: childAttributes([
+      inertHtml.DataAttribute('slot', 'context-menu-separator'),
+    ]),
+    groupClassName: config.groupClass,
+    groupAttributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu-group')]),
+    backdropClassName: cn(contextMenuBackdropClass, config.backdropClass),
+    className: cn(contextMenuWrapperClass, config.wrapperClass),
+    attributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu')]),
+  }
+}
