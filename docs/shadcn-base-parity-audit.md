@@ -83,7 +83,7 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 - **select — MAJOR.** Flat options only (no groups/labels/separators/scroll arrows); activedescendant focus vs item focus; h-9/rounded-md vs h-8/rounded-lg material. Native `<select>` export ≈ base native-select.
 - **menu ↔ dropdown-menu — MAJOR.** Plain items only (no checkbox/radio/sub/destructive/inset); panel `min-w-48 rounded-md border` vs `min-w-32 rounded-lg ring-foreground/10`; zero data-slots; shortcut not accent-on-focus.
 - **context-menu — MAJOR.** Same gaps as menu + no pointer anchoring (bug #6).
-- **menubar — MAJOR.** Static bar of independent menus; no cross-menu keyboard model (bug #7); h-9 vs h-8 bar.
+- **menubar — MAJOR.** Bar of independent live menus (per-menu open/keyboard/typeahead/disabled/groups all work; anchor gap 8 = upstream sideOffset; group + checkbox/radio/sub token constants ported, demo covers every upstream example interactively). Still no cross-menu keyboard model (bug #7 — OPEN); submenu/checkbox/radio/destructive/inset item kinds need primitive work (demo uses labeled groups + state-managed check/radio rows).
 - **combobox — MAJOR.** Parent-owned filtering; no chips UI for multi-select, no clear button, no Empty row; panel metrics differ.
 - **command — MAJOR.** Presentational only (bug #8); item selection `bg-accent` vs base `bg-muted`.
 

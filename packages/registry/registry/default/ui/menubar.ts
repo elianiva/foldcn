@@ -26,13 +26,20 @@ export type Message = typeof Message.Type
 export const OutMessage = FoldkitMenu.OutMessage
 export type OutMessage = typeof OutMessage.Type
 
-// foldcn gaps vs upstream: each trigger is an independent Menu bundle — no
-// cross-menu arrow traversal or open-on-hover-of-next-trigger (needs a
-// menubar behavior primitive). Menubar content/item/label/separator/shortcut
-// now use correct cn-menubar-* family (was cn-dropdown-menu-*). Flat item
-// path only; checkbox/radio/submenu/destructive/inset require primitive work.
-// Per-item data-slot (menubar-item etc) cannot be stamped — primitive has no
-// per-item attribute hook.
+// foldcn gaps vs upstream (primitive ceiling — needs @foldkit/ui work): each
+// trigger is an independent Menu bundle — no cross-menu ArrowLeft/Right
+// traversal or open-on-hover-of-next-trigger (upstream Menubar primitive
+// behavior). No submenu/checkbox/radio item kinds (upstream MenubarSub,
+// MenubarCheckboxItem, MenubarRadioGroup/Item) — the Menu primitive has flat
+// items + labeled groups only; demo state can toggle check/radio affordances
+// (see the web menubar demo). No per-item data-inset/data-variant attributes
+// (upstream MenubarItem inset/destructive props) and no per-item data-slot
+// (menubar-item etc) — the primitive has no per-item attribute hook.
+// Menubar content/item/label/separator/shortcut use the cn-menubar-* family.
+// Group headings render via itemGroupKey/groupToHeading (upstream
+// MenubarGroup/MenubarLabel); separators render between groups. The panel is
+// portaled to the document body by the primitive itself (upstream
+// MenubarPortal equivalent). Align offset (-4) has no anchor equivalent.
 
 export type Bundle<Item extends string = string> = FoldkitMenu.Bundle<Item>
 export type InitConfig = FoldkitMenu.InitConfig
@@ -57,15 +64,43 @@ export const menubarSeparatorClass = 'cn-menubar-separator -mx-1 my-1 h-px'
 
 export const menubarHeadingClass = 'cn-menubar-label'
 
+/** Upstream `MenubarLabel` token (alias — foldcn historically named it heading). */
+export const menubarLabelClass = menubarHeadingClass
+
 export const menubarShortcutClass = 'cn-menubar-shortcut ml-auto'
+
+/** Upstream `MenubarCheckboxItem` token string (verbatim). No foldkit highlight
+ *  twin: upstream keys checkbox highlight on focus: inside the token. */
+export const menubarCheckboxItemClass =
+  'cn-menubar-checkbox-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+
+export const menubarCheckboxItemIndicatorClass =
+  'cn-menubar-checkbox-item-indicator pointer-events-none absolute flex items-center justify-center'
+
+/** Upstream `MenubarRadioItem` token string (verbatim — note: no disabled
+ *  opacity, matching upstream). */
+export const menubarRadioItemClass =
+  'cn-menubar-radio-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0'
+
+export const menubarRadioItemIndicatorClass =
+  'cn-menubar-radio-item-indicator pointer-events-none absolute flex items-center justify-center'
+
+/** Upstream `MenubarSubTrigger` token (verbatim). Open-state styling arrives
+ *  via cn-compat.css twins (foldkit emits data-open, Base UI data-popup-open). */
+export const menubarSubTriggerClass = 'cn-menubar-sub-trigger'
+
+/** Upstream `MenubarSubContent` token string (verbatim). */
+export const menubarSubContentClass = 'cn-menubar-sub-content cn-menu-target cn-menu-translucent'
 
 export const menubarBackdropClass = 'fixed inset-0 z-0'
 
 export const menubarWrapperClass = 'relative inline-block'
 
+// Upstream MenubarContent: align=start (placement bottom-start), sideOffset=8
+// (gap), alignOffset=-4 (no anchor equivalent — documented gap above).
 export const MENUBAR_ANCHOR: AnchorConfig = {
   placement: 'bottom-start',
-  gap: 4,
+  gap: 8,
   padding: 8,
 }
 
@@ -78,12 +113,15 @@ export type MenubarViewInputsConfig<Item extends string> = Readonly<{
   itemToSearchText?: (item: Item, index: number) => string
   isButtonDisabled?: boolean
   isAnimated?: boolean
+  itemGroupKey?: (item: Item, index: number) => string
+  groupToHeading?: (groupKey: string) => GroupHeading | undefined
   triggerClass?: string
   itemsClass?: string
   itemClass?: string
   backdropClass?: string
   wrapperClass?: string
   separatorClass?: string
+  groupClass?: string
   ariaLabel?: string
   ariaLabelledBy?: string
 }>
@@ -98,6 +136,17 @@ export const viewInputs = <Item extends string>(
   itemToSearchText: config.itemToSearchText,
   isButtonDisabled: config.isButtonDisabled,
   buttonContent: config.buttonContent,
+  itemGroupKey: config.itemGroupKey,
+  groupToHeading: config.groupToHeading
+    ? (groupKey) => {
+        const heading = config.groupToHeading!(groupKey)
+        if (!heading) return undefined
+        return {
+          content: heading.content,
+          className: cn(menubarHeadingClass, heading.className),
+        }
+      }
+    : undefined,
   ariaLabel: config.ariaLabel,
   ariaLabelledBy: config.ariaLabelledBy,
   buttonClassName: cn(menubarTriggerClass, config.triggerClass),
@@ -113,6 +162,8 @@ export const viewInputs = <Item extends string>(
   },
   separatorClassName: cn(menubarSeparatorClass, config.separatorClass),
   separatorAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-separator')]),
+  groupClassName: config.groupClass,
+  groupAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-group')]),
   backdropClassName: cn(menubarBackdropClass, config.backdropClass),
   className: cn(menubarWrapperClass, config.wrapperClass),
   attributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar')]),

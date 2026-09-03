@@ -318,6 +318,7 @@ export const update = (model: Model, message: Message): DemoUpdateReturn => {
       ...listboxSlice.handlers(model),
       ...loginFormSlice.handlers(model),
       ...menuSlice.handlers(model),
+      ...menubarSlice.handlers(model),
       ...navSlice.handlers(model),
       ...navigationMenuSlice.handlers(model),
       ...nativeSelectSlice.handlers(model),
