@@ -1,0 +1,17 @@
+pre-commit:
+  # fmt must run before lint so fixes are staged before lint checks
+  parallel: false
+  commands:
+    fmt:
+      run: pnpm fmt
+      stage_fixed: true
+    lint:
+      run: pnpm lint
+
+pre-push:
+  parallel: true
+  commands:
+    build:
+      run: pnpm build
+    typecheck:
+      run: pnpm typecheck

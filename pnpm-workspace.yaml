@@ -3,6 +3,7 @@ packages:
 minimumReleaseAge: 0
 allowBuilds:
   esbuild: true
+  lefthook: true
   msgpackr-extract: true
   sharp: true
   workerd: true
