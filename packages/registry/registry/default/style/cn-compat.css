@@ -110,6 +110,33 @@
   @apply data-enter:animate-in data-enter:fade-in-0 data-enter:zoom-in-95 data-leave:animate-out data-leave:fade-out-0 data-leave:zoom-out-95 duration-300;
 }
 
+/* Floating panels that never scroll upstream: foldkit's anchor `size`
+ * middleware unconditionally writes inline `max-height: <available>px` +
+ * `overflow-y: auto` onto every anchored panel without an arrow element (see
+ * @foldkit/ui anchor/anchor.js). Upstream popover/tooltip/hover-card/
+ * navigation-menu popups have no max-height and no overflow, and the tooltip
+ * arrow deliberately protrudes past the panel's padding box — so the forced
+ * scroll container puts a scrollbar on panels whose content merely fits
+ * (tooltip, every side) or whenever content exceeds the available space
+ * (popover/hover-card/navigation-menu, instead of overflowing like upstream).
+ * These `!important` deltas beat the inline styles and restore the upstream
+ * behavior. Menu-family panels (menu/select/context-menu/menubar)
+ * intentionally scroll per their authored strings and are untouched. */
+.cn-popover-content,
+.cn-tooltip-content,
+.cn-hover-card-content,
+.cn-navigation-menu-content {
+  @apply max-h-none! overflow-visible!;
+}
+
+/* Combobox content keeps its upstream height cap but must not scroll itself:
+ * upstream pairs `overflow-hidden` on the content with scrolling on the inner
+ * `cn-combobox-list`. The anchor's inline `overflow-y: auto` defeats the
+ * token's `overflow-hidden`, so re-assert it importantly. */
+.cn-combobox-content {
+  @apply overflow-hidden!;
+}
+
 /* sheet: upstream keys enter/exit motion on data-starting-style/
  * data-ending-style, which foldkit cannot emit — mapped to its
  * data-enter/data-leave transition windows instead. */

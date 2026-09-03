@@ -45,8 +45,13 @@ export const menubarClass = 'cn-menubar flex items-center'
 /** Upstream menubar trigger token string. */
 export const menubarTriggerClass = 'cn-menubar-trigger flex items-center outline-hidden select-none'
 
+/** Upstream MenubarContent renders DropdownMenuContent (which owns the panel's
+ *  scroll-container utilities) with the menubar tokens layered on. Mirror that
+ *  composition so the panel scrolls intentionally like upstream instead of
+ *  relying on the anchor's inline overflow (whose computed overflow-x: auto
+ *  risks horizontal scrollbars). */
 export const menubarContentClass =
-  'cn-menubar-content cn-menubar-content-logical cn-menu-target cn-menu-translucent'
+  'cn-dropdown-menu-content cn-dropdown-menu-content-logical cn-menu-target cn-menu-translucent z-50 max-h-(--available-height) w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none data-closed:overflow-hidden cn-menubar-content cn-menubar-content-logical'
 
 export const menubarContentAnimatedClass = menubarContentClass
 
