@@ -4,6 +4,7 @@ Outputs (all under packages/web/public):
   apple-touch-icon.png 180x180 iOS icon (full-bleed, no transparency)
   favicon-48x48.png    48x48 tab icon
   favicon-32x32.png    32x32 tab icon
+  favicon.ico          16/32/48 multi-size fallback for browsers and validators
 
 Social cards live under dist/client/og/ and render at build time via
 scripts/og-image.ts (takumi), one per page. They are not checked in.
@@ -43,6 +44,9 @@ def main() -> None:
     tile(180).save(PUBLIC_DIR / "apple-touch-icon.png")
     tile(48).save(PUBLIC_DIR / "favicon-48x48.png")
     tile(32).save(PUBLIC_DIR / "favicon-32x32.png")
+    tile(48).save(
+        PUBLIC_DIR / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)]
+    )
     print(f"wrote icon assets to {PUBLIC_DIR}")
 
 
