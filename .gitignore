@@ -2,7 +2,6 @@ node_modules/
 dist/
 .turbo/
 .alchemy/
-public/
 *.tgz
 .DS_Store
 packages/registry/styles/

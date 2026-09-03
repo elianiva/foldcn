@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://foldcn.elianiva.com/sitemap.xml
