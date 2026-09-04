@@ -137,6 +137,45 @@
   @apply overflow-hidden!;
 }
 
+/* `--anchor-width` bridge: upstream sizes dropdown/select/combobox panels to
+ * the trigger (`w-(--anchor-width)`, combobox also
+ * `min-w-[calc(var(--anchor-width)+--spacing(7))]`), resolving the var through
+ * Base UI's positioner. Foldkit's anchor publishes the trigger width as
+ * `--button-width` on the panel instead, so those utilities are dead (panels
+ * fall back to auto/min-w — e.g. a 192px select trigger got a 144px panel).
+ * Alias the var on the consuming tokens (menubar inherits it through its
+ * dropdown composition). No foldkit equivalent exists for
+ * `--available-height`/`--available-width`/`--transform-origin`; the inline
+ * max-height cap and centered zoom origin stand in. */
+.cn-dropdown-menu-content,
+.cn-select-content,
+.cn-combobox-content {
+  @apply [--anchor-width:var(--button-width)];
+}
+
+/* Placement-keyed slide twins: foldkit writes the live side to
+ * `data-placement` (bare side, `-start`/`-end` stripped) on every anchored
+ * panel, but only popover/tooltip/navigation-menu emit (static) `data-side`
+ * — and `flip` can move the panel after render (observed: side=bottom with
+ * placement=top), so the vendored `data-[side=…]` slide-ins play from the
+ * wrong direction, or never play where no side is emitted at all. These twins
+ * apply the same slide when the live placement disagrees with the rendered
+ * side; the `:not()` guard raises specificity so the live side wins
+ * deterministically, and goes inert when they agree. All eight styles agree
+ * on the slide mapping. (Menubar inherits the dropdown twins through its
+ * composition. Tooltip arrow geometry stays `data-side`-keyed — the arrow is
+ * a child element and cannot see the panel's placement — so wrong-edge
+ * arrows post-flip remain a known gap.) */
+.cn-popover-content,
+.cn-tooltip-content,
+.cn-hover-card-content,
+.cn-dropdown-menu-content,
+.cn-select-content,
+.cn-context-menu-content,
+.cn-combobox-content {
+  @apply not-data-[side=bottom]:data-[placement=bottom]:slide-in-from-top-2 not-data-[side=left]:data-[placement=left]:slide-in-from-right-2 not-data-[side=right]:data-[placement=right]:slide-in-from-left-2 not-data-[side=top]:data-[placement=top]:slide-in-from-bottom-2;
+}
+
 /* sheet: upstream keys enter/exit motion on data-starting-style/
  * data-ending-style, which foldkit cannot emit — mapped to its
  * data-enter/data-leave transition windows instead. */
