@@ -137,6 +137,19 @@
   @apply overflow-hidden!;
 }
 
+/* Tooltip arrow centering: upstream centers the arrow on the trigger via the
+ * floating-ui arrow middleware (inline `left`/`top` on the Arrow element).
+ * Foldkit's tooltip primitive has no arrow support, and the authored arrow
+ * string carries no cross-axis centering for top/bottom sides (left/right
+ * already center via `top-1/2`), so the arrow sat at its static position —
+ * ~25px off-center. Center it on the panel instead. This matches upstream
+ * exactly when the trigger is centered and unshifted; with start/end align
+ * or shift displacement the arrow sits panel-centered rather than
+ * trigger-centered (true centering needs primitive arrow middleware). */
+.cn-tooltip-arrow {
+  @apply data-[side=bottom]:left-1/2 data-[side=bottom]:-translate-x-1/2 data-[side=top]:left-1/2 data-[side=top]:-translate-x-1/2;
+}
+
 /* `--anchor-width` bridge: upstream sizes dropdown/select/combobox panels to
  * the trigger (`w-(--anchor-width)`, combobox also
  * `min-w-[calc(var(--anchor-width)+--spacing(7))]`), resolving the var through
