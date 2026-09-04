@@ -18,6 +18,8 @@ import { ArrowUp, ChevronRight, LocateFixed, Search, Users, X } from 'lucide'
 
 import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
+import { activeRegistryStyle } from '../../active-style'
+import type { RegistryStyle } from '../../active-style'
 
 const Message = defineMessageUnion({
   GotVirtualListMessage: { message: virtualList.Message },
@@ -365,7 +367,12 @@ const headerLazy = createLazy()
 const toolbarLazy = createLazy()
 const footerLazy = createLazy()
 
-const directoryHeader = (h: HtmlBuilder<AppMessage>, shownPersons: number): Html =>
+const directoryHeader = (
+  h: HtmlBuilder<AppMessage>,
+  shownPersons: number,
+  // oxlint-disable-next-line typescript/no-unused-vars
+  _style: RegistryStyle,
+): Html =>
   h.div(
     [h.Class('flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center')],
     [
@@ -400,6 +407,8 @@ const directoryToolbar = (
   search: string,
   team: string,
   isFiltering: boolean,
+  // oxlint-disable-next-line typescript/no-unused-vars
+  _style: RegistryStyle,
 ): Html =>
   h.div(
     [h.Class('flex flex-col gap-2 border-b border-border bg-muted/40 p-3')],
@@ -493,6 +502,8 @@ const directoryFooter = (
   h: HtmlBuilder<AppMessage>,
   shownPersons: number,
   groupCount: number,
+  // oxlint-disable-next-line typescript/no-unused-vars
+  _style: RegistryStyle,
 ): Html =>
   h.div(
     [
@@ -527,8 +538,8 @@ export const virtualListView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
           h.div(
             [h.Class('w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm')],
             [
-              headerLazy(directoryHeader, [h, personCount]),
-              toolbarLazy(directoryToolbar, [h, search, team, isFiltering]),
+              headerLazy(directoryHeader, [h, personCount, activeRegistryStyle()]),
+              toolbarLazy(directoryToolbar, [h, search, team, isFiltering, activeRegistryStyle()]),
               ...(items.length === 0
                 ? [
                     Empty<AppMessage>(
@@ -596,7 +607,7 @@ export const virtualListView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                       toParentMessage: (message) => Message.GotVirtualListMessage({ message }),
                     }),
                   ]),
-              footerLazy(directoryFooter, [h, personCount, groupCount]),
+              footerLazy(directoryFooter, [h, personCount, groupCount, activeRegistryStyle()]),
             ],
           ),
         ],

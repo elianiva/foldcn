@@ -1,4 +1,5 @@
 import type { Html, HtmlBuilder } from 'foldkit/html'
+import { createLazy } from 'foldkit/html'
 
 import { badge } from '../generated/registry/ui/badge'
 import { separator } from '../generated/registry/ui/separator'
@@ -9,6 +10,7 @@ import type { Category, Item } from '../catalog/types'
 import type { Message } from '../message'
 import type { Model } from '../model'
 import { sidebarView } from './chrome'
+import { activeRegistryStyle } from '../active-style'
 
 const GROUP_ORDER: ReadonlyArray<{
   category: Category
@@ -55,11 +57,13 @@ const row = (item: Item, h: HtmlBuilder<Message>): Html =>
     ],
   )
 
+const sidebarLazy = createLazy()
+
 export const componentsIndexView = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [h.Class('mx-auto flex w-full max-w-6xl flex-1')],
     [
-      sidebarView(model, h),
+      sidebarLazy(sidebarView, [h, 'Components', undefined, activeRegistryStyle()]),
       h.div(
         [
           h.Class(

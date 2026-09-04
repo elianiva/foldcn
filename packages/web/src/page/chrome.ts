@@ -15,6 +15,7 @@ import { ArrowRight, Computer, Moon, Sun } from 'lucide'
 import { Message } from '../message'
 import type { Message as AppMessage } from '../message'
 import type { Model, PackageManager } from '../model'
+import type { RegistryStyle } from '../active-style'
 
 import { categoryGroups } from '../catalog'
 import { gapsForItem } from '../catalog/gaps'
@@ -40,10 +41,13 @@ const betaBadge = (h: HtmlBuilder<AppMessage>): Html =>
     h,
   )
 
-export const themeSelector = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
+export const themeSelector = (
+  h: HtmlBuilder<AppMessage>,
+  themeToggle: Model['themeToggleGroup'],
+): Html =>
   h.submodel({
-    slotId: model.themeToggleGroup.id,
-    model: model.themeToggleGroup,
+    slotId: themeToggle.id,
+    model: themeToggle,
     view: toggleGroup.view,
     viewInputs: {
       variant: 'outline',
@@ -59,8 +63,15 @@ export const themeSelector = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
     toParentMessage: (message) => Message.GotThemeToggleGroupMessage({ message }),
   })
 
-export const headerView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
-  h.header(
+export const headerView = (
+  h: HtmlBuilder<AppMessage>,
+  themeToggle: Model['themeToggleGroup'],
+  // Cache key only: style switching rebinds the styled primitives, so the
+  // memoized VNode must rebuild for the new tree. Unused by design.
+  // oxlint-disable-next-line typescript/no-unused-vars
+  _style: RegistryStyle,
+): Html => {
+  return h.header(
     [h.Class('py-4 font-mono')],
     [
       h.div(
@@ -109,13 +120,14 @@ export const headerView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                 ],
                 ['GitHub'],
               ),
-              themeSelector(model, h),
+              themeSelector(h, themeToggle),
             ],
           ),
         ],
       ),
     ],
   )
+}
 
 const parityBadge = (status: ParityStatus, h: HtmlBuilder<AppMessage>): Html =>
   badge<AppMessage>(
@@ -131,7 +143,13 @@ const parityLegendBadge = (status: ParityStatus, h: HtmlBuilder<AppMessage>): Ht
     h,
   )
 
-export const sidebarView = (model: Model, h: HtmlBuilder<AppMessage>): Html => {
+export const sidebarView = (
+  h: HtmlBuilder<AppMessage>,
+  routeTag: string,
+  routeName: string | undefined,
+  // oxlint-disable-next-line typescript/no-unused-vars
+  _style: RegistryStyle,
+): Html => {
   const componentsGroup = categoryGroups.find((g) => g.category === 'Components')
   const components = componentsGroup?.items ?? []
   const counts = {
@@ -209,7 +227,7 @@ export const sidebarView = (model: Model, h: HtmlBuilder<AppMessage>): Html => {
                   h.ul(
                     [h.Class('flex flex-col gap-0.5')],
                     sortedItems.map((item) => {
-                      const isActive = model.route._tag === 'Item' && model.route.name === item.name
+                      const isActive = routeTag === 'Item' && routeName === item.name
                       const status: ParityStatus | null = isComponentsGroup
                         ? parityStatus(item.name)
                         : null
@@ -281,8 +299,12 @@ export const sidebarView = (model: Model, h: HtmlBuilder<AppMessage>): Html => {
   )
 }
 
-export const footerView = (h: HtmlBuilder<AppMessage>): Html =>
-  h.footer(
+export const footerView = (
+  h: HtmlBuilder<AppMessage>,
+  // oxlint-disable-next-line typescript/no-unused-vars
+  _style: RegistryStyle,
+): Html => {
+  return h.footer(
     [h.Class('font-mono')],
     [
       separator<AppMessage>({}, h),
@@ -330,6 +352,7 @@ export const footerView = (h: HtmlBuilder<AppMessage>): Html =>
       ),
     ],
   )
+}
 
 export const copyButton = (
   h: HtmlBuilder<AppMessage>,
@@ -424,17 +447,19 @@ const installCommand = (packageManager: PackageManager, componentName: string): 
 
 export const installTabs = (
   h: HtmlBuilder<AppMessage>,
-  model: Model,
   componentName: string,
+  selectedValue: Model['selectedPackageManager'],
+  installTabsModel: Model['installTabs'],
+  maybeCopied: Model['maybeCopiedValue'],
 ): Html =>
   h.submodel({
     slotId: 'install-tabs',
-    model: model.installTabs,
+    model: installTabsModel,
     view: PackageManagerTabs.view,
     viewInputs: tabsStyledViewInputs<Message, PackageManager>(
       {
         tabs: ['pnpm', 'npm', 'bun'],
-        selectedValue: model.selectedPackageManager,
+        selectedValue,
         ariaLabel: 'Package manager',
         variant: 'line',
         panel: (tab, _render, h) => {
@@ -450,7 +475,7 @@ export const installTabs = (
                 [h.Class('select-all overflow-x-auto whitespace-nowrap font-mono text-[13px]')],
                 [command],
               ),
-              copyButton(h, command, model.maybeCopiedValue),
+              copyButton(h, command, maybeCopied),
             ],
           )
         },
