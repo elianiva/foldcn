@@ -17,7 +17,7 @@ export const gapsByItem = {
     'Renders independent menus in a bar — no cross-menu keyboard traversal or open-on-hover of the next trigger.',
   ],
   'context-menu': [
-    'Opens on activation at a fixed anchor — foldkit has no right-click/pointer-position anchoring primitive yet.',
+    'Right-click opens the menu anchored to the trigger region — foldkit has no pointer-position anchoring primitive yet.',
   ],
   toast: [
     'No swipe-to-dismiss — foldkit has no pointer-move gesture primitive yet. Auto-dismiss, hover-pause, hover-to-expand and manual close work as expected.',
@@ -36,7 +36,7 @@ export const gapsByItem = {
     'Addons do not focus the input on click — foldkit has no scoped click-to-focus primitive yet.',
   ],
   menu: [
-    'Flat items only — no submenu, checkbox-item, radio-item, or destructive variants (foldkit menu primitives do not have those kinds yet).',
+    'No submenu, checkbox-item, or radio-item kinds — submenus render as labelled groups and checkbox/radio rows run off demo state; toggling one closes the panel.',
   ],
   progress: [
     'Indeterminate state renders an empty track — animated indeterminacy awaits primitive support.',
