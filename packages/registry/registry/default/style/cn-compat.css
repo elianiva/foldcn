@@ -153,3 +153,13 @@
 .cn-input-group-button-size-sm {
   @apply gap-1;
 }
+
+/* menu panels: upstream's frosted-glass token (bg-popover/70 + a ::before
+ * backdrop-blur layer) does not reproduce under foldkit — the blur has no
+ * visible effect in foldcn's render, leaving raw see-through transparency on
+ * menubar/dropdown/context panels (upstream's deployed docs render these
+ * panels opaque). Pin the panel background opaque; authored strings keep
+ * cn-menu-translucent verbatim for upstream diffability. */
+.cn-menu-translucent {
+  @apply bg-popover;
+}
