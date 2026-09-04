@@ -2,6 +2,7 @@ import { Schema as S } from 'effect'
 import { Model as InstallTabsModel } from '@foldkit/ui/tabs'
 
 import { Model as ToggleGroupModel } from './generated/registry/ui/toggle-group'
+import { Model as SheetModel } from './generated/registry/ui/sheet'
 
 import { Model as DemoModelSchema } from './demo'
 import { RegistryStyle } from './active-style'
@@ -27,6 +28,9 @@ export const Model = S.Struct({
   /** The header's theme selector: a stateful ToggleGroup submodel whose
    *  selection mirrors `maybeThemePreference`. */
   themeToggleGroup: ToggleGroupModel,
+  /** The mobile docs nav drawer: a Sheet submodel (a Dialog state machine
+   *  owned by @foldkit/ui via the Sheet re-export), not scattered booleans. */
+  navSheet: SheetModel,
   selectedPackageManager: PackageManager,
   /** The registry style applied to the live demo previews (see active-style.ts). */
   selectedStyle: RegistryStyle,

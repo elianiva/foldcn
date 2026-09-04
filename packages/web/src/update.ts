@@ -12,6 +12,7 @@ import { Message } from './message'
 import type { Message as AppMessage } from './message'
 import { Model, PackageManager, ResolvedTheme, ThemePreference } from './model'
 import * as ToggleGroup from './generated/registry/ui/toggle-group'
+import * as Sheet from './generated/registry/ui/sheet'
 
 export const THEME_STORAGE_KEY = 'foldcn-theme'
 export const PACKAGE_MANAGER_STORAGE_KEY = 'foldcn-package-manager'
@@ -240,6 +241,14 @@ const foldInstallTabs = (model: Model, message: Tabs.Message): UpdateReturn => {
   }
 }
 
+const foldNavSheet = (model: Model, message: Sheet.Message): UpdateReturn => {
+  const { model: next, commands = [] } = Sheet.update(model.navSheet, message)
+  return {
+    model: evo(model, { navSheet: () => next }),
+    commands: Command.mapMessages(commands, (m) => Message.GotNavSheetMessage({ message: m })),
+  }
+}
+
 export const update = (model: Model, message: AppMessage): UpdateReturn =>
   M.value(message).pipe(
     withUpdateReturn,
@@ -255,13 +264,29 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
             External: ({ href }) => ({ model, commands: [LoadExternal({ href })] }),
           }),
         ),
-      ChangedUrl: ({ url }) => ({
-        model: evo(model, { route: () => parseRoute(url) }),
-        commands: [ScrollToTop()],
-      }),
+      ChangedUrl: ({ url }) => {
+        const { model: nextNavSheet, commands: navCommands = [] } = Sheet.close(model.navSheet)
+        return {
+          model: evo(model, { route: () => parseRoute(url), navSheet: () => nextNavSheet }),
+          commands: [
+            ScrollToTop(),
+            ...Command.mapMessages(navCommands, (m) => Message.GotNavSheetMessage({ message: m })),
+          ],
+        }
+      },
       GotDemoMessage: ({ message }) => foldDemo(model, message),
       GotInstallTabsMessage: ({ message }) => foldInstallTabs(model, message),
       GotThemeToggleGroupMessage: ({ message }) => foldThemeToggleGroup(model, message),
+      ClickedOpenNavSheet: () => {
+        const { model: next, commands = [] } = Sheet.open(model.navSheet)
+        return {
+          model: evo(model, { navSheet: () => next }),
+          commands: Command.mapMessages(commands, (m) =>
+            Message.GotNavSheetMessage({ message: m }),
+          ),
+        }
+      },
+      GotNavSheetMessage: ({ message }) => foldNavSheet(model, message),
 
       SelectedThemePreference: ({ preference }) => applyThemePreference(model, preference),
       ChangedSystemTheme: ({ theme }) =>

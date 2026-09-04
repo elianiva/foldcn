@@ -5,6 +5,7 @@ import type * as Update from 'foldkit/update'
 import * as Tabs from '@foldkit/ui/tabs'
 
 import * as ToggleGroup from './generated/registry/ui/toggle-group'
+import * as Sheet from './generated/registry/ui/sheet'
 
 import * as Demo from './demo'
 import { parseRoute } from './route'
@@ -35,6 +36,7 @@ export const init = (url: Url.Url): InitReturn => {
       demo,
       installTabs,
       themeToggleGroup: ToggleGroup.init({ id: 'theme-toggle-group', type: 'single' }),
+      navSheet: Sheet.init({ id: 'nav-sheet' }),
       selectedPackageManager: 'pnpm',
       selectedStyle: 'default',
       expandedCodeBlocks: new Set<string>(),

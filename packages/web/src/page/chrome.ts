@@ -10,7 +10,8 @@ import { badge } from '../generated/registry/ui/badge'
 import { separator } from '../generated/registry/ui/separator'
 import { styledViewInputs as tabsStyledViewInputs } from '../generated/registry/ui/tabs'
 import * as toggleGroup from '../generated/registry/ui/toggle-group'
-import { ArrowRight, Computer, Moon, Sun } from 'lucide'
+import * as Sheet from '../generated/registry/ui/sheet'
+import { ArrowRight, Computer, Menu, Moon, Sun } from 'lucide'
 
 import { Message } from '../message'
 import type { Message as AppMessage } from '../message'
@@ -63,6 +64,8 @@ export const themeSelector = (
     toParentMessage: (message) => Message.GotThemeToggleGroupMessage({ message }),
   })
 
+const isDocsRoute = (routeTag: string): boolean => routeTag === 'Components' || routeTag === 'Item'
+
 export const headerView = (
   h: HtmlBuilder<AppMessage>,
   themeToggle: Model['themeToggleGroup'],
@@ -70,6 +73,7 @@ export const headerView = (
   // memoized VNode must rebuild for the new tree. Unused by design.
   // oxlint-disable-next-line typescript/no-unused-vars
   _style: RegistryStyle,
+  routeTag: string,
 ): Html => {
   return h.header(
     [h.Class('py-4 font-mono')],
@@ -81,19 +85,39 @@ export const headerView = (
           ),
         ],
         [
-          h.a(
-            [h.Href('/'), h.Class('flex items-center gap-2 font-semibold tracking-tight')],
+          h.div(
+            [h.Class('flex items-center gap-1')],
             [
-              h.span(
+              ...(isDocsRoute(routeTag)
+                ? [
+                    h.button(
+                      [
+                        h.Type('button'),
+                        h.OnClick(Message.ClickedOpenNavSheet()),
+                        h.AriaLabel('Open docs navigation'),
+                        h.Class(
+                          'inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden',
+                        ),
+                      ],
+                      [icon(h, Menu, 'size-5')],
+                    ),
+                  ]
+                : []),
+              h.a(
+                [h.Href('/'), h.Class('flex items-center gap-2 font-semibold tracking-tight')],
                 [
-                  h.Class(
-                    'flex size-5 items-center justify-center rounded bg-foreground text-background',
+                  h.span(
+                    [
+                      h.Class(
+                        'flex size-5 items-center justify-center rounded bg-foreground text-background',
+                      ),
+                    ],
+                    [h.span([h.Class('text-[11px] leading-none font-black')], ['F'])],
                   ),
+                  h.span([], ['foldcn']),
+                  betaBadge(h),
                 ],
-                [h.span([h.Class('text-[11px] leading-none font-black')], ['F'])],
               ),
-              h.span([], ['foldcn']),
-              betaBadge(h),
             ],
           ),
           h.div(
@@ -143,13 +167,11 @@ const parityLegendBadge = (status: ParityStatus, h: HtmlBuilder<AppMessage>): Ht
     h,
   )
 
-export const sidebarView = (
+export const docsNavContent = (
   h: HtmlBuilder<AppMessage>,
   routeTag: string,
   routeName: string | undefined,
-  // oxlint-disable-next-line typescript/no-unused-vars
-  _style: RegistryStyle,
-): Html => {
+): ReadonlyArray<Html> => {
   const componentsGroup = categoryGroups.find((g) => g.category === 'Components')
   const components = componentsGroup?.items ?? []
   const counts = {
@@ -158,7 +180,140 @@ export const sidebarView = (
     'foldcn-only': components.filter((i) => parityStatus(i.name) === 'foldcn-only').length,
   } as const
 
-  return h.aside(
+  return [
+    h.div(
+      [h.Class('mb-6 rounded-lg border border-border bg-muted/20 px-3 py-3')],
+      [
+        h.p(
+          [h.Class('text-xs font-semibold tracking-wide text-foreground')],
+          ['Parity with shadcn/ui'],
+        ),
+        h.ul(
+          [h.Class('mt-2 flex flex-col gap-2')],
+          [
+            h.li(
+              [h.Class('flex items-center justify-between gap-2')],
+              [
+                parityLegendBadge('full', h),
+                h.span(
+                  [h.Class('text-xs tabular-nums text-muted-foreground')],
+                  [String(counts.full)],
+                ),
+              ],
+            ),
+            h.li(
+              [h.Class('flex items-center justify-between gap-2')],
+              [
+                parityLegendBadge('diverged', h),
+                h.span(
+                  [h.Class('text-xs tabular-nums text-muted-foreground')],
+                  [String(counts.diverged)],
+                ),
+              ],
+            ),
+            h.li(
+              [h.Class('flex items-center justify-between gap-2')],
+              [
+                parityLegendBadge('foldcn-only', h),
+                h.span(
+                  [h.Class('text-xs tabular-nums text-muted-foreground')],
+                  [String(counts['foldcn-only'])],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+    h.nav(
+      [h.Class('flex flex-col gap-6'), h.AriaLabel('Components')],
+      categoryGroups.map((group) => {
+        const sortedItems = [...group.items].sort((a, b) => a.title.localeCompare(b.title))
+        const isComponentsGroup = group.category === 'Components'
+        return h.div(
+          [h.Class('flex flex-col gap-2')],
+          [
+            h.h3(
+              [h.Class('px-2 text-xs font-semibold tracking-wide text-foreground')],
+              [group.label],
+            ),
+            h.ul(
+              [h.Class('flex flex-col gap-0.5')],
+              sortedItems.map((item) => {
+                const isActive = routeTag === 'Item' && routeName === item.name
+                const status: ParityStatus | null = isComponentsGroup
+                  ? parityStatus(item.name)
+                  : null
+                const badgeTitle =
+                  status === null
+                    ? ''
+                    : status === 'diverged'
+                      ? (gapsForItem(item.name)?.[0] ?? parityTitle.diverged)
+                      : parityTitleForItem(item.name)
+                return h.li(
+                  [],
+                  [
+                    h.a(
+                      [
+                        h.Href(`/docs/${item.name}`),
+                        h.Class(
+                          cn(
+                            'flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+                            isActive
+                              ? 'bg-muted font-medium text-foreground'
+                              : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                          ),
+                        ),
+                        ...(isActive ? [h.AriaCurrent('page')] : []),
+                        ...(status !== null
+                          ? [h.Title(badgeTitle), h.AriaLabel(`${item.title} — ${badgeTitle}`)]
+                          : []),
+                      ],
+                      [
+                        h.span([h.Class('truncate')], [item.title]),
+                        status !== null ? parityBadge(status, h) : h.span([], []),
+                      ],
+                    ),
+                  ],
+                )
+              }),
+            ),
+          ],
+        )
+      }),
+    ),
+    h.div(
+      [h.Class('mt-6 rounded-lg border border-border bg-muted/20 px-3 py-3')],
+      [
+        h.p([h.Class('text-xs font-medium text-foreground')], ['Missing something?']),
+        h.p(
+          [h.Class('mt-1 text-xs leading-relaxed text-muted-foreground')],
+          ['Request a component'],
+        ),
+        h.a(
+          [
+            h.Href(requestComponentUrl()),
+            h.Target('_blank'),
+            h.Rel('noopener noreferrer'),
+            h.Class(
+              'mt-2 inline-flex items-center justify-center rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted',
+            ),
+          ],
+          ['Request a component →'],
+        ),
+      ],
+    ),
+  ]
+}
+
+export const sidebarView = (
+  h: HtmlBuilder<AppMessage>,
+  routeTag: string,
+  routeName: string | undefined,
+  // oxlint-disable-next-line typescript/no-unused-vars
+  _style: RegistryStyle,
+): Html =>
+  h.aside(
     [h.Class('hidden w-[220px] shrink-0 font-mono lg:block'), h.AriaLabel('Sidebar')],
     [
       h.div(
@@ -167,137 +322,37 @@ export const sidebarView = (
             'sticky top-10 h-[calc(100vh-2.5rem)] overflow-y-auto overflow-x-visible border-r border-border py-6 pr-4',
           ),
         ],
-        [
-          h.div(
-            [h.Class('mb-6 rounded-lg border border-border bg-muted/20 px-3 py-3')],
-            [
-              h.p(
-                [h.Class('text-xs font-semibold tracking-wide text-foreground')],
-                ['Parity with shadcn/ui'],
-              ),
-              h.ul(
-                [h.Class('mt-2 flex flex-col gap-2')],
-                [
-                  h.li(
-                    [h.Class('flex items-center justify-between gap-2')],
-                    [
-                      parityLegendBadge('full', h),
-                      h.span(
-                        [h.Class('text-xs tabular-nums text-muted-foreground')],
-                        [String(counts.full)],
-                      ),
-                    ],
-                  ),
-                  h.li(
-                    [h.Class('flex items-center justify-between gap-2')],
-                    [
-                      parityLegendBadge('diverged', h),
-                      h.span(
-                        [h.Class('text-xs tabular-nums text-muted-foreground')],
-                        [String(counts.diverged)],
-                      ),
-                    ],
-                  ),
-                  h.li(
-                    [h.Class('flex items-center justify-between gap-2')],
-                    [
-                      parityLegendBadge('foldcn-only', h),
-                      h.span(
-                        [h.Class('text-xs tabular-nums text-muted-foreground')],
-                        [String(counts['foldcn-only'])],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          h.nav(
-            [h.Class('flex flex-col gap-6'), h.AriaLabel('Components')],
-            categoryGroups.map((group) => {
-              const sortedItems = [...group.items].sort((a, b) => a.title.localeCompare(b.title))
-              const isComponentsGroup = group.category === 'Components'
-              return h.div(
-                [h.Class('flex flex-col gap-2')],
-                [
-                  h.h3(
-                    [h.Class('px-2 text-xs font-semibold tracking-wide text-foreground')],
-                    [group.label],
-                  ),
-                  h.ul(
-                    [h.Class('flex flex-col gap-0.5')],
-                    sortedItems.map((item) => {
-                      const isActive = routeTag === 'Item' && routeName === item.name
-                      const status: ParityStatus | null = isComponentsGroup
-                        ? parityStatus(item.name)
-                        : null
-                      const badgeTitle =
-                        status === null
-                          ? ''
-                          : status === 'diverged'
-                            ? (gapsForItem(item.name)?.[0] ?? parityTitle.diverged)
-                            : parityTitleForItem(item.name)
-                      return h.li(
-                        [],
-                        [
-                          h.a(
-                            [
-                              h.Href(`/docs/${item.name}`),
-                              h.Class(
-                                cn(
-                                  'flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
-                                  isActive
-                                    ? 'bg-muted font-medium text-foreground'
-                                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-                                ),
-                              ),
-                              ...(isActive ? [h.AriaCurrent('page')] : []),
-                              ...(status !== null
-                                ? [
-                                    h.Title(badgeTitle),
-                                    h.AriaLabel(`${item.title} — ${badgeTitle}`),
-                                  ]
-                                : []),
-                            ],
-                            [
-                              h.span([h.Class('truncate')], [item.title]),
-                              status !== null ? parityBadge(status, h) : h.span([], []),
-                            ],
-                          ),
-                        ],
-                      )
-                    }),
-                  ),
-                ],
-              )
-            }),
-          ),
-          h.div(
-            [h.Class('mt-6 rounded-lg border border-border bg-muted/20 px-3 py-3')],
-            [
-              h.p([h.Class('text-xs font-medium text-foreground')], ['Missing something?']),
-              h.p(
-                [h.Class('mt-1 text-xs leading-relaxed text-muted-foreground')],
-                ['Request a component'],
-              ),
-              h.a(
-                [
-                  h.Href(requestComponentUrl()),
-                  h.Target('_blank'),
-                  h.Rel('noopener noreferrer'),
-                  h.Class(
-                    'mt-2 inline-flex items-center justify-center rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted',
-                  ),
-                ],
-                ['Request a component →'],
-              ),
-            ],
-          ),
-        ],
+        docsNavContent(h, routeTag, routeName),
       ),
     ],
   )
-}
+
+export const navSheetView = (
+  h: HtmlBuilder<AppMessage>,
+  navSheet: Model['navSheet'],
+  routeTag: string,
+  routeName: string | undefined,
+): Html =>
+  h.submodel({
+    slotId: navSheet.id,
+    model: navSheet,
+    view: Sheet.view,
+    viewInputs: Sheet.styledViewInputs(
+      {
+        side: 'left',
+        content: ({ title }, h) => [
+          Sheet.header(
+            {},
+            [Sheet.title({ attributes: title, className: 'sr-only' }, ['Docs navigation'], h)],
+            h,
+          ),
+          h.div([h.Class('overflow-y-auto px-2 pb-6')], docsNavContent(h, routeTag, routeName)),
+        ],
+      },
+      h,
+    ),
+    toParentMessage: (message) => Message.GotNavSheetMessage({ message }),
+  })
 
 export const footerView = (
   h: HtmlBuilder<AppMessage>,
