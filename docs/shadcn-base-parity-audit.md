@@ -15,6 +15,20 @@
 > #3 switch hidden input → Foldkit's `attributes.hiddenInput` is now rendered (`packages/registry/registry/default/ui/switch.ts`);
 > #4 input-otp `onComplete` → documented intentional update-channel fallback with an in-code comment (`packages/registry/registry/default/ui/input-otp.ts`).
 > Gaps #5–#12 are unchanged.
+>
+> **Menu update (2026-09-03):** menu/context-menu/menubar panels now emit
+> `data-side` derived from the anchor placement (upstream slide-in variants
+> keyed on `data-side` previously never matched), shortcut accent-on-highlight
+> is fixed via `group-data-active/*` twins in `cn-compat.css` (foldkit
+> highlights via `data-active`, never `:focus`), and menubar `viewInputs`
+> gained `itemGroupKey`/`groupToHeading`/`groupClass`/`groupAttributes`
+> (with `menubar-group` slot) so menubar demos render upstream's groups and
+> separators. The menu/context-menu/menubar demos now exercise every row:
+> triggers, groups, shortcuts, icons, destructive rows, disabled items,
+> demo-state checkboxes/radios, and keyboard nav. Primitive ceilings stand:
+> no real submenus (flattened to labelled groups), checkbox/radio rows close
+> the panel on toggle, context menus anchor to the trigger region (right-click
+> opens via `OnContextMenu`), and menubar triggers stay independent.
 
 Reference: `/Users/elianiva/Development/repos/shadcn-ui/ui/apps/v4/registry/bases/base/ui` (Base UI–backed registry), with `cn-*` tokens resolved via `registry/styles/style-nova.css`. Lineage checked against `registry/new-york-v4/ui` (legacy inline-class registry).
 

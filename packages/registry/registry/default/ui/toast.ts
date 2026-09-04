@@ -103,7 +103,7 @@ export const toastTitleClass = 'text-sm font-medium'
 export const toastDescriptionClass = 'text-sm text-muted-foreground'
 
 export const toastDismissButtonClass =
-  "shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-70 transition-opacity hover:text-foreground hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 after:absolute after:-inset-2 after:content-['']"
+  "relative shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-70 transition-opacity hover:text-foreground hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 after:absolute after:-inset-2 after:content-['']"
 
 export const toastActionClass = 'shrink-0'
 

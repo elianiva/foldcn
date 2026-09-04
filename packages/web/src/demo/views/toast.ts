@@ -33,12 +33,7 @@ export const toastView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
             [
               h.div(
                 [h.Class('flex flex-wrap gap-2')],
-                [
-                  hButton(h, 'Info', Message.ClickedShowInfoToast()),
-                  hButton(h, 'Success', Message.ClickedShowSuccessToast()),
-                  hButton(h, 'Warning', Message.ClickedShowWarningToast()),
-                  hButton(h, 'Error', Message.ClickedShowErrorToast()),
-                ],
+                [hButton(h, 'Show toast', Message.ClickedShowInfoToast())],
               ),
               h.div(
                 [h.Class('flex flex-wrap gap-2')],
@@ -87,10 +82,10 @@ export const toastView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           h.div(
             [h.Class('flex flex-wrap gap-2')],
             [
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm')], ['Info']),
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm bg-green-50')], ['Success']),
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm bg-yellow-50')], ['Warning']),
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm bg-red-50')], ['Error']),
+              hVariantButton(h, 'Info', Message.ClickedShowInfoToast()),
+              hVariantButton(h, 'Success', Message.ClickedShowSuccessToast()),
+              hVariantButton(h, 'Warning', Message.ClickedShowWarningToast()),
+              hVariantButton(h, 'Error', Message.ClickedShowErrorToast()),
             ],
           ),
         ],
@@ -105,6 +100,25 @@ const hButton = (h: HtmlBuilder<AppMessage>, label: string, message: AppMessage)
       h.OnClick(message),
     ],
     [label],
+  )
+
+/** Live variant button: renders the registry's own per-variant icon
+ *  (`ToastModule.toastIcon`, the same renderer the toast stack uses) and
+ *  fires a real toast of that variant on click — mirroring upstream's
+ *  `toast-types` demo. Previously this section was inert tinted spans. */
+const hVariantButton = (
+  h: HtmlBuilder<AppMessage>,
+  variant: 'Info' | 'Success' | 'Warning' | 'Error',
+  message: AppMessage,
+): Html =>
+  h.button(
+    [
+      h.Class(
+        'inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium',
+      ),
+      h.OnClick(message),
+    ],
+    [ToastModule.toastIcon(h, variant), variant],
   )
 
 const foldNoOp =

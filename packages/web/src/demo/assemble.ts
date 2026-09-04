@@ -304,6 +304,7 @@ export const update = (model: Model, message: Message): DemoUpdateReturn => {
       ...comboboxSlice.handlers(model),
       ...collapsibleSlice.handlers(model),
       ...commandSlice.handlers(model),
+      ...contextMenuSlice.handlers(model),
       ...dataTableSlice.handlers(model),
       ...datePickerSlice.handlers(model),
       ...dialogSlice.handlers(model),

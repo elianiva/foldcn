@@ -10,7 +10,6 @@ import { Check, CircleHelp, File, Folder, Save, Settings, Trash2 } from 'lucide'
 import type { IconNode } from 'lucide'
 
 import * as Menubar from '../../generated/registry/ui/menubar'
-import * as menu from '../../generated/registry/ui/menu'
 import { icon } from '../../generated/registry/lib/icons'
 
 import { DemoMenu } from '../bundles'
@@ -19,19 +18,19 @@ import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
 export const Message = defineMessageUnion({
-  GotFileMessage: { message: menu.Message },
-  GotEditMessage: { message: menu.Message },
-  GotViewMessage: { message: menu.Message },
-  GotProfilesMessage: { message: menu.Message },
-  GotSubFileMessage: { message: menu.Message },
-  GotSubEditMessage: { message: menu.Message },
-  GotCheckViewMessage: { message: menu.Message },
-  GotCheckFormatMessage: { message: menu.Message },
-  GotRadioProfilesMessage: { message: menu.Message },
-  GotRadioThemeMessage: { message: menu.Message },
-  GotIconFileMessage: { message: menu.Message },
-  GotIconMoreMessage: { message: menu.Message },
-  GotRtlFileMessage: { message: menu.Message },
+  GotFileMessage: { message: Menubar.Message },
+  GotEditMessage: { message: Menubar.Message },
+  GotViewMessage: { message: Menubar.Message },
+  GotProfilesMessage: { message: Menubar.Message },
+  GotSubFileMessage: { message: Menubar.Message },
+  GotSubEditMessage: { message: Menubar.Message },
+  GotCheckViewMessage: { message: Menubar.Message },
+  GotCheckFormatMessage: { message: Menubar.Message },
+  GotRadioProfilesMessage: { message: Menubar.Message },
+  GotRadioThemeMessage: { message: Menubar.Message },
+  GotIconFileMessage: { message: Menubar.Message },
+  GotIconMoreMessage: { message: Menubar.Message },
+  GotRtlFileMessage: { message: Menubar.Message },
 })
 
 // Mirrors apps/v4/examples/base/menubar-*.tsx. Every bar below is a live menu:
@@ -105,12 +104,12 @@ const fileItems = [
   'Email link',
   'Messages',
   'Notes',
-  'Print…',
+  'Print...',
 ] as const
 
 const fileGroupKey = (item: string): string => {
   if (item === 'Email link' || item === 'Messages' || item === 'Notes') return 'share'
-  if (item === 'Print…') return 'print'
+  if (item === 'Print...') return 'print'
   return 'main'
 }
 
@@ -118,7 +117,7 @@ const editItems = [
   'Undo',
   'Redo',
   'Search the web',
-  'Find…',
+  'Find...',
   'Find Next',
   'Find Previous',
   'Cut',
@@ -129,7 +128,7 @@ const editItems = [
 const editGroupKey = (item: string): string => {
   if (
     item === 'Search the web' ||
-    item === 'Find…' ||
+    item === 'Find...' ||
     item === 'Find Next' ||
     item === 'Find Previous'
   )
@@ -144,8 +143,8 @@ const fileContent = (h: HtmlBuilder<AppMessage>, item: string): Html => {
       return labelRow(h, 'New Tab', '⌘T')
     case 'New Window':
       return labelRow(h, 'New Window', '⌘N')
-    case 'Print…':
-      return labelRow(h, 'Print…', '⌘P')
+    case 'Print...':
+      return labelRow(h, 'Print...', '⌘P')
     default:
       return labelRow(h, item)
   }
@@ -264,10 +263,10 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.profilesMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
-                items: ['Andy', 'Benoit', 'Luis', 'Edit…', 'Add Profile…'],
+                items: ['Andy', 'Benoit', 'Luis', 'Edit...', 'Add Profile...'],
                 buttonContent: h.span([], ['Profiles']),
                 itemToConfig: (item) => {
-                  if (item === 'Edit…' || item === 'Add Profile…')
+                  if (item === 'Edit...' || item === 'Add Profile...')
                     return { className: INSET, content: labelRow(h, item) }
                   return {
                     className: radioItemClass,
@@ -275,7 +274,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                   }
                 },
                 itemGroupKey: (item) =>
-                  item === 'Edit…' ? 'edit' : item === 'Add Profile…' ? 'add' : 'profiles',
+                  item === 'Edit...' ? 'edit' : item === 'Add Profile...' ? 'add' : 'profiles',
               }),
               toParentMessage: (message) => Message.GotProfilesMessage({ message }),
             }),
@@ -296,10 +295,10 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.subFileMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
-                items: ['Email link', 'Messages', 'Notes', 'Print…'],
+                items: ['Email link', 'Messages', 'Notes', 'Print...'],
                 buttonContent: h.span([], ['File']),
                 itemToConfig: (item) => ({ content: fileContent(h, item) }),
-                itemGroupKey: (item) => (item === 'Print…' ? 'print' : 'share'),
+                itemGroupKey: (item) => (item === 'Print...' ? 'print' : 'share'),
                 groupToHeading: (groupKey) =>
                   groupKey === 'share' ? { content: h.span([], ['Share']) } : undefined,
               }),
@@ -313,7 +312,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                 items: [
                   'Undo',
                   'Redo',
-                  'Find…',
+                  'Find...',
                   'Find Next',
                   'Find Previous',
                   'Cut',
@@ -406,10 +405,10 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.radioProfilesMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
-                items: ['Andy', 'Benoit', 'Luis', 'Edit…', 'Add Profile…'],
+                items: ['Andy', 'Benoit', 'Luis', 'Edit...', 'Add Profile...'],
                 buttonContent: h.span([], ['Profiles']),
                 itemToConfig: (item) => {
-                  if (item === 'Edit…' || item === 'Add Profile…')
+                  if (item === 'Edit...' || item === 'Add Profile...')
                     return { className: INSET, content: labelRow(h, item) }
                   return {
                     className: radioItemClass,
@@ -417,7 +416,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                   }
                 },
                 itemGroupKey: (item) =>
-                  item === 'Edit…' ? 'edit' : item === 'Add Profile…' ? 'add' : 'profiles',
+                  item === 'Edit...' ? 'edit' : item === 'Add Profile...' ? 'add' : 'profiles',
               }),
               toParentMessage: (message) => Message.GotRadioProfilesMessage({ message }),
             }),
@@ -629,19 +628,19 @@ const foldThemeOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
 // pair below is per-field so inference stays on the proven path.
 
 const fields = {
-  fileMenu: menu.Model,
-  editMenu: menu.Model,
-  viewMenu: menu.Model,
-  profilesMenu: menu.Model,
-  subFileMenu: menu.Model,
-  subEditMenu: menu.Model,
-  checkViewMenu: menu.Model,
-  checkFormatMenu: menu.Model,
-  radioProfilesMenu: menu.Model,
-  radioThemeMenu: menu.Model,
-  iconFileMenu: menu.Model,
-  iconMoreMenu: menu.Model,
-  rtlFileMenu: menu.Model,
+  fileMenu: Menubar.Model,
+  editMenu: Menubar.Model,
+  viewMenu: Menubar.Model,
+  profilesMenu: Menubar.Model,
+  subFileMenu: Menubar.Model,
+  subEditMenu: Menubar.Model,
+  checkViewMenu: Menubar.Model,
+  checkFormatMenu: Menubar.Model,
+  radioProfilesMenu: Menubar.Model,
+  radioThemeMenu: Menubar.Model,
+  iconFileMenu: Menubar.Model,
+  iconMoreMenu: Menubar.Model,
+  rtlFileMenu: Menubar.Model,
   showBookmarks: S.Boolean,
   showFullUrls: S.Boolean,
   checkedFormats: S.Array(S.String),
@@ -655,19 +654,19 @@ type State = typeof stateSchema.Type
 export const slice = defineSlice({
   fields,
   init: {
-    fileMenu: menu.init({ id: 'menubar-file' }),
-    editMenu: menu.init({ id: 'menubar-edit' }),
-    viewMenu: menu.init({ id: 'menubar-view' }),
-    profilesMenu: menu.init({ id: 'menubar-profiles' }),
-    subFileMenu: menu.init({ id: 'menubar-sub-file' }),
-    subEditMenu: menu.init({ id: 'menubar-sub-edit' }),
-    checkViewMenu: menu.init({ id: 'menubar-check-view' }),
-    checkFormatMenu: menu.init({ id: 'menubar-check-format' }),
-    radioProfilesMenu: menu.init({ id: 'menubar-radio-profiles' }),
-    radioThemeMenu: menu.init({ id: 'menubar-radio-theme' }),
-    iconFileMenu: menu.init({ id: 'menubar-icon-file' }),
-    iconMoreMenu: menu.init({ id: 'menubar-icon-more' }),
-    rtlFileMenu: menu.init({ id: 'menubar-rtl-file' }),
+    fileMenu: Menubar.init({ id: 'menubar-file' }),
+    editMenu: Menubar.init({ id: 'menubar-edit' }),
+    viewMenu: Menubar.init({ id: 'menubar-view' }),
+    profilesMenu: Menubar.init({ id: 'menubar-profiles' }),
+    subFileMenu: Menubar.init({ id: 'menubar-sub-file' }),
+    subEditMenu: Menubar.init({ id: 'menubar-sub-edit' }),
+    checkViewMenu: Menubar.init({ id: 'menubar-check-view' }),
+    checkFormatMenu: Menubar.init({ id: 'menubar-check-format' }),
+    radioProfilesMenu: Menubar.init({ id: 'menubar-radio-profiles' }),
+    radioThemeMenu: Menubar.init({ id: 'menubar-radio-theme' }),
+    iconFileMenu: Menubar.init({ id: 'menubar-icon-file' }),
+    iconMoreMenu: Menubar.init({ id: 'menubar-icon-more' }),
+    rtlFileMenu: Menubar.init({ id: 'menubar-rtl-file' }),
     showBookmarks: false,
     showFullUrls: true,
     checkedFormats: ['Strikethrough'],

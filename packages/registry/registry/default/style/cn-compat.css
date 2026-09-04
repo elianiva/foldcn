@@ -133,6 +133,25 @@
   @apply data-open:bg-accent data-open:text-accent-foreground data-[popup-open]:bg-accent data-[popup-open]:text-accent-foreground;
 }
 
+/* menu shortcuts: upstream keys the accent-on-highlight on
+ * group-focus/<item> (e.g. group-focus/dropdown-menu-item:), but foldkit
+ * highlights items via data-active while DOM focus stays on the panel —
+ * :focus never lands on the item, so the group-focus rule never matches.
+ * Add data-active twins keyed on the same named groups the item classes
+ * declare (group/dropdown-menu-item, group/context-menu-item,
+ * group/menubar-item). */
+.cn-dropdown-menu-shortcut {
+  @apply group-data-active/dropdown-menu-item:text-accent-foreground;
+}
+
+.cn-context-menu-shortcut {
+  @apply group-data-active/context-menu-item:text-accent-foreground;
+}
+
+.cn-menubar-shortcut {
+  @apply group-data-active/menubar-item:text-accent-foreground;
+}
+
 /* input-otp: upstream leaves input/caret as no-op hooks (input-otp library
  * handles positioning). foldcn renders its own absolute overlay input, so
  * provide the overlay geometry here to keep authored strings bare
