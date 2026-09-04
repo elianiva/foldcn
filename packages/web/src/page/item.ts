@@ -1,4 +1,6 @@
+import { Option } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
+import { createLazy } from 'foldkit/html'
 
 import { Alert } from '../generated/registry/ui/alert'
 import { badge } from '../generated/registry/ui/badge'
@@ -54,6 +56,33 @@ const dependencyChips = (
       h,
     ),
   )
+
+/** Memo slots for the two highlighted code blocks. Highlighting + VNode
+ *  construction for a large source runs once per distinct
+ *  (code, copied, expanded) state; scroll ticks and unrelated updates reuse the
+ *  cached VNodes, skipping highlight, construction, and subtree diffing.
+ *  Each slot renders at exactly one position below. */
+const demoCodeLazy = createLazy()
+const sourceCodeLazy = createLazy()
+
+const demoCodeBlock = (
+  h: HtmlBuilder<AppMessage>,
+  id: string,
+  path: string,
+  code: string,
+  className: string | undefined,
+  isCopied: boolean,
+  isExpanded: boolean,
+): Html => collapsibleCodeBlock(h, id, path, code, isCopied, isExpanded, className)
+
+const sourceCodeBlock = (
+  h: HtmlBuilder<AppMessage>,
+  id: string,
+  path: string,
+  code: string,
+  isCopied: boolean,
+  isExpanded: boolean,
+): Html => collapsibleCodeBlock(h, id, path, code, isCopied, isExpanded)
 
 export const itemPage = (model: Model, name: string, h: HtmlBuilder<AppMessage>): Html => {
   const item = itemByName[name]
@@ -285,14 +314,15 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<AppMessage>)
                                 ),
                               ]),
                           // Demo usage code — the actual view source, imported ?raw.
-                          collapsibleCodeBlock(
+                          demoCodeLazy(demoCodeBlock, [
                             h,
-                            model,
                             `demo:${demoName}`,
                             demoExample.path,
                             demoExample.code,
                             'rounded-none border-x-0 border-b-0 border-t',
-                          ),
+                            Option.exists(model.maybeCopiedValue, (v) => v === demoExample.code),
+                            model.expandedCodeBlocks.has(`demo:${demoName}`),
+                          ]),
                           h.div(
                             [h.Class('border-t border-border bg-muted/30 px-4 py-3 font-mono')],
                             [
@@ -353,13 +383,17 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<AppMessage>)
                             'The component ships as plain source — no build step, no wrapper. Copy it and make it yours.',
                           ],
                         ),
-                        collapsibleCodeBlock(
+                        sourceCodeLazy(sourceCodeBlock, [
                           h,
-                          model,
                           `source:${item.name}`,
                           item.maybeSource.path,
                           item.maybeSource.code,
-                        ),
+                          Option.exists(
+                            model.maybeCopiedValue,
+                            (v) => v === item.maybeSource!.code,
+                          ),
+                          model.expandedCodeBlocks.has(`source:${item.name}`),
+                        ]),
                       ],
                     ),
                   ]

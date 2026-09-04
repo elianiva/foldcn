@@ -379,10 +379,11 @@ export const codeBlock = (
 
 export const collapsibleCodeBlock = (
   h: HtmlBuilder<AppMessage>,
-  model: Model,
   id: string,
   path: string,
   code: string,
+  isCopied: boolean,
+  isExpanded: boolean,
   className?: string,
 ): Html =>
   registryCodeBlock<AppMessage>(
@@ -390,9 +391,9 @@ export const collapsibleCodeBlock = (
       path,
       code,
       onCopy: Message.ClickedCopy({ value: code }),
-      isCopied: Option.exists(model.maybeCopiedValue, (v) => v === code),
+      isCopied,
       isCollapsible: true,
-      isExpanded: model.expandedCodeBlocks.has(id),
+      isExpanded,
       onToggle: Message.ToggledCodeBlock({ id }),
       className,
     },

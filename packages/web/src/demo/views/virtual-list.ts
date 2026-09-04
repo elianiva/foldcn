@@ -4,6 +4,7 @@ import { Schema as S } from 'effect'
 import { evo } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
+import { createLazy } from 'foldkit/html'
 
 import { VirtualList as FoldkitVirtualList } from '@foldkit/ui'
 
@@ -242,25 +243,60 @@ export const filteredPersons = (search: string, team: string): ReadonlyArray<Per
   )
 }
 
-const toGroupedItems = (persons: ReadonlyArray<Person>): ReadonlyArray<DemoItem> => {
+type VisibleList = Readonly<{
+  items: ReadonlyArray<DemoItem>
+  personCount: number
+  groupCount: number
+}>
+
+const TEAM_INDEX: Readonly<Record<string, number>> = Object.fromEntries(
+  TEAMS.map((team, index) => [team, index]),
+)
+
+/** Single-pass grouping: buckets members per team and emits header bands with
+ *  counts, so one walk yields items and both counters (the old shape paid a
+ *  full filter pass per team plus two more reduce passes per render). */
+const buildGrouped = (persons: ReadonlyArray<Person>): VisibleList => {
+  const buckets: Array<Array<Person>> = TEAMS.map(() => [])
+  for (const person of persons) buckets[TEAM_INDEX[person.team]!]!.push(person)
   const items: Array<DemoItem> = []
-  for (const team of TEAMS) {
-    const members = persons.filter((person) => person.team === team)
+  let groupCount = 0
+  for (let index = 0; index < TEAMS.length; index++) {
+    const members = buckets[index]!
     if (members.length === 0) continue
-    items.push({ tag: 'header', team, count: members.length })
+    groupCount += 1
+    items.push({ tag: 'header', team: TEAMS[index]!, count: members.length })
     for (const person of members) items.push({ tag: 'person', person })
   }
-  return items
+  return { items, personCount: persons.length, groupCount }
 }
 
 /** Precomputed unfiltered list (headers + all rows) so idle scrolling pays
  *  no filter cost — only keystrokes and team switches rebuild the array. */
-const DEFAULT_ITEMS: ReadonlyArray<DemoItem> = toGroupedItems(PERSONS)
+const DEFAULT_VISIBLE: VisibleList = buildGrouped(PERSONS)
+
+const computeVisible = (search: string, team: string): VisibleList =>
+  search.trim() === '' && team === ALL_TEAMS
+    ? DEFAULT_VISIBLE
+    : buildGrouped(filteredPersons(search, team))
+
+/** Last-args memo for the visible list. Scroll ticks re-render with the same
+ *  (search, team), so every scroll render is a cache hit and the
+ *  filter+group work runs only on keystrokes and team switches. Keyed by
+ *  value (two small strings), never by row — rows are unbounded, so they
+ *  stay out of any memo map. */
+let visibleCache: { search: string; team: string; visible: VisibleList } | null = null
+
+export const getVisible = (search: string, team: string): VisibleList => {
+  const cached = visibleCache
+  if (cached !== null && cached.search === search && cached.team === team) return cached.visible
+  const visible = computeVisible(search, team)
+  visibleCache = { search, team, visible }
+  return visible
+}
 
 export const visibleItems = (search: string, team: string): ReadonlyArray<DemoItem> =>
-  search.trim() === '' && team === ALL_TEAMS
-    ? DEFAULT_ITEMS
-    : toGroupedItems(filteredPersons(search, team))
+  getVisible(search, team).items
 
 const personRow = (person: Person, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
@@ -319,11 +355,167 @@ const headerRow = (team: string, count: number, h: HtmlBuilder<AppMessage>): Htm
     ],
   )
 
+/** Memo slots for the scroll-stable subtrees. Each renders at exactly one
+ *  position and takes only primitives + the frame builder as args, so every
+ *  scroll tick — which changes just the virtual-list child model — is a cache
+ *  hit, skipping both VNode construction and subtree diffing. The list itself
+ *  stays unmemoized (it must re-render on every scroll), and rows stay out of
+ *  keyed memo maps (row keys are unbounded at 100k). */
+const headerLazy = createLazy()
+const toolbarLazy = createLazy()
+const footerLazy = createLazy()
+
+const directoryHeader = (h: HtmlBuilder<AppMessage>, shownPersons: number): Html =>
+  h.div(
+    [h.Class('flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center')],
+    [
+      h.div(
+        [h.Class('flex min-w-0 items-center gap-3')],
+        [
+          h.div(
+            [h.Class('flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted')],
+            [icon(h, Users, 'size-4')],
+          ),
+          h.div(
+            [h.Class('flex min-w-0 flex-col')],
+            [
+              h.span([h.Class('text-sm font-medium')], ['Team directory']),
+              h.span(
+                [h.Class('truncate text-xs text-muted-foreground')],
+                ['100,000 members virtualized — only visible rows mount.'],
+              ),
+            ],
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class('flex shrink-0 items-center gap-2 sm:ml-auto')],
+        [badge<AppMessage>({ variant: 'secondary' }, [`${formatCount(shownPersons)} shown`], h)],
+      ),
+    ],
+  )
+
+const directoryToolbar = (
+  h: HtmlBuilder<AppMessage>,
+  search: string,
+  team: string,
+  isFiltering: boolean,
+): Html =>
+  h.div(
+    [h.Class('flex flex-col gap-2 border-b border-border bg-muted/40 p-3')],
+    [
+      h.div(
+        [h.Class('flex flex-col gap-2 lg:flex-row lg:items-center')],
+        [
+          h.div(
+            [h.Class('relative w-full lg:max-w-xs')],
+            [
+              h.span(
+                [h.Class('pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2')],
+                [icon(h, Search, 'size-4 text-muted-foreground')],
+              ),
+              h.input([
+                h.Type('search'),
+                h.Placeholder('Search name, handle, or role…'),
+                h.Value(search),
+                h.OnInput((value) => Message.UpdatedVirtualListSearch({ value })),
+                h.Class(`${inputClass} pl-8`),
+              ]),
+            ],
+          ),
+          h.div(
+            [h.Class('flex flex-wrap items-center gap-1.5')],
+            [
+              ...[ALL_TEAMS, ...TEAMS].map((option) =>
+                button<AppMessage>(
+                  {
+                    variant: team === option ? 'secondary' : 'outline',
+                    size: 'xs',
+                    onClick: Message.SelectedVirtualListTeam({ team: option }),
+                  },
+                  option,
+                  h,
+                ),
+              ),
+              ...(isFiltering
+                ? [
+                    button<AppMessage>(
+                      {
+                        variant: 'ghost',
+                        size: 'xs',
+                        onClick: Message.ClearedVirtualListFilters(),
+                      },
+                      h.span(
+                        [h.Class('inline-flex items-center gap-1')],
+                        [icon(h, X, 'size-3'), 'Clear'],
+                      ),
+                      h,
+                    ),
+                  ]
+                : []),
+            ],
+          ),
+          h.div(
+            [h.Class('flex items-center gap-2 lg:ml-auto')],
+            [
+              button<AppMessage>(
+                {
+                  variant: 'outline',
+                  size: 'sm',
+                  onClick: Message.ClickedScrollToTop(),
+                },
+                h.span(
+                  [h.Class('inline-flex items-center gap-1.5')],
+                  [icon(h, ArrowUp, 'size-3.5'), 'Top'],
+                ),
+                h,
+              ),
+              button<AppMessage>(
+                {
+                  variant: 'outline',
+                  size: 'sm',
+                  onClick: Message.ClickedScrollToMiddle(),
+                },
+                h.span(
+                  [h.Class('inline-flex items-center gap-1.5')],
+                  [icon(h, LocateFixed, 'size-3.5'), 'Middle'],
+                ),
+                h,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  )
+
+const directoryFooter = (
+  h: HtmlBuilder<AppMessage>,
+  shownPersons: number,
+  groupCount: number,
+): Html =>
+  h.div(
+    [
+      h.Class(
+        'flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border px-4 py-2.5 text-xs text-muted-foreground',
+      ),
+    ],
+    [
+      h.span(
+        [],
+        [
+          `${formatCount(shownPersons)} of ${formatCount(VIRTUAL_LIST_ROW_COUNT)} members${groupCount > 0 ? ` · ${groupCount} teams` : ''}`,
+        ],
+      ),
+      h.span([h.Class('ml-auto')], ['Tip: scroll fast — overscan keeps it smooth.']),
+    ],
+  )
+
 export const virtualListView = (model: Model, h: HtmlBuilder<AppMessage>): Html => {
-  const items = visibleItems(model.virtualListSearch, model.virtualListTeam)
-  const shownPersons = items.reduce((sum, item) => sum + (item.tag === 'person' ? 1 : 0), 0)
-  const groupCount = items.reduce((sum, item) => sum + (item.tag === 'header' ? 1 : 0), 0)
-  const isFiltering = model.virtualListSearch.trim() !== '' || model.virtualListTeam !== ALL_TEAMS
+  const search = model.virtualListSearch
+  const team = model.virtualListTeam
+  const { items, personCount, groupCount } = getVisible(search, team)
+  const isFiltering = search.trim() !== '' || team !== ALL_TEAMS
 
   return h.div(
     [h.Class('flex w-full flex-col gap-8')],
@@ -335,139 +527,8 @@ export const virtualListView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
           h.div(
             [h.Class('w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm')],
             [
-              h.div(
-                [
-                  h.Class(
-                    'flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center',
-                  ),
-                ],
-                [
-                  h.div(
-                    [h.Class('flex min-w-0 items-center gap-3')],
-                    [
-                      h.div(
-                        [
-                          h.Class(
-                            'flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted',
-                          ),
-                        ],
-                        [icon(h, Users, 'size-4')],
-                      ),
-                      h.div(
-                        [h.Class('flex min-w-0 flex-col')],
-                        [
-                          h.span([h.Class('text-sm font-medium')], ['Team directory']),
-                          h.span(
-                            [h.Class('truncate text-xs text-muted-foreground')],
-                            ['100,000 members virtualized — only visible rows mount.'],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  h.div(
-                    [h.Class('flex shrink-0 items-center gap-2 sm:ml-auto')],
-                    [
-                      badge<AppMessage>(
-                        { variant: 'secondary' },
-                        [`${formatCount(shownPersons)} shown`],
-                        h,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              h.div(
-                [h.Class('flex flex-col gap-2 border-b border-border bg-muted/40 p-3')],
-                [
-                  h.div(
-                    [h.Class('flex flex-col gap-2 lg:flex-row lg:items-center')],
-                    [
-                      h.div(
-                        [h.Class('relative w-full lg:max-w-xs')],
-                        [
-                          h.span(
-                            [
-                              h.Class(
-                                'pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2',
-                              ),
-                            ],
-                            [icon(h, Search, 'size-4 text-muted-foreground')],
-                          ),
-                          h.input([
-                            h.Type('search'),
-                            h.Placeholder('Search name, handle, or role…'),
-                            h.Value(model.virtualListSearch),
-                            h.OnInput((value) => Message.UpdatedVirtualListSearch({ value })),
-                            h.Class(`${inputClass} pl-8`),
-                          ]),
-                        ],
-                      ),
-                      h.div(
-                        [h.Class('flex flex-wrap items-center gap-1.5')],
-                        [
-                          ...[ALL_TEAMS, ...TEAMS].map((team) =>
-                            button<AppMessage>(
-                              {
-                                variant: model.virtualListTeam === team ? 'secondary' : 'outline',
-                                size: 'xs',
-                                onClick: Message.SelectedVirtualListTeam({ team }),
-                              },
-                              team,
-                              h,
-                            ),
-                          ),
-                          ...(isFiltering
-                            ? [
-                                button<AppMessage>(
-                                  {
-                                    variant: 'ghost',
-                                    size: 'xs',
-                                    onClick: Message.ClearedVirtualListFilters(),
-                                  },
-                                  h.span(
-                                    [h.Class('inline-flex items-center gap-1')],
-                                    [icon(h, X, 'size-3'), 'Clear'],
-                                  ),
-                                  h,
-                                ),
-                              ]
-                            : []),
-                        ],
-                      ),
-                      h.div(
-                        [h.Class('flex items-center gap-2 lg:ml-auto')],
-                        [
-                          button<AppMessage>(
-                            {
-                              variant: 'outline',
-                              size: 'sm',
-                              onClick: Message.ClickedScrollToTop(),
-                            },
-                            h.span(
-                              [h.Class('inline-flex items-center gap-1.5')],
-                              [icon(h, ArrowUp, 'size-3.5'), 'Top'],
-                            ),
-                            h,
-                          ),
-                          button<AppMessage>(
-                            {
-                              variant: 'outline',
-                              size: 'sm',
-                              onClick: Message.ClickedScrollToMiddle(),
-                            },
-                            h.span(
-                              [h.Class('inline-flex items-center gap-1.5')],
-                              [icon(h, LocateFixed, 'size-3.5'), 'Middle'],
-                            ),
-                            h,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              headerLazy(directoryHeader, [h, personCount]),
+              toolbarLazy(directoryToolbar, [h, search, team, isFiltering]),
               ...(items.length === 0
                 ? [
                     Empty<AppMessage>(
@@ -485,7 +546,7 @@ export const virtualListView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                             Empty.description<AppMessage>(
                               {},
                               [
-                                `Nothing matches “${model.virtualListSearch.trim()}”${model.virtualListTeam === ALL_TEAMS ? '' : ` in ${model.virtualListTeam}`}. Try a different search or team.`,
+                                `Nothing matches “${search.trim()}”${team === ALL_TEAMS ? '' : ` in ${team}`}. Try a different search or team.`,
                               ],
                               h,
                             ),
@@ -535,22 +596,7 @@ export const virtualListView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                       toParentMessage: (message) => Message.GotVirtualListMessage({ message }),
                     }),
                   ]),
-              h.div(
-                [
-                  h.Class(
-                    'flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border px-4 py-2.5 text-xs text-muted-foreground',
-                  ),
-                ],
-                [
-                  h.span(
-                    [],
-                    [
-                      `${formatCount(shownPersons)} of ${formatCount(VIRTUAL_LIST_ROW_COUNT)} members${groupCount > 0 ? ` · ${groupCount} teams` : ''}`,
-                    ],
-                  ),
-                  h.span([h.Class('ml-auto')], ['Tip: scroll fast — overscan keeps it smooth.']),
-                ],
-              ),
+              footerLazy(directoryFooter, [h, personCount, groupCount]),
             ],
           ),
         ],
@@ -653,7 +699,7 @@ export const slice = defineSlice({
       }
     },
     ClickedScrollToMiddle: (): UpdateReturn => {
-      const items = visibleItems(model.virtualListSearch, model.virtualListTeam)
+      const items = getVisible(model.virtualListSearch, model.virtualListTeam).items
       const { model: next, commands = [] } = FoldkitVirtualList.scrollToIndex(
         model.virtualList,
         Math.floor(items.length / 2),
