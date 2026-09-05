@@ -7,7 +7,7 @@
 > against the **pre-migration legacy port** and are kept for the functional-gap analysis
 > only; class-material diffs (radius/surface/ring columns) are resolved as of this
 > branch. Primitive-level gaps (menus without submenu/checkbox kinds, static sidebar,
-> presentational command, click-vs-hover popover family) still stand.
+> click-vs-hover popover family) still stand. Command has a later update below.
 >
 > **Functional-gap update (2026-08-22):** gaps #1–#4 below are FIXED:
 > #1 button disabled → `aria-disabled:`/`data-disabled:` twins added in `packages/registry/registry/default/style/cn-compat.css` (button block);
@@ -66,11 +66,11 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 5. **hover-card — click-toggled, not hover.** It reuses the Popover submodel; there is no hover-intent delay/grace model. Trigger semantics are the component's defining behavior.
 6. **context-menu — not a context menu.** Opens on activation at a fixed anchor; no right-click/pointer-position anchoring.
 7. **menubar — no menubar behavior.** Each trigger is an independent Menu bundle; no ArrowLeft/Right traversal, no open-on-hover-of-next-trigger.
-8. **command — pure markup.** No filtering, arrow-key nav, Enter-to-select, roving tabindex, or Dialog wrapper; `[cmdk-group-heading]` selectors in its classes match nothing.
+8. **command — implemented in the current review branch (2026-09-05).** Stateful Command provides fuzzy ranking, keyword aliases, groups, disabled items, and keyboard/pointer selection. CommandDialog composes Foldkit Dialog with configurable close/reset behavior. The view emits `cmdk-group-heading`, and the resolver preserves its selectors. See the [Command and CommandDialog guide](command-composition.md). Publication and full browser/visual parity verification remain pending.
 9. **toast/sonner — no swipe-to-dismiss, no stack expansion** (index-based scale/peek choreography absent); hover-pause restarts the _full_ duration on resume. foldcn emits literal `cn-toast` but defines no such rule in its CSS (inert class).
 10. **sidebar — interactive shell with one remaining gap.** Collapse modes (`offcanvas|icon|none`), side/variant props, mobile Sheet path, ⌘/Ctrl+B shortcut, rail, all 20+ parts (`groupAction/groupContent/menuAction/menuBadge/menuSkeleton/menuSub*`, `input`, RTL flip), and shared collapsed-mode menu-button tooltip composition are now ported. Remaining: desktop cookie hydration still needs its wrapper marker when the initial DOM must be corrected before model hydration.
 11. **avatar — no image loading/error fallback chain** (stateless `<img>`; base swaps to Fallback automatically).
-12. **Inert/dead classes:** `peer-disabled:*` on input/textarea labels (no `.peer` sibling exists); command's cmdk selectors (above).
+12. **Inert/dead classes:** `peer-disabled:*` on input/textarea labels (no `.peer` sibling exists). Command now emits its cmdk attributes and preserves their selectors.
 
 > **2026-08-26 sidebar:** the static-paint bucket for sidebar is closed. The collapsible app shell, keyboard shortcut, mobile sheet, rail, and the `menu* / group* / input` sub-parts were added to `packages/registry/registry/default/ui/sidebar.ts`, and the demo at `packages/web/src/demo/views/sidebar.ts` now embeds the provider submodel, exercises `offcanvas|icon|none × left|right × sidebar|floating|inset`, and lifts the breakpoint/keyboard subscriptions.
 
@@ -99,7 +99,7 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 - **context-menu — MAJOR.** Same gaps as menu + no pointer anchoring (bug #6).
 - **menubar — MAJOR.** Bar of independent live menus (per-menu open/keyboard/typeahead/disabled/groups all work; anchor gap 8 = upstream sideOffset; group + checkbox/radio/sub token constants ported, demo covers every upstream example interactively). Still no cross-menu keyboard model (bug #7 — OPEN); submenu/checkbox/radio/destructive/inset item kinds need primitive work (demo uses labeled groups + state-managed check/radio rows).
 - **combobox — MAJOR.** Parent-owned filtering; no chips UI for multi-select, no clear button, no Empty row; panel metrics differ.
-- **command — MAJOR.** Presentational only (bug #8); item selection `bg-accent` vs base `bg-muted`.
+- **command — updated, parity not re-audited.** See #8 for the stateful implementation. The API uses Foldkit models and item arrays; it does not expose React child registration.
 
 ### Overlays
 

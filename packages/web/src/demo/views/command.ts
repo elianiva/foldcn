@@ -1,9 +1,11 @@
-import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { Subscription, Update } from 'foldkit'
+import * as RuntimeCommand from 'foldkit/command'
+import { Option, Schema as S } from 'effect'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { Command, commandGroupHeadingClass } from '../../generated/registry/ui/command'
+import * as Command from '../../generated/registry/ui/command'
+import { button } from '../../generated/registry/ui/button'
 import { icon } from '../../generated/registry/lib/icons'
 import { Calculator, Calendar, CreditCard, Settings, Smile, User } from 'lucide'
 
@@ -11,122 +13,227 @@ import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
 const Message = defineMessageUnion({
-  UpdatedCommandSearch: { value: S.String },
+  GotInlineCommandMessage: { message: Command.Message },
+  GotCommandDialogMessage: { message: Command.CommandDialog.Message },
+  ToggledCommandDialog: {},
 })
 
-// Presentational palette mirroring apps/v4/examples/base/command-demo.tsx.
-// Filtering is parent-owned; the upstream cmdk behaviors (arrow nav, Enter
-// selection) are inert in foldcn (see registry/default/ui/command.ts).
-const GROUPS: ReadonlyArray<{
-  heading: string
-  items: ReadonlyArray<{
-    label: string
-    icon: typeof Calendar
-    disabled?: boolean
-    shortcut?: string
-  }>
-}> = [
+const fields = {
+  inlineCommand: Command.Model,
+  commandDialog: Command.CommandDialog.Model,
+  lastCommand: S.String,
+  commandRunCount: S.Number,
+}
+const stateSchema = S.Struct(fields)
+type State = typeof stateSchema.Type
+
+const commandItems = <M>(h: HtmlBuilder<M>): ReadonlyArray<Command.Item> => [
   {
-    heading: 'Suggestions',
-    items: [
-      { label: 'Calendar', icon: Calendar },
-      { label: 'Search Emoji', icon: Smile },
-      { label: 'Calculator', icon: Calculator, disabled: true },
-    ],
+    value: 'calendar',
+    label: 'Calendar',
+    keywords: ['events', 'schedule'],
+    group: 'suggestions',
+    content: iconLabel(h, Calendar, 'Calendar'),
   },
   {
-    heading: 'Settings',
-    items: [
-      { label: 'Profile', icon: User, shortcut: '⌘P' },
-      { label: 'Billing', icon: CreditCard, shortcut: '⌘B' },
-      { label: 'Settings', icon: Settings, shortcut: '⌘S' },
-    ],
+    value: 'emoji',
+    label: 'Search Emoji',
+    keywords: ['smile'],
+    group: 'suggestions',
+    content: iconLabel(h, Smile, 'Search Emoji'),
+  },
+  {
+    value: 'calculator',
+    label: 'Calculator',
+    group: 'suggestions',
+    isDisabled: true,
+    content: iconLabel(h, Calculator, 'Calculator'),
+  },
+  {
+    value: 'profile',
+    label: 'Profile',
+    keywords: ['account'],
+    group: 'settings',
+    shortcut: '⌘P',
+    content: iconLabel(h, User, 'Profile'),
+  },
+  {
+    value: 'billing',
+    label: 'Billing',
+    keywords: ['payment', 'invoice'],
+    group: 'settings',
+    shortcut: '⌘B',
+    content: iconLabel(h, CreditCard, 'Billing'),
+  },
+  {
+    value: 'settings',
+    label: 'Settings',
+    keywords: ['preferences'],
+    group: 'settings',
+    shortcut: '⌘S',
+    content: iconLabel(h, Settings, 'Settings'),
   },
 ]
+const iconLabel = <M>(h: HtmlBuilder<M>, symbol: typeof Calendar, label: string): Html =>
+  h.span([h.Class('flex items-center gap-2')], [icon(h, symbol, 'size-4'), h.span([], [label])])
+const groups: ReadonlyArray<Command.Group> = [
+  { value: 'suggestions', heading: 'Suggestions' },
+  { value: 'settings', heading: 'Settings' },
+]
+
+const recordCommand =
+  (out: Command.OutMessage | Command.CommandDialogOutMessage): Update.Step<State, unknown> =>
+  (model) => ({
+    model:
+      out._tag === 'Selected'
+        ? { ...model, lastCommand: out.value, commandRunCount: model.commandRunCount + 1 }
+        : model,
+  })
+const foldInline = Update.foldChild({
+  update: Command.update,
+  read: (model: State) => Option.some(model.inlineCommand),
+  write: (model, inlineCommand) => ({ ...model, inlineCommand }),
+  toParentMessage: (message) => Message.GotInlineCommandMessage({ message }),
+  foldOutMessage: recordCommand,
+})
+const foldDialog = Update.foldChild({
+  update: Command.CommandDialog.update,
+  read: (model: State) => Option.some(model.commandDialog),
+  write: (model, commandDialog) => ({ ...model, commandDialog }),
+  toParentMessage: (message) => Message.GotCommandDialogMessage({ message }),
+  foldOutMessage: recordCommand,
+})
 
 export const commandView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
-    [h.Class('flex w-full flex-col gap-8')],
+    [h.Class('flex w-full max-w-sm flex-col gap-6')],
     [
-      h.div(
-        [h.Class('flex w-full flex-col gap-2')],
+      h.h2([h.Class('text-sm font-medium')], ['Inline']),
+      h.submodel({
+        slotId: model.inlineCommand.id,
+        model: model.inlineCommand,
+        view: Command.view,
+        viewInputs: {
+          items: commandItems(h),
+          groups,
+          label: 'Inline commands',
+          loop: true,
+          className: 'rounded-lg border',
+        },
+        toParentMessage: (message) => Message.GotInlineCommandMessage({ message }),
+      }),
+      h.h2([h.Class('text-sm font-medium')], ['Dialog']),
+      button(
+        {
+          variant: 'outline',
+          onClick: Message.ToggledCommandDialog(),
+          attributes: [h.Id('command-dialog-trigger')],
+        },
+        'Open command palette',
+        h,
+      ),
+      h.p(
+        [h.Class('text-xs text-muted-foreground')],
         [
-          h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['Basic']),
-          (() => {
-            const query = model.commandSearch.toLowerCase()
-            const groups = GROUPS.map((group) => {
-              const items = group.items.filter((item) => item.label.toLowerCase().includes(query))
-              if (items.length === 0) return null
-              return Command.group(
-                {},
-                [
-                  h.div(
-                    [
-                      h.Class(commandGroupHeadingClass),
-                      h.DataAttribute('slot', 'command-group-heading'),
-                    ],
-                    [group.heading],
-                  ),
-                  ...items.map((item) =>
-                    Command.item(
-                      { isDisabled: item.disabled },
-                      [
-                        icon(h, item.icon, 'size-4'),
-                        h.span([], [item.label]),
-                        ...(item.shortcut ? [Command.shortcut({}, [item.shortcut], h)] : []),
-                      ],
-                      h,
-                    ),
-                  ),
-                ],
-                h,
-              )
-            }).filter((group): group is Html => group !== null)
-
-            return Command(
-              { className: 'max-w-sm rounded-lg border' },
-              [
-                Command.input(
-                  {
-                    value: model.commandSearch,
-                    onInput: (value) => Message.UpdatedCommandSearch({ value }),
-                    placeholder: 'Type a command or search...',
-                  },
-                  h,
-                ),
-                Command.list({}, [...groups, Command.empty({}, ['No results found.'], h)], h),
-              ],
-              h,
-            )
-          })(),
+          'Press ⌘K or Ctrl+K. Try “schedule”, “payment”, or “clndr”. Calculator is disabled. Shortcut hints are labels, not registered hotkeys.',
         ],
       ),
-      h.div(
-        [h.Class('flex w-full flex-col gap-2')],
+      h.submodel({
+        slotId: model.commandDialog.dialog.id,
+        model: model.commandDialog,
+        view: Command.CommandDialog.view,
+        viewInputs: {
+          items: commandItems(h),
+          groups,
+          label: 'Search commands',
+          title: 'Command Palette',
+          loop: true,
+          vimBindings: false,
+        },
+        toParentMessage: (message) => Message.GotCommandDialogMessage({ message }),
+      }),
+      h.p(
         [
-          h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['With Icons']),
-          h.div(
-            [h.Class('mx-auto w-full max-w-sm rounded-lg border p-3 text-sm')],
-            [h.p([], ['Command palette with icons and shortcuts.'])],
-          ),
+          h.Role('status'),
+          h.DataAttribute('command-result', ''),
+          h.Class('text-sm text-muted-foreground'),
+        ],
+        [
+          model.commandRunCount
+            ? `Ran ${model.lastCommand}. Commands run: ${model.commandRunCount}.`
+            : 'No command run yet.',
         ],
       ),
     ],
   )
 
-const fields = { commandSearch: S.String }
-
-const stateSchema = S.Struct(fields)
-type State = typeof stateSchema.Type
+// cmdk also leaves the global shortcut to its caller. Scope this demo to its page.
+export const subscriptions = Subscription.make<State, typeof Message.ToggledCommandDialog.Type>()(
+  (entry) => ({
+    commandShortcut: entry(
+      { enabled: S.Boolean },
+      {
+        modelToDependencies: () => ({ enabled: true }),
+        dependenciesToStream: () =>
+          Subscription.fromEventFilterMap<KeyboardEvent, typeof Message.ToggledCommandDialog.Type>({
+            target: window,
+            type: 'keydown',
+            toMessage: (event) => {
+              if (
+                window.location.pathname === '/docs/command' &&
+                !event.defaultPrevented &&
+                !event.isComposing &&
+                !event.repeat &&
+                (event.metaKey || event.ctrlKey) &&
+                event.key.toLowerCase() === 'k'
+              ) {
+                event.preventDefault()
+                return Option.some(Message.ToggledCommandDialog())
+              }
+              return Option.none()
+            },
+          }),
+      },
+    ),
+  }),
+)
 
 export const slice = defineSlice({
   fields,
-  init: { commandSearch: '' },
-  messages: [Message.UpdatedCommandSearch],
-  handlers: (model: State) => ({
-    UpdatedCommandSearch: ({ value }: typeof Message.UpdatedCommandSearch.Type): UpdateReturn => ({
-      model: evo(model, { commandSearch: () => value }),
+  init: {
+    inlineCommand: Command.init({ id: 'command-inline' }),
+    commandDialog: Command.CommandDialog.init({
+      id: 'command-demo',
+      closeOnSelect: true,
+      resetOnOpen: true,
     }),
+    lastCommand: '',
+    commandRunCount: 0,
+  },
+  messages: [
+    Message.GotInlineCommandMessage,
+    Message.GotCommandDialogMessage,
+    Message.ToggledCommandDialog,
+  ],
+  handlers: (model: State) => ({
+    GotInlineCommandMessage: ({
+      message,
+    }: typeof Message.GotInlineCommandMessage.Type): UpdateReturn => foldInline(model, message),
+    GotCommandDialogMessage: ({
+      message,
+    }: typeof Message.GotCommandDialogMessage.Type): UpdateReturn => foldDialog(model, message),
+    ToggledCommandDialog: (): UpdateReturn => {
+      const result = model.commandDialog.dialog.isOpen
+        ? Command.CommandDialog.close(model.commandDialog)
+        : Command.CommandDialog.open(model.commandDialog)
+      return {
+        model: { ...model, commandDialog: result.model },
+        commands: RuntimeCommand.mapMessages(result.commands ?? [], (message) =>
+          Message.GotCommandDialogMessage({ message }),
+        ),
+      }
+    },
   }),
-  samples: [Message.UpdatedCommandSearch({ value: 'cal' })],
+  samples: [Message.ToggledCommandDialog()],
+  subscriptions,
 })

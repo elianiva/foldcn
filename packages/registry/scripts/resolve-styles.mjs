@@ -291,7 +291,7 @@ function transformSourceFile(sourceFile, styleMap, unmappedTokens) {
     // Inert-selector cleanup runs on EVERY literal — resolved tokens and
     // hand-written tails alike — so upstream-copied selectors that can never
     // match foldkit's emitted attributes don't ship to users:
-    //   - `[cmdk-*]` descendant selectors (no cmdk behavior layer)
+    // Command now emits cmdk-* attributes; preserve those selectors.
     //   - `data-[selected=true]:…` (foldkit emits data-selected as EMPTY attr)
     //   - `data-[disabled=true]` → `data-[disabled]` (same empty-attr rule as
     //     the style-map foldkitCompat pass above)
@@ -303,10 +303,7 @@ function transformSourceFile(sourceFile, styleMap, unmappedTokens) {
 const stripInertUtilities = (classes) =>
   classes
     .split(/\s+/)
-    .filter(
-      (utility) =>
-        utility !== '' && !utility.includes('[cmdk-') && !/^data-\[selected=true\]:/.test(utility),
-    )
+    .filter((utility) => utility !== '' && !/^data-\[selected=true\]:/.test(utility))
     .map((utility) => utility.replace(/data-\[disabled=true\]/g, 'data-[disabled]'))
     .join(' ')
 

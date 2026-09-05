@@ -1,3 +1,4 @@
+import commandGuideUrl from '../../../../docs/command-composition.md?url'
 import { Option } from 'effect'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { createLazy } from 'foldkit/html'
@@ -40,7 +41,21 @@ const gapsCallout = (name: string, h: HtmlBuilder<AppMessage>): Html => {
     [
       icon(h, TriangleAlert),
       Alert.title<AppMessage>({}, ['Differences vs shadcn/ui'], h),
-      Alert.description<AppMessage>({}, [h.ul([h.Class('list-disc space-y-1 pl-4')], gaps)], h),
+      Alert.description<AppMessage>(
+        {},
+        [
+          h.ul([h.Class('list-disc space-y-1 pl-4')], gaps),
+          ...(name === 'command'
+            ? [
+                h.a(
+                  [h.Href(commandGuideUrl), h.Class('underline underline-offset-4')],
+                  ['Read the Command and CommandDialog guide'],
+                ),
+              ]
+            : []),
+        ],
+        h,
+      ),
     ],
     h,
   )
