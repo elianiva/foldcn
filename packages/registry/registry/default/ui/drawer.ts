@@ -37,6 +37,13 @@ const swipeAxis = (direction: SwipeDirection): 'x' | 'y' =>
 const dismissSign = (direction: SwipeDirection): 1 | -1 =>
   direction === 'up' || direction === 'left' ? -1 : 1
 
+/** Inline drag translation for the panel, signed along the dismiss axis.
+ *  Positive-only offsets would shove up/left drawers the wrong way. */
+const dragTranslate = (direction: SwipeDirection, offset: number): string => {
+  const signed = String(dismissSign(direction) * offset)
+  return swipeAxis(direction) === 'y' ? `0 ${signed}px` : `${signed}px 0`
+}
+
 export const DragState = S.Struct({
   activity: S.Literals(['Idle', 'Dragging']),
   originX: S.Number,
@@ -519,14 +526,7 @@ export const styledViewInputs = <M>(
                 ),
                 ...(isDragging ? [h.DataAttribute('swiping', '')] : []),
                 ...(isDragging && dragOffset > 0
-                  ? [
-                      h.Style({
-                        translate:
-                          swipeAxis(direction) === 'y'
-                            ? `0 ${String(dragOffset)}px`
-                            : `${String(dragOffset)}px 0`,
-                      }),
-                    ]
+                  ? [h.Style({ translate: dragTranslate(direction, dragOffset) })]
                   : []),
               ],
               [
