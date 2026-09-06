@@ -43,6 +43,10 @@ export const gapsByItem = {
   progress: [
     'Indeterminate state renders an empty track — animated indeterminacy awaits primitive support.',
   ],
+  'input-otp': [
+    'Numeric codes only — non-digits are stripped with no pattern or alphanumeric mode like upstream.',
+    'onInput fires on every change; onComplete alone doubles as the update channel, so derive completion from the stored value.',
+  ],
 } as const
 
 const isGapItem = (name: string): name is keyof typeof gapsByItem => name in gapsByItem

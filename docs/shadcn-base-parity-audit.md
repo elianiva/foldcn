@@ -13,7 +13,11 @@
 > #1 button disabled → `aria-disabled:`/`data-disabled:` twins added in `packages/registry/registry/default/style/cn-compat.css` (button block);
 > #2 progress indeterminate → `undefined` now renders an empty track (`packages/registry/registry/default/ui/progress.ts`; animated indeterminate still awaits primitive support);
 > #3 switch hidden input → Foldkit's `attributes.hiddenInput` is now rendered (`packages/registry/registry/default/ui/switch.ts`);
-> #4 input-otp `onComplete` → documented intentional update-channel fallback with an in-code comment (`packages/registry/registry/default/ui/input-otp.ts`).
+> #4 input-otp `onComplete` → fixed: `onInput` now fires on every change
+> including the completing one (mirrors upstream `onChange`); `onComplete`
+> alone remains the update channel when `onInput` is absent, and Group/Slot
+> parts plus `isInvalid` landed (`packages/registry/registry/default/ui/input-otp.ts`).
+> Remaining: numeric-only (no pattern/alphanumeric mode).
 > Gaps #5–#12 are unchanged.
 >
 > **Menu update (2026-09-03):** menu/context-menu/menubar panels now emit
@@ -54,11 +58,11 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 
 ## Scorecard (52 compared pairs)
 
-| Verdict     | Count | Components                                                                                                                                                                                                                                                                                                    |
-| ----------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MATCHES     | 4     | label, separator, spinner, kbd                                                                                                                                                                                                                                                                                |
-| MINOR DIFFS | 18    | input, textarea, checkbox, avatar, card, skeleton, popover, tooltip, tabs, breadcrumb, toggle, item, fieldset↔field, slider, aspect-ratio, direction, marker, table                                                                                                                                           |
-| MAJOR DIFFS | 30    | button, switch, radio-group, select, menu, context-menu, menubar, combobox, command, dialog, alert-dialog, sheet, drawer, hover-card, accordion, collapsible, navigation-menu, toggle-group, alert, badge, empty, progress, input-group, input-otp, button-group, calendar, resizable, sonner, toast, sidebar |
+| Verdict     | Count | Components                                                                                                                                                                                                                                                                                         |
+| ----------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MATCHES     | 4     | label, separator, spinner, kbd                                                                                                                                                                                                                                                                     |
+| MINOR DIFFS | 19    | input, textarea, checkbox, avatar, card, skeleton, popover, tooltip, tabs, breadcrumb, toggle, item, fieldset↔field, slider, aspect-ratio, direction, marker, table, input-otp                                                                                                                     |
+| MAJOR DIFFS | 29    | button, switch, radio-group, select, menu, context-menu, menubar, combobox, command, dialog, alert-dialog, sheet, drawer, hover-card, accordion, collapsible, navigation-menu, toggle-group, alert, badge, empty, progress, input-group, button-group, calendar, resizable, sonner, toast, sidebar |
 
 ### Not covered (no counterpart)
 
@@ -72,7 +76,12 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 1. **button — disabled is visually broken.** Foldkit emits `aria-disabled="true"` + `data-disabled=""` (never native `disabled`), but foldcn ships only `disabled:pointer-events-none disabled:opacity-50`. The `:disabled` pseudo-class never matches → disabled buttons look enabled and stay tabbable (`tabindex="0"` always emitted).
 2. **progress — indeterminate renders a full bar.** `value === undefined` applies no transform; indicator is `w-full` → 100%. Legacy used `100 - (value || 0)`; base primitive has true indeterminate. Also no `role="progressbar"`/ARIA values, no Label/Value parts.
 3. **switch — form payload dropped.** Config accepts `name`/`value` but `toView` never renders the hidden input Foldkit supplies (checkbox does) → nothing submits.
-4. **input-otp — `onComplete` fires on partial values** when `onInput` is absent (fall-through at the end of the `OnInput` handler).
+4. **input-otp — numeric-only + single-message callbacks.** Non-digits are
+   stripped with no `pattern`/alphanumeric mode like upstream, and foldkit
+   maps one event to one message: `onInput` fires on every change (including
+   completion) while `onComplete` alone doubles as the update channel — the
+   two never fire for the same keystroke, so controlled owners derive
+   completion from their stored value.
 5. **hover-card — click-toggled, not hover.** It reuses the Popover submodel; there is no hover-intent delay/grace model. Trigger semantics are the component's defining behavior.
 6. **context-menu — not a context menu.** Opens on activation at a fixed anchor; no right-click/pointer-position anchoring.
 7. **menubar — no menubar behavior.** Each trigger is an independent Menu bundle; no ArrowLeft/Right traversal, no open-on-hover-of-next-trigger.
@@ -144,7 +153,7 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 ### Composite inputs
 
 - **input-group — MINOR.** Full part set (Group/Addon/Button/Text/Input/Textarea) with `role=group`, align variants, and frame-level invalid/focus states keyed off `data-slot=input-group-control`; addon-click-focus missing (foldkit has no scoped click-to-focus attribute).
-- **input-otp — MAJOR.** Standalone cells vs joined pill; no Group/Slot/Separator parts; onComplete quirk (bug #4).
+- **input-otp — MINOR.** Full part set (root/Group/Slot/Separator) with joined-pill slots, active caret, and invalid rings; numeric-only with no pattern/alphanumeric mode, and one-message-per-event callbacks (see bug #4).
 - **button-group — MAJOR.** Outer-frame model vs child corner-cutting; no orientation/Text/Separator, no `role=group`.
 - **item — MINOR.** Full part parity minus `xs` size; padding/radius/hover drift; media boxed vs bare.
 - **fieldset ↔ field — MINOR.** Near-complete part mapping incl. container-query responsive orientation; spacing drift; checked-label card tint/radius differ.
