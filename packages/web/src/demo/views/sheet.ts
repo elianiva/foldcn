@@ -1,4 +1,4 @@
-import { Match as M, Option } from 'effect'
+import { Match as M, Option, Schema as S } from 'effect'
 import { Command, Update } from 'foldkit'
 import { evo } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
@@ -10,11 +10,20 @@ import * as Sheet from '../../generated/registry/ui/sheet'
 import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
-type State = { dialog: typeof Sheet.Model.Type }
+const SheetSide = S.Literals(['top', 'right', 'bottom', 'left'])
+type SheetSide = typeof SheetSide.Type
+
+const SheetSideLabel: Record<SheetSide, string> = {
+  top: 'Top',
+  right: 'Right',
+  bottom: 'Bottom',
+  left: 'Left',
+}
 
 const Message = defineMessageUnion({
   GotDialogMessage: { message: Sheet.Message },
   ClickedOpenDialog: {},
+  ClickedOpenSidedSheet: { side: SheetSide },
 })
 
 export const sheetView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
@@ -39,12 +48,16 @@ export const sheetView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                 view: Sheet.view,
                 viewInputs: Sheet.styledViewInputs(
                   {
-                    side: 'right',
+                    side: model.sheetSide,
                     content: ({ closeButton, title, description }, h) => [
                       Sheet.header(
                         {},
                         [
-                          Sheet.title({ attributes: title }, ['Edit profile'], h),
+                          Sheet.title(
+                            { attributes: title },
+                            ['Edit profile (', SheetSideLabel[model.sheetSide], ')'],
+                            h,
+                          ),
                           Sheet.description(
                             { attributes: description },
                             ['Make changes to your profile here. Click save when you are done.'],
@@ -139,10 +152,29 @@ export const sheetView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           h.div(
             [h.Class('flex flex-wrap gap-2')],
             [
-              button<AppMessage>({ variant: 'outline' }, 'Top', h),
-              button<AppMessage>({ variant: 'outline' }, 'Right', h),
-              button<AppMessage>({ variant: 'outline' }, 'Bottom', h),
-              button<AppMessage>({ variant: 'outline' }, 'Left', h),
+              button<AppMessage>(
+                { variant: 'outline', onClick: Message.ClickedOpenSidedSheet({ side: 'top' }) },
+                'Top',
+                h,
+              ),
+              button<AppMessage>(
+                { variant: 'outline', onClick: Message.ClickedOpenSidedSheet({ side: 'right' }) },
+                'Right',
+                h,
+              ),
+              button<AppMessage>(
+                {
+                  variant: 'outline',
+                  onClick: Message.ClickedOpenSidedSheet({ side: 'bottom' }),
+                },
+                'Bottom',
+                h,
+              ),
+              button<AppMessage>(
+                { variant: 'outline', onClick: Message.ClickedOpenSidedSheet({ side: 'left' }) },
+                'Left',
+                h,
+              ),
             ],
           ),
         ],
@@ -172,10 +204,15 @@ const foldSheet = Update.foldChild({
   foldOutMessage: foldSheetOutMessage,
 })
 
+const fields = { sheetSide: SheetSide }
+
+const stateSchema = S.Struct({ dialog: Sheet.Model, ...fields })
+type State = typeof stateSchema.Type
+
 export const slice = defineSlice({
-  fields: {},
-  init: {},
-  messages: [Message.GotDialogMessage, Message.ClickedOpenDialog],
+  fields,
+  init: { sheetSide: 'right' },
+  messages: [Message.GotDialogMessage, Message.ClickedOpenDialog, Message.ClickedOpenSidedSheet],
   handlers: (model: State) => ({
     GotDialogMessage: (payload: typeof Message.GotDialogMessage.Type): UpdateReturn =>
       foldSheet(model, payload.message),
@@ -186,6 +223,14 @@ export const slice = defineSlice({
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },
+    ClickedOpenSidedSheet: ({ side }: typeof Message.ClickedOpenSidedSheet.Type): UpdateReturn => {
+      const sided = evo(model, { sheetSide: () => side })
+      const { model: next, commands = [] } = Sheet.open(sided.dialog)
+      return {
+        model: evo(sided, { dialog: () => next }),
+        commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
+      }
+    },
   }),
-  samples: [Message.ClickedOpenDialog()],
+  samples: [Message.ClickedOpenDialog(), Message.ClickedOpenSidedSheet({ side: 'left' })],
 })
