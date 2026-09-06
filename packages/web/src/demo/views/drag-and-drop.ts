@@ -5,7 +5,6 @@ import { evo } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
-import { cn } from '../../generated/registry/lib/utils'
 import * as DragAndDrop from '../../generated/registry/ui/drag-and-drop'
 
 import { defineSlice, type UpdateReturn } from '../slice'
@@ -82,19 +81,13 @@ const cardView = (
 ): Html => {
   const maybeItemId = DragAndDrop.maybeDraggedItemId(model.dragAndDrop)
   const isBeingDragged = Option.exists(maybeItemId, (id) => id === card.id)
-  const isKeyboardDragged =
-    isBeingDragged && model.dragAndDrop.dragState._tag === 'KeyboardDragging'
   const isPointerDragged = isBeingDragged && model.dragAndDrop.dragState._tag === 'Dragging'
 
   return h.keyed('div')(
     card.id,
     [
-      h.Class(
-        cn(DragAndDrop.dragCardClass, {
-          'opacity-40': isPointerDragged,
-          'data-[keyboard-dragging]': isKeyboardDragged,
-        }),
-      ),
+      h.Class(DragAndDrop.dragCardClass),
+      ...(isPointerDragged ? [h.DataAttribute('dragging', '')] : []),
       ...DragAndDrop.draggable(
         {
           model: model.dragAndDrop,
@@ -135,11 +128,8 @@ const renderColumn = (
       ),
       h.div(
         [
-          h.Class(
-            cn(DragAndDrop.dragContainerClass, {
-              'border-dashed !border-primary/50': isDropTarget,
-            }),
-          ),
+          h.Class(DragAndDrop.dragContainerClass),
+          ...(isDropTarget ? [h.DataAttribute('drop-target', '')] : []),
           ...DragAndDrop.droppable(column.id, column.label),
         ],
         [...children],
