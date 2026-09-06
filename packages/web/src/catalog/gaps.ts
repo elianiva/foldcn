@@ -22,7 +22,9 @@ export const gapsByItem = {
   toast: [
     'No swipe-to-dismiss — foldkit has no pointer-move gesture primitive yet. Auto-dismiss, hover-pause, hover-to-expand and manual close work as expected.',
   ],
-  drawer: ['Bottom-docked modal with handle visuals — no drag/snap gestures.'],
+  drawer: [
+    'No snap points, nested stacks, or non-modal drawers — handle drag-to-dismiss and all four directions work.',
+  ],
   resizable: [
     'Two-pane percentage splitter — no min/max constraints, collapsible panes, or N-pane layouts.',
   ],
