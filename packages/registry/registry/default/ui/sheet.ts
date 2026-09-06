@@ -3,7 +3,6 @@
  *  `import * as Sheet from '@/components/ui/sheet'`
  */
 import { Dialog as FoldkitDialog } from '@foldkit/ui'
-import type { AnchorConfig } from '@foldkit/ui/anchor'
 import type { Attribute, ChildAttribute, Html, HtmlBuilder } from 'foldkit/html'
 
 type Child = Html | string
@@ -38,16 +37,9 @@ export type ViewInputs = FoldkitDialog.ViewInputs
 // foldkit delta: upstream keys enter/exit motion on
 // data-starting-style/data-ending-style, which foldkit cannot emit — the
 // equivalent declarations are inlined under data-enter/data-leave,
-// and the panel emits data-side (derived from the anchor placement).
+// and the panel emits data-side (from the `side` view input).
 
 export type SheetSide = 'top' | 'bottom' | 'left' | 'right'
-
-export const SHEET_ANCHOR: Readonly<Record<SheetSide, AnchorConfig>> = {
-  top: { placement: 'top', gap: 0, padding: 0 },
-  bottom: { placement: 'bottom', gap: 0, padding: 0 },
-  left: { placement: 'left', gap: 0, padding: 0 },
-  right: { placement: 'right', gap: 0, padding: 0 },
-}
 
 /** Upstream SheetContent string. Positioning comes from the cn-sheet-content
  *  token keyed on the emitted data-side attribute. */
