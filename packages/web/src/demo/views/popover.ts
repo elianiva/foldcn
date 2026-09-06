@@ -12,6 +12,10 @@ import type { Model, Message as AppMessage } from '../assemble'
 
 const Message = defineMessageUnion({
   GotPopoverMessage: { message: popover.Message },
+  GotTopPopoverMessage: { message: popover.Message },
+  GotRightPopoverMessage: { message: popover.Message },
+  GotBottomPopoverMessage: { message: popover.Message },
+  GotLeftPopoverMessage: { message: popover.Message },
 })
 
 export const popoverView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
@@ -131,10 +135,70 @@ export const popoverView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           h.div(
             [h.Class('flex flex-wrap gap-2 justify-center')],
             [
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm')], ['Top']),
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm')], ['Right']),
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm')], ['Bottom']),
-              h.span([h.Class('rounded-lg border px-3 py-1 text-sm')], ['Left']),
+              h.submodel({
+                slotId: model.topPopover.id,
+                model: model.topPopover,
+                view: popover.view,
+                viewInputs: popover.styledViewInputs(
+                  {
+                    anchor: { placement: 'top', gap: 4 },
+                    trigger: 'Top',
+                    content: ['Top popover'],
+                    triggerClass: 'rounded-lg border px-3 py-1 text-sm',
+                    contentClass: 'w-40',
+                  },
+                  h,
+                ),
+                toParentMessage: (message) => Message.GotTopPopoverMessage({ message }),
+              }),
+              h.submodel({
+                slotId: model.rightPopover.id,
+                model: model.rightPopover,
+                view: popover.view,
+                viewInputs: popover.styledViewInputs(
+                  {
+                    anchor: { placement: 'right', gap: 4 },
+                    trigger: 'Right',
+                    content: ['Right popover'],
+                    triggerClass: 'rounded-lg border px-3 py-1 text-sm',
+                    contentClass: 'w-40',
+                  },
+                  h,
+                ),
+                toParentMessage: (message) => Message.GotRightPopoverMessage({ message }),
+              }),
+              h.submodel({
+                slotId: model.bottomPopover.id,
+                model: model.bottomPopover,
+                view: popover.view,
+                viewInputs: popover.styledViewInputs(
+                  {
+                    anchor: { placement: 'bottom', gap: 4 },
+                    trigger: 'Bottom',
+                    content: ['Bottom popover'],
+                    triggerClass: 'rounded-lg border px-3 py-1 text-sm',
+                    contentClass: 'w-40',
+                  },
+                  h,
+                ),
+                toParentMessage: (message) => Message.GotBottomPopoverMessage({ message }),
+              }),
+              h.submodel({
+                slotId: model.leftPopover.id,
+                model: model.leftPopover,
+                view: popover.view,
+                viewInputs: popover.styledViewInputs(
+                  {
+                    anchor: { placement: 'left', gap: 4 },
+                    trigger: 'Left',
+                    content: ['Left popover'],
+                    triggerClass: 'rounded-lg border px-3 py-1 text-sm',
+                    contentClass: 'w-40',
+                  },
+                  h,
+                ),
+                toParentMessage: (message) => Message.GotLeftPopoverMessage({ message }),
+              }),
             ],
           ),
         ],
@@ -163,18 +227,76 @@ const foldPopover = Update.foldChild({
   foldOutMessage: foldPopoverOutMessage,
 })
 
-const fields = { popover: popover.Model }
+const foldTopPopover = Update.foldChild({
+  update: popover.update,
+  read: (model: State) => Option.some(model.topPopover),
+  write: (model, next) => evo(model, { topPopover: () => next }),
+  toParentMessage: (message) => Message.GotTopPopoverMessage({ message }),
+  foldOutMessage: foldPopoverOutMessage,
+})
+
+const foldRightPopover = Update.foldChild({
+  update: popover.update,
+  read: (model: State) => Option.some(model.rightPopover),
+  write: (model, next) => evo(model, { rightPopover: () => next }),
+  toParentMessage: (message) => Message.GotRightPopoverMessage({ message }),
+  foldOutMessage: foldPopoverOutMessage,
+})
+
+const foldBottomPopover = Update.foldChild({
+  update: popover.update,
+  read: (model: State) => Option.some(model.bottomPopover),
+  write: (model, next) => evo(model, { bottomPopover: () => next }),
+  toParentMessage: (message) => Message.GotBottomPopoverMessage({ message }),
+  foldOutMessage: foldPopoverOutMessage,
+})
+
+const foldLeftPopover = Update.foldChild({
+  update: popover.update,
+  read: (model: State) => Option.some(model.leftPopover),
+  write: (model, next) => evo(model, { leftPopover: () => next }),
+  toParentMessage: (message) => Message.GotLeftPopoverMessage({ message }),
+  foldOutMessage: foldPopoverOutMessage,
+})
+
+const fields = {
+  popover: popover.Model,
+  topPopover: popover.Model,
+  rightPopover: popover.Model,
+  bottomPopover: popover.Model,
+  leftPopover: popover.Model,
+}
 
 const stateSchema = S.Struct(fields)
 type State = typeof stateSchema.Type
 
 export const slice = defineSlice({
   fields,
-  init: { popover: popover.init({ id: 'popover-demo' }) },
-  messages: [Message.GotPopoverMessage],
+  init: {
+    popover: popover.init({ id: 'popover-demo' }),
+    topPopover: popover.init({ id: 'popover-top-demo' }),
+    rightPopover: popover.init({ id: 'popover-right-demo' }),
+    bottomPopover: popover.init({ id: 'popover-bottom-demo' }),
+    leftPopover: popover.init({ id: 'popover-left-demo' }),
+  },
+  messages: [
+    Message.GotPopoverMessage,
+    Message.GotTopPopoverMessage,
+    Message.GotRightPopoverMessage,
+    Message.GotBottomPopoverMessage,
+    Message.GotLeftPopoverMessage,
+  ],
   handlers: (model: State) => ({
     GotPopoverMessage: (payload: typeof Message.GotPopoverMessage.Type): UpdateReturn =>
       foldPopover(model, payload.message),
+    GotTopPopoverMessage: (payload: typeof Message.GotTopPopoverMessage.Type): UpdateReturn =>
+      foldTopPopover(model, payload.message),
+    GotRightPopoverMessage: (payload: typeof Message.GotRightPopoverMessage.Type): UpdateReturn =>
+      foldRightPopover(model, payload.message),
+    GotBottomPopoverMessage: (payload: typeof Message.GotBottomPopoverMessage.Type): UpdateReturn =>
+      foldBottomPopover(model, payload.message),
+    GotLeftPopoverMessage: (payload: typeof Message.GotLeftPopoverMessage.Type): UpdateReturn =>
+      foldLeftPopover(model, payload.message),
   }),
   samples: [],
   // Popover open/close flows entirely through the submodel; the public

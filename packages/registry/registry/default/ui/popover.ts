@@ -32,6 +32,10 @@ export const view = FoldkitPopover.view
 export type InitConfig = FoldkitPopover.InitConfig
 export type RenderInfo = FoldkitPopover.RenderInfo
 
+/** Default anchor matching the shadcn reference `PopoverContent` defaults:
+ *  `side="bottom"`, `sideOffset=4`, `align="center"`, `alignOffset=0`.
+ *  `placement` maps side+align (a bare side centers the popover), `gap` maps
+ *  sideOffset, `offset` maps alignOffset and defaults to 0. */
 export const POPOVER_ANCHOR: AnchorConfig = {
   placement: 'bottom',
   gap: 4,
