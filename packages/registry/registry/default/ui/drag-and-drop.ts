@@ -34,25 +34,14 @@ export type InitConfig = FoldkitDragAndDrop.InitConfig
 export type DraggableConfig<M> = FoldkitDragAndDrop.DraggableConfig<M>
 export type DraggableMessage = FoldkitDragAndDrop.DraggableMessage
 
-// Card-like draggable item. Mirrors shadcn card/list-item styling:
-// `border bg-card text-card-foreground shadow-xs` with
-// `focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50`
-// since `draggable` emits `tabindex=0` + `role=option` (focusable). The
-// submodel's `touch-action: none` / `user-select: none` inline styles are
-// complemented here with `select-none` + `cursor-grab`. Set
-// `data-dragging` on the element when `isDragging` / `maybeDraggedItemId`
-// indicates this item is being dragged — the `data-[dragging]:opacity-50`
-// hook dims the source. Keyboard dragging is covered by `focus-visible`
-// rather than a separate `data-[keyboard-dragging]` attribute (the submodel
-// never emits that).
 export const dragCardClass =
-  'flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm text-card-foreground shadow-xs outline-none select-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[dragging]:opacity-50 cursor-grab active:cursor-grabbing'
+  'cn-item cn-item-variant-outline cn-item-size-default cursor-grab select-none bg-card text-card-foreground shadow-xs data-[dragging]:opacity-50 active:cursor-grabbing'
 
 export const dragDropPlaceholderClass =
-  'h-9 rounded-lg border-2 border-dashed border-primary/50 bg-primary/5'
+  'cn-item h-9 border-2 border-dashed border-primary/50 bg-primary/5'
 
 export const dragContainerClass =
-  'flex min-h-[120px] flex-col gap-1.5 rounded-lg border-2 border-transparent bg-muted/50 p-2 outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[drop-target]:border-dashed data-[drop-target]:border-primary/50 data-[drop-target]:bg-accent/50'
+  'cn-card flex min-h-[120px] flex-col gap-1.5 border-2 border-transparent bg-muted/50 p-2 outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[drop-target]:border-dashed data-[drop-target]:border-primary/50 data-[drop-target]:bg-accent/50'
 
 export const dragGhostClass =
-  'flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm text-card-foreground shadow-lg ring-1 ring-foreground/10 select-none'
+  'cn-item cn-item-variant-outline cn-item-size-default bg-card text-card-foreground shadow-lg ring-1 ring-foreground/10 select-none'
