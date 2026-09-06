@@ -5,10 +5,9 @@ import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import {
   inputOtp,
-  inputOtpGroupClass,
-  inputOtpSlotClass,
+  inputOtpGroup,
+  inputOtpSlot,
   inputOtpSeparator,
-  inputOtpClass,
 } from '../../generated/registry/ui/input-otp'
 import {
   field,
@@ -25,29 +24,35 @@ import type { Model, Message as AppMessage } from '../assemble'
 
 const Message = defineMessageUnion({
   UpdatedOtp: { value: S.String },
+  UpdatedSeparatedOtp: { value: S.String },
+  UpdatedFourOtp: { value: S.String },
+  UpdatedControlledOtp: { value: S.String },
+  UpdatedInvalidOtp: { value: S.String },
 })
 
-const otpSlots = (
+const separatedGroups = (
   h: HtmlBuilder<AppMessage>,
-  length: number,
   value: string,
-  highlightInvalid = false,
-): Html => {
-  const digits = value.replace(/\D/g, '').slice(0, length).split('')
-  return h.div(
-    [h.Class(inputOtpGroupClass), h.DataAttribute('slot', 'input-otp-group')],
-    Array.from({ length }, (_, i) =>
-      h.div(
-        [
-          h.Class(inputOtpSlotClass),
-          h.DataAttribute('slot', 'input-otp-slot'),
-          ...(highlightInvalid ? [h.AriaInvalid(true)] : []),
-        ],
-        [digits[i] ?? ''],
-      ),
-    ),
-  )
-}
+  isInvalid = false,
+): ReadonlyArray<Html> => [
+  inputOtpGroup<AppMessage>(
+    {},
+    [0, 1].map((index) => inputOtpSlot({ index, value, length: 6, isInvalid }, h)),
+    h,
+  ),
+  inputOtpSeparator({}, h),
+  inputOtpGroup<AppMessage>(
+    {},
+    [2, 3].map((index) => inputOtpSlot({ index, value, length: 6, isInvalid }, h)),
+    h,
+  ),
+  inputOtpSeparator({}, h),
+  inputOtpGroup<AppMessage>(
+    {},
+    [4, 5].map((index) => inputOtpSlot({ index, value, length: 6, isInvalid }, h)),
+    h,
+  ),
+]
 
 export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
@@ -60,15 +65,15 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           field<AppMessage>(
             {},
             [
-              fieldLabel<AppMessage>({ for: 'simple' }, ['Simple'], h),
-              h.div(
-                [h.Class(inputOtpClass), h.DataAttribute('slot', 'input-otp')],
-                [
-                  h.div(
-                    [h.Class('flex items-center gap-2')],
-                    [otpSlots(h, 3, ''), inputOtpSeparator({}, h), otpSlots(h, 3, '')],
-                  ),
-                ],
+              fieldLabel<AppMessage>({ for: 'otp-simple' }, ['Simple'], h),
+              inputOtp<AppMessage>(
+                {
+                  length: 6,
+                  value: model.otp,
+                  id: 'otp-simple',
+                  onInput: (value) => Message.UpdatedOtp({ value }),
+                },
+                h,
               ),
             ],
             h,
@@ -82,9 +87,15 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           field<AppMessage>(
             {},
             [
-              fieldLabel<AppMessage>({ for: 'with-separator' }, ['With Separator'], h),
+              fieldLabel<AppMessage>({ for: 'otp-separator' }, ['With Separator'], h),
               inputOtp<AppMessage>(
-                { length: 6, value: model.otp, onInput: (value) => Message.UpdatedOtp({ value }) },
+                {
+                  length: 6,
+                  value: model.otpSeparated,
+                  id: 'otp-separator',
+                  onInput: (value) => Message.UpdatedSeparatedOtp({ value }),
+                  children: separatedGroups(h, model.otpSeparated),
+                },
                 h,
               ),
             ],
@@ -99,11 +110,16 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           field<AppMessage>(
             {},
             [
-              fieldLabel<AppMessage>({ for: 'four-digits' }, ['4 Digits'], h),
+              fieldLabel<AppMessage>({ for: 'otp-four' }, ['4 Digits'], h),
               fieldDescription<AppMessage>({}, ['Common pattern for PIN codes.'], h),
-              h.div(
-                [h.Class(inputOtpClass), h.DataAttribute('slot', 'input-otp')],
-                [otpSlots(h, 4, '1234')],
+              inputOtp<AppMessage>(
+                {
+                  length: 4,
+                  value: model.otpFour,
+                  id: 'otp-four',
+                  onInput: (value) => Message.UpdatedFourOtp({ value }),
+                },
+                h,
               ),
             ],
             h,
@@ -117,15 +133,10 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           field<AppMessage>(
             {},
             [
-              fieldLabel<AppMessage>({ for: 'disabled' }, ['Disabled'], h),
-              h.div(
-                [h.Class(`${inputOtpClass} opacity-50`), h.DataAttribute('slot', 'input-otp')],
-                [
-                  h.div(
-                    [h.Class('flex items-center gap-2')],
-                    [otpSlots(h, 3, '123'), inputOtpSeparator({}, h), otpSlots(h, 3, '456')],
-                  ),
-                ],
+              fieldLabel<AppMessage>({ for: 'otp-disabled' }, ['Disabled'], h),
+              inputOtp<AppMessage>(
+                { length: 6, value: '123456', id: 'otp-disabled', isDisabled: true },
+                h,
               ),
             ],
             h,
@@ -139,22 +150,18 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           field<AppMessage>(
             {},
             [
-              fieldLabel<AppMessage>({ for: 'invalid' }, ['Invalid State'], h),
+              fieldLabel<AppMessage>({ for: 'otp-invalid' }, ['Invalid State'], h),
               fieldDescription<AppMessage>({}, ['Example showing the invalid error state.'], h),
-              h.div(
-                [h.Class(inputOtpClass), h.DataAttribute('slot', 'input-otp')],
-                [
-                  h.div(
-                    [h.Class('flex items-center gap-2')],
-                    [
-                      otpSlots(h, 2, '00', true),
-                      inputOtpSeparator({}, h),
-                      otpSlots(h, 2, '00', true),
-                      inputOtpSeparator({}, h),
-                      otpSlots(h, 2, '00', true),
-                    ],
-                  ),
-                ],
+              inputOtp<AppMessage>(
+                {
+                  length: 6,
+                  value: model.otpInvalid,
+                  id: 'otp-invalid',
+                  isInvalid: true,
+                  onInput: (value) => Message.UpdatedInvalidOtp({ value }),
+                  children: separatedGroups(h, model.otpInvalid, true),
+                },
+                h,
               ),
               fieldError<AppMessage>(
                 { errors: [{ message: 'Invalid code. Please try again.' }] },
@@ -170,8 +177,23 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
         [
           h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['Controlled']),
           inputOtp<AppMessage>(
-            { length: 6, value: model.otp, onInput: (value) => Message.UpdatedOtp({ value }) },
+            {
+              length: 6,
+              value: model.otpControlled,
+              id: 'otp-controlled',
+              onInput: (value) => Message.UpdatedControlledOtp({ value }),
+            },
             h,
+          ),
+          h.div(
+            [h.Class('text-center text-sm')],
+            [
+              model.otpControlled === ''
+                ? 'Enter your one-time password.'
+                : model.otpControlled.length >= 6
+                  ? `You entered: ${model.otpControlled}`
+                  : `${6 - model.otpControlled.length} digits remaining.`,
+            ],
           ),
         ],
       ),
@@ -210,6 +232,7 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                     {
                       length: 6,
                       value: model.otp,
+                      id: 'otp-verification',
                       onInput: (value) => Message.UpdatedOtp({ value }),
                     },
                     h,
@@ -239,19 +262,49 @@ export const inputOtpView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
     ],
   )
 
-const fields = { otp: S.String }
+const fields = {
+  otp: S.String,
+  otpSeparated: S.String,
+  otpFour: S.String,
+  otpControlled: S.String,
+  otpInvalid: S.String,
+}
 
 const stateSchema = S.Struct(fields)
 type State = typeof stateSchema.Type
 
 export const slice = defineSlice({
   fields,
-  init: { otp: '123456' },
-  messages: [Message.UpdatedOtp],
+  init: { otp: '123456', otpSeparated: '', otpFour: '', otpControlled: '', otpInvalid: '000000' },
+  messages: [
+    Message.UpdatedOtp,
+    Message.UpdatedSeparatedOtp,
+    Message.UpdatedFourOtp,
+    Message.UpdatedControlledOtp,
+    Message.UpdatedInvalidOtp,
+  ],
   handlers: (model: State) => ({
     UpdatedOtp: ({ value }: typeof Message.UpdatedOtp.Type): UpdateReturn => ({
       model: evo(model, { otp: () => value }),
     }),
+    UpdatedSeparatedOtp: ({ value }: typeof Message.UpdatedSeparatedOtp.Type): UpdateReturn => ({
+      model: evo(model, { otpSeparated: () => value }),
+    }),
+    UpdatedFourOtp: ({ value }: typeof Message.UpdatedFourOtp.Type): UpdateReturn => ({
+      model: evo(model, { otpFour: () => value }),
+    }),
+    UpdatedControlledOtp: ({ value }: typeof Message.UpdatedControlledOtp.Type): UpdateReturn => ({
+      model: evo(model, { otpControlled: () => value }),
+    }),
+    UpdatedInvalidOtp: ({ value }: typeof Message.UpdatedInvalidOtp.Type): UpdateReturn => ({
+      model: evo(model, { otpInvalid: () => value }),
+    }),
   }),
-  samples: [Message.UpdatedOtp({ value: '1234' })],
+  samples: [
+    Message.UpdatedOtp({ value: '1234' }),
+    Message.UpdatedSeparatedOtp({ value: '12' }),
+    Message.UpdatedFourOtp({ value: '34' }),
+    Message.UpdatedControlledOtp({ value: '56' }),
+    Message.UpdatedInvalidOtp({ value: '00' }),
+  ],
 })
