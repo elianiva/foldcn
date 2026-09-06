@@ -29,6 +29,16 @@
 > no real submenus (flattened to labelled groups), checkbox/radio rows close
 > the panel on toggle, context menus anchor to the trigger region (right-click
 > opens via `OnContextMenu`), and menubar triggers stay independent.
+>
+> **Drawer update:** the drawer is now a gesture drawer, not a static bottom
+> dialog (`packages/registry/registry/default/ui/drawer.ts`). It owns a
+> fused Dialog + drag submodel: the grab handle starts a model-owned drag
+> (document pointermove/pointerup streams, slider precedent), release past
+> 96px closes the nested dialog, shorter drags snap back, and all four
+> swipe directions dock with verbatim upstream panel lines. The demo
+> (`packages/web/src/demo/views/drawer.ts`) follows the upstream examples:
+> delivery-picker basic, left/right/top sides, handle-drag affordance.
+> Still out of scope: snap points, nested stacks, non-modal drawers.
 
 Reference: `/Users/elianiva/Development/repos/shadcn-ui/ui/apps/v4/registry/bases/base/ui` (Base UI–backed registry), with `cn-*` tokens resolved via `registry/styles/style-nova.css`. Lineage checked against `registry/new-york-v4/ui` (legacy inline-class registry).
 
