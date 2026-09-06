@@ -11,9 +11,25 @@ import * as Dialog from '../../generated/registry/ui/dialog'
 import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
+const DialogSize = S.Literals(['sm', 'default', 'lg'])
+type DialogSize = typeof DialogSize.Type
+
+const DialogSizePanelClass: Record<DialogSize, string> = {
+  sm: 'sm:max-w-sm',
+  default: 'sm:max-w-lg',
+  lg: 'sm:max-w-2xl',
+}
+
+const DialogSizeLabel: Record<DialogSize, string> = {
+  sm: 'Small',
+  default: 'Default',
+  lg: 'Large',
+}
+
 const Message = defineMessageUnion({
   GotDialogMessage: { message: Dialog.Message },
   ClickedOpenDialog: {},
+  ClickedOpenSizedDialog: { size: DialogSize },
 })
 
 export const dialogView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
@@ -38,11 +54,16 @@ export const dialogView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                 view: Dialog.view,
                 viewInputs: Dialog.styledViewInputs(
                   {
+                    panelClass: DialogSizePanelClass[model.dialogSize],
                     content: ({ closeButton, title, description }, h) => [
                       Dialog.header(
                         {},
                         [
-                          Dialog.title({ attributes: title }, ['Edit profile'], h),
+                          Dialog.title(
+                            { attributes: title },
+                            ['Edit profile (', DialogSizeLabel[model.dialogSize], ')'],
+                            h,
+                          ),
                           Dialog.description(
                             { attributes: description },
                             ['Make changes to your profile here. Click save when you are done.'],
@@ -150,9 +171,24 @@ export const dialogView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           h.div(
             [h.Class('flex flex-wrap gap-2')],
             [
-              button<AppMessage>({ variant: 'outline' }, 'Small', h),
-              button<AppMessage>({ variant: 'outline' }, 'Default', h),
-              button<AppMessage>({ variant: 'outline' }, 'Large', h),
+              button<AppMessage>(
+                { variant: 'outline', onClick: Message.ClickedOpenSizedDialog({ size: 'sm' }) },
+                'Small',
+                h,
+              ),
+              button<AppMessage>(
+                {
+                  variant: 'outline',
+                  onClick: Message.ClickedOpenSizedDialog({ size: 'default' }),
+                },
+                'Default',
+                h,
+              ),
+              button<AppMessage>(
+                { variant: 'outline', onClick: Message.ClickedOpenSizedDialog({ size: 'lg' }) },
+                'Large',
+                h,
+              ),
             ],
           ),
         ],
@@ -179,15 +215,15 @@ const foldDialog = Update.foldChild({
   foldOutMessage: foldDialogOutMessage,
 })
 
-const fields = { dialog: Dialog.Model }
+const fields = { dialog: Dialog.Model, dialogSize: DialogSize }
 
 const stateSchema = S.Struct(fields)
 type State = typeof stateSchema.Type
 
 export const slice = defineSlice({
   fields,
-  init: { dialog: Dialog.init({ id: 'dialog-demo' }) },
-  messages: [Message.GotDialogMessage, Message.ClickedOpenDialog],
+  init: { dialog: Dialog.init({ id: 'dialog-demo' }), dialogSize: 'default' },
+  messages: [Message.GotDialogMessage, Message.ClickedOpenDialog, Message.ClickedOpenSizedDialog],
   handlers: (model: State) => ({
     GotDialogMessage: (payload: typeof Message.GotDialogMessage.Type): UpdateReturn =>
       foldDialog(model, payload.message),
@@ -198,6 +234,16 @@ export const slice = defineSlice({
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },
+    ClickedOpenSizedDialog: ({
+      size,
+    }: typeof Message.ClickedOpenSizedDialog.Type): UpdateReturn => {
+      const sized = evo(model, { dialogSize: () => size })
+      const { model: next, commands = [] } = Dialog.open(sized.dialog)
+      return {
+        model: evo(sized, { dialog: () => next }),
+        commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
+      }
+    },
   }),
-  samples: [Message.ClickedOpenDialog()],
+  samples: [Message.ClickedOpenDialog(), Message.ClickedOpenSizedDialog({ size: 'lg' })],
 })
