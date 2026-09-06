@@ -776,11 +776,20 @@
       "name": "command",
       "type": "registry:ui",
       "title": "Command",
-      "description": "Presentational command-palette surface with input, list, group and item builders. \u26a0 No cmdk behavior: filtering and arrow-key/Enter selection are consumer-owned \u2014 consider combobox instead.",
-      "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
+      "description": "Command palette with fuzzy search, ranked groups, keyboard and pointer selection, and a composed CommandDialog.",
+      "registryDependencies": [
+        "@foldcn/utils",
+        "@foldcn/icons",
+        "@foldcn/input-group",
+        "@foldcn/dialog"
+      ],
       "files": [
         {
           "path": "command.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "command-score.ts",
           "type": "registry:ui"
         }
       ]

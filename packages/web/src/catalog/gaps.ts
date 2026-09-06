@@ -11,7 +11,7 @@
 
 export const gapsByItem = {
   command: [
-    'Presentational surface only — no filtering, arrow-key navigation, or selection. Compose with listbox or wire your own behavior.',
+    'Data-driven Foldkit API: provide stable item values and content instead of cmdk React children. CommandDialog uses Foldkit Dialog; nested pages and async fetching remain application-owned.',
   ],
   menubar: [
     'Renders independent menus in a bar — no cross-menu keyboard traversal or open-on-hover of the next trigger.',
