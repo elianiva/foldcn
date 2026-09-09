@@ -808,6 +808,19 @@
       ]
     },
     {
+      "name": "scroll-area",
+      "type": "registry:ui",
+      "title": "Scroll Area",
+      "description": "Styled overlay scrollbars over a native-scroll viewport, with draggable thumb and track-click jumping.",
+      "registryDependencies": ["@foldcn/utils"],
+      "files": [
+        {
+          "path": "scroll-area.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "attachment",
       "type": "registry:ui",
       "title": "Attachment",

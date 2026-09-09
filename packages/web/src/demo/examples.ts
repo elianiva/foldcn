@@ -58,6 +58,7 @@ import sidebarViewSource from './views/sidebar.ts?raw'
 import tableViewSource from './views/table.ts?raw'
 import commandViewSource from './views/command.ts?raw'
 import resizableViewSource from './views/resizable.ts?raw'
+import scrollAreaViewSource from './views/scroll-area.ts?raw'
 import switchViewSource from './views/switch.ts?raw'
 import tabsViewSource from './views/tabs.ts?raw'
 import textareaViewSource from './views/textarea.ts?raw'
@@ -367,6 +368,11 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     path: 'src/demo/views/resizable.ts',
     code: resizableViewSource,
     githubUrl: gh('src/demo/views/resizable.ts'),
+  },
+  'scroll-area': {
+    path: 'src/demo/views/scroll-area.ts',
+    code: scrollAreaViewSource,
+    githubUrl: gh('src/demo/views/scroll-area.ts'),
   },
   switch: {
     path: 'src/demo/views/switch.ts',
