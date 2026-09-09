@@ -819,6 +819,19 @@
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "message-scroller",
+      "type": "registry:ui",
+      "title": "Message Scroller",
+      "description": "Chat transcript scroller with auto-follow at the live edge, anchored turns, default open position, and scroll-to-end/start controls, as a Foldkit submodel.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/icons", "@foldcn/button"],
+      "files": [
+        {
+          "path": "message-scroller.ts",
+          "type": "registry:ui"
+        }
+      ]
     }
   ]
 }

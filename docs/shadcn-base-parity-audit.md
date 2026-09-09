@@ -56,20 +56,33 @@ Reference: `/Users/elianiva/Development/repos/shadcn-ui/ui/apps/v4/registry/base
 
 Beyond styling, several foldcn components are missing their **defining behaviors** entirely (see "Functional gaps").
 
-## Scorecard (52 compared pairs)
+## Scorecard (53 compared pairs)
 
-| Verdict     | Count | Components                                                                                                                                                                                                                                                                                         |
-| ----------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MATCHES     | 4     | label, separator, spinner, kbd                                                                                                                                                                                                                                                                     |
-| MINOR DIFFS | 19    | input, textarea, checkbox, avatar, card, skeleton, popover, tooltip, tabs, breadcrumb, toggle, item, fieldset↔field, slider, aspect-ratio, direction, marker, table, input-otp                                                                                                                     |
-| MAJOR DIFFS | 29    | button, switch, radio-group, select, menu, context-menu, menubar, combobox, command, dialog, alert-dialog, sheet, drawer, hover-card, accordion, collapsible, navigation-menu, toggle-group, alert, badge, empty, progress, input-group, button-group, calendar, resizable, sonner, toast, sidebar |
+| Verdict     | Count | Components                                                                                                                                                                                                                                                                                                           |
+| ----------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MATCHES     | 4     | label, separator, spinner, kbd                                                                                                                                                                                                                                                                                       |
+| MINOR DIFFS | 19    | input, textarea, checkbox, avatar, card, skeleton, popover, tooltip, tabs, breadcrumb, toggle, item, fieldset↔field, slider, aspect-ratio, direction, marker, table, input-otp                                                                                                                                       |
+| MAJOR DIFFS | 30    | button, switch, radio-group, select, menu, context-menu, menubar, combobox, command, dialog, alert-dialog, sheet, drawer, hover-card, accordion, collapsible, navigation-menu, toggle-group, alert, badge, empty, progress, input-group, button-group, calendar, resizable, sonner, toast, sidebar, message-scroller |
 
 ### Not covered (no counterpart)
 
 - **foldcn-only (7):** animation, date-picker, drag-and-drop, file-drop, listbox, nav, virtual-list
-- **base-only, missing from foldcn (10):** attachment, bubble, carousel, chart, message, message-scroller, native-select (partially covered inside foldcn `select.ts`), pagination, questionnaire, scroll-area
+- **base-only, missing from foldcn (9):** attachment, bubble, carousel, chart, message, native-select (partially covered inside foldcn `select.ts`), pagination, questionnaire, scroll-area
 - Renames: foldcn `menu` ↔ base `dropdown-menu`; foldcn `fieldset` ↔ base `field`.
-- Manifest `ui/registry.json`: 60 entries ↔ 60 files, no mismatches.
+- Manifest `ui/registry.json`: 61 entries ↔ 61 files, no mismatches.
+
+**Message-scroller update (2026-09-09):** `message-scroller` is ported
+(`packages/registry/registry/default/ui/message-scroller.ts`) as a foldkit
+submodel — @foldkit/ui has no message-scroller primitive. Covered: auto-follow
+at the live edge (backs off on user scroll-away, re-engages at the bottom),
+defaultScrollPosition (start / end / last-anchor), anchored-turn alignment with
+previous-turn peek, scrollToMessage/scrollToEnd/scrollToStart commands, the
+data-active scroll button, and data-autoscrolling during programmatic scrolls.
+Still divergent (see `packages/web/src/catalog/gaps.ts`): no visibility
+tracking (currentAnchorId / visibleMessageIds), no prepend preservation, and no
+anchored-turn tail spacer — a turn streaming below the anchor is not held
+while it grows (the anchor scrolls once, clamped by available content; follow
+resumes once the reply reaches the live edge).
 
 ## Functional gaps (behavior, not just classes)
 
