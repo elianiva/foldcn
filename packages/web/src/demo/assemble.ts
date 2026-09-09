@@ -16,6 +16,7 @@ import { slice as attachmentSlice } from './views/attachment'
 import { slice as avatarSlice } from './views/avatar'
 import { slice as badgeSlice } from './views/badge'
 import { slice as breadcrumbSlice } from './views/breadcrumb'
+import { slice as bubbleSlice } from './views/bubble'
 import { slice as buttonGroupSlice } from './views/button-group'
 import { slice as buttonSlice } from './views/button'
 import { slice as calendarSlice } from './views/calendar'
@@ -85,6 +86,7 @@ const ModelSchema = S.Struct({
   ...avatarSlice.fields,
   ...badgeSlice.fields,
   ...breadcrumbSlice.fields,
+  ...bubbleSlice.fields,
   ...buttonGroupSlice.fields,
   ...buttonSlice.fields,
   ...calendarSlice.fields,
@@ -154,6 +156,7 @@ const MessageSchema = S.Union([
   ...avatarSlice.messages,
   ...badgeSlice.messages,
   ...breadcrumbSlice.messages,
+  ...bubbleSlice.messages,
   ...buttonGroupSlice.messages,
   ...buttonSlice.messages,
   ...calendarSlice.messages,
@@ -227,6 +230,7 @@ export const init = (): DemoUpdateReturn => {
     ...avatarSlice.init,
     ...badgeSlice.init,
     ...breadcrumbSlice.init,
+    ...bubbleSlice.init,
     ...buttonGroupSlice.init,
     ...buttonSlice.init,
     ...calendarSlice.init,
@@ -294,6 +298,7 @@ export const update = (model: Model, message: Message): DemoUpdateReturn => {
     M.tagsExhaustive({
       ...accordionSlice.handlers(model),
       ...alertDialogSlice.handlers(model),
+      ...bubbleSlice.handlers(model),
       ...breadcrumbSlice.handlers(model),
       ...animationSlice.handlers(model),
       ...avatarSlice.handlers(model),
