@@ -84,6 +84,11 @@
   @apply aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-disabled:cursor-not-allowed data-disabled:opacity-50 aria-disabled:bg-input/50 data-disabled:bg-input/50 dark:aria-disabled:bg-input/80 dark:data-disabled:bg-input/80;
 }
 
+/* questionnaire freeform input: same native-:disabled delta as input. */
+.cn-questionnaire-input {
+  @apply aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50 aria-disabled:bg-input/50 data-disabled:bg-input/50 dark:aria-disabled:bg-input/80 dark:data-disabled:bg-input/80;
+}
+
 /* native-select: select element disabled twins. */
 .cn-native-select {
   @apply aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed data-disabled:pointer-events-none data-disabled:cursor-not-allowed;
