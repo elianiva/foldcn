@@ -3,6 +3,7 @@ import { Option } from 'effect'
 import { Scene } from 'foldkit/test'
 import * as Command from '../../registry/registry/default/ui/command'
 import { commandScore } from '../../registry/registry/default/ui/command-score'
+import { update as demoUpdate, init as demoInit } from './demo/assemble'
 
 const items: ReadonlyArray<Command.Item> = [
   { value: 'calendar', label: 'Calendar', keywords: ['schedule'], group: 'tools' },
@@ -175,9 +176,8 @@ describe('CommandDialog ownership', () => {
   })
 })
 
-it('routes selection through the demo parent', async () => {
-  const Demo = await import('./demo/assemble')
-  const result = Demo.update(Demo.init().model, {
+it('routes selection through the demo parent', () => {
+  const result = demoUpdate(demoInit().model, {
     _tag: 'GotInlineCommandMessage',
     message: Command.Message.Selected({ value: 'calendar' }),
   })
