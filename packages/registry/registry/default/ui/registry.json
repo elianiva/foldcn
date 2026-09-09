@@ -44,7 +44,7 @@
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
-      "description": "Styled custom dropdown select (single/multi) backed by the @foldkit/ui Listbox submodel — a real submodel you embed via h.submodel. For a plain native <select> helper, use native-select.",
+      "description": "Styled custom dropdown select (single/multi) backed by the @foldkit/ui Listbox submodel \u2014 a real submodel you embed via h.submodel. For a plain native <select> helper, use native-select.",
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [
         {
@@ -70,20 +70,21 @@
       "name": "carousel",
       "type": "registry:ui",
       "title": "Carousel",
-      "description": "Native scroll-snap carousel with horizontal/vertical orientation, slide basis and spacing, keyboard, and programmatic control.",
+      "description": "Embla-powered carousel with orientation, slide basis/spacing, loop and align options, plugins, keyboard, and programmatic control.",
       "registryDependencies": ["@foldcn/utils", "@foldcn/button"],
       "files": [
         {
           "path": "carousel.ts",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "dependencies": ["embla-carousel"]
     },
     {
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
-      "description": "Composable card primitives — Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter. A pure layout primitive.",
+      "description": "Composable card primitives \u2014 Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter. A pure layout primitive.",
       "registryDependencies": ["@foldcn/utils"],
       "cssVars": {
         "theme": {
@@ -153,7 +154,7 @@
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",
-      "description": "Composable modal dialog — Dialog.header, Dialog.title, Dialog.description, Dialog.footer, Dialog.closeButton. Built on the @foldkit/ui Dialog submodel.",
+      "description": "Composable modal dialog \u2014 Dialog.header, Dialog.title, Dialog.description, Dialog.footer, Dialog.closeButton. Built on the @foldkit/ui Dialog submodel.",
       "registryDependencies": ["@foldcn/utils"],
       "cssVars": {
         "theme": {
@@ -171,7 +172,7 @@
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
-      "description": "Composable floating panel — Popover.header, Popover.title, Popover.description. Built on the @foldkit/ui Popover submodel.",
+      "description": "Composable floating panel \u2014 Popover.header, Popover.title, Popover.description. Built on the @foldkit/ui Popover submodel.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -236,7 +237,7 @@
       "name": "tabs",
       "type": "registry:ui",
       "title": "Tabs",
-      "description": "Composable tabbed interface — Tabs.list, Tabs.trigger, Tabs.content. Built on the @foldkit/ui Tabs submodel.",
+      "description": "Composable tabbed interface \u2014 Tabs.list, Tabs.trigger, Tabs.content. Built on the @foldkit/ui Tabs submodel.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -301,7 +302,7 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "Stacked toast notifications — measured-height choreography matching Base UI: uniform collapsed stack with peek layers, hover-to-expand spread, limited visible entries, enter/exit motion, auto-dismiss and hover-pause — built on the @foldkit/ui Toast submodel (embed via h.submodel). ⚠ No swipe-to-dismiss.",
+      "description": "Stacked toast notifications \u2014 measured-height choreography matching Base UI: uniform collapsed stack with peek layers, hover-to-expand spread, limited visible entries, enter/exit motion, auto-dismiss and hover-pause \u2014 built on the @foldkit/ui Toast submodel (embed via h.submodel). \u26a0 No swipe-to-dismiss.",
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [
         {
@@ -418,7 +419,7 @@
       "name": "avatar",
       "type": "registry:ui",
       "title": "Avatar",
-      "description": "Styled avatar with image, fallback, badge and grouping. Note: no automatic image error fallback — drive the swap from your own state.",
+      "description": "Styled avatar with image, fallback, badge and grouping. Note: no automatic image error fallback \u2014 drive the swap from your own state.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -646,7 +647,7 @@
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",
-      "description": "Menu styled for right-click use, built on the @foldkit/ui Menu submodel. ⚠ Opens on activation at a fixed anchor, not at the pointer — foldkit has no pointer-position anchor yet.",
+      "description": "Menu styled for right-click use, built on the @foldkit/ui Menu submodel. \u26a0 Opens on activation at a fixed anchor, not at the pointer \u2014 foldkit has no pointer-position anchor yet.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -659,7 +660,7 @@
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",
-      "description": "Horizontal bar of menus built on the @foldkit/ui Menu submodel. ⚠ Each trigger is an independent menu — no cross-menu arrow-key traversal yet.",
+      "description": "Horizontal bar of menus built on the @foldkit/ui Menu submodel. \u26a0 Each trigger is an independent menu \u2014 no cross-menu arrow-key traversal yet.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -763,7 +764,7 @@
       "name": "sidebar",
       "type": "registry:ui",
       "title": "Sidebar",
-      "description": "Collapsible app shell — SidebarProvider.view submodel (offcanvas/icon/none × sidebar/floating/inset, mobile sheet, ⌘B shortcut, rail) with menu/badge/skeleton/sub-menu/input primitives.",
+      "description": "Collapsible app shell \u2014 SidebarProvider.view submodel (offcanvas/icon/none \u00d7 sidebar/floating/inset, mobile sheet, \u2318B shortcut, rail) with menu/badge/skeleton/sub-menu/input primitives.",
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [
         {

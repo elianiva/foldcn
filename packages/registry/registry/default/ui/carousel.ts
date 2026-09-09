@@ -2,8 +2,13 @@
  *  Model/Message/init/update/subscriptions into your app:
  *  `import * as Carousel from '@/components/ui/carousel'`
  */
-import { Effect, Option, Schema as S } from 'effect'
+import { Effect, Option, Queue, Schema as S, Stream } from 'effect'
 import { Command, Subscription, Update } from 'foldkit'
+import EmblaCarousel, {
+  type EmblaCarouselType,
+  type EmblaOptionsType,
+  type EmblaPluginType,
+} from 'embla-carousel'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import { defineView } from 'foldkit/submodel'
@@ -15,40 +20,40 @@ import { cn } from '@/lib/utils'
 
 import { button, type ButtonSize, type ButtonVariant } from './button'
 
-// A scroll-snap carousel. The model owns the selected slide index; prev/next
-// (buttons and ArrowLeft/ArrowRight anywhere inside the region) move it and
-// an ApplyScroll command smooth-scrolls the port. Native scrolling (touch
-// swipe, wheel) flows back through the contentScroll subscription, which
-// measures item geometry and reports the settled slide plus the last
-// reachable one (scrollBound) — with partial-width slides (basis-1/2…) the
-// last index is lower than count-1, exactly where the browser can scroll.
+// A carousel backed by the embla-carousel engine (the same dependency upstream
+// shadcn ships), owned by this Submodel: the scroll subscription mounts the
+// engine on the viewport when it appears in the DOM and tears it down when it
+// leaves, `select` events flow back as SelectedSlide, and Prev/Next (buttons
+// and ArrowLeft/ArrowRight anywhere inside the region) dispatch scroll
+// commands against the mounted engine. The model mirrors the upstream
+// useCarousel context values (index, canScrollPrev, canScrollNext).
 //
-// foldcn gaps vs upstream: no embla engine — no loop, align/duration opts, or
-// plugins (autoplay); no imperative API (use ChangedIndex out-messages
-// instead of setApi); RTL layouts are not handled.
-//
-// The scroll port and slide geometry are CSS-driven via the compat tokens
-// `cn-carousel-content[-vertical]` / `cn-carousel-item`: snap alignment plus
-// a negative scroll margin derived from `--foldcn-carousel-spacing` keeps
-// slide content flush with the port edges for any spacing (default 1rem,
-// matching upstream's -ml-4/pl-4 pairing).
+// foldcn deltas vs upstream: embla options are a serializable schema subset
+// carried on the model (plugins are instances and cannot live in a schema —
+// register them with `configure`); there is no setApi hand-off — listen for
+// ChangedIndex out-messages instead.
 
 export const Orientation = S.Literals(['horizontal', 'vertical'])
 export type Orientation = typeof Orientation.Type
 
+/** Serializable subset of embla's options, carried on the model so option
+ *  changes re-mount the engine with the new configuration. */
+export const Options = S.Struct({
+  align: S.optional(S.Literals(['start', 'center', 'end'])),
+  loop: S.optional(S.Boolean),
+  duration: S.optional(S.Number),
+  startIndex: S.optional(S.Number),
+  direction: S.optional(S.Literals(['ltr', 'rtl'])),
+  containScroll: S.optional(S.Literals(['trimSnaps', 'keepSnaps', false])),
+  slidesToScroll: S.optional(S.Number),
+})
+export type Options = typeof Options.Type
+
 /** Upstream Carousel root string. */
 export const carouselClass = 'relative'
 
-/** Upstream CarouselContent viewport string. Upstream's bare
- *  "overflow-hidden" is carried inside the compat token (an overflow-hidden
- *  literal after the token would strip overflow-x-auto in cn's last-wins
- *  merge — see cn-compat.css). Sizing such as a vertical height goes through
- *  viewInputs.contentClassName. */
-export const carouselContentClass = 'cn-carousel-content'
-
-/** Vertical counterpart of carouselContentClass — self-sufficient (carries
- *  its own overflow pair in the compat token). */
-export const carouselContentVerticalClass = 'cn-carousel-content-vertical'
+/** Upstream CarouselContent viewport string (embla root). */
+export const carouselContentClass = 'overflow-hidden'
 
 /** Upstream CarouselContent track strings. */
 export const carouselTrackClass = 'flex'
@@ -56,7 +61,7 @@ export const carouselTrackHorizontalClass = '-ml-4'
 export const carouselTrackVerticalClass = '-mt-4 flex-col'
 
 /** Upstream CarouselItem strings. */
-export const carouselItemClass = 'cn-carousel-item min-w-0 shrink-0 grow-0 basis-full'
+export const carouselItemClass = 'min-w-0 shrink-0 grow-0 basis-full'
 export const carouselItemHorizontalClass = 'pl-4'
 export const carouselItemVerticalClass = 'pt-4'
 
@@ -70,13 +75,30 @@ export const carouselNextClass = 'cn-carousel-next absolute touch-manipulation'
 export const carouselNextHorizontalClass = 'inset-y-0 -right-12 my-auto'
 export const carouselNextVerticalClass = '-bottom-12 left-1/2 -translate-x-1/2 rotate-90'
 
-/** DOM id of the scroll port for a carousel id. */
+/** DOM id of the embla viewport for a carousel id. */
 export const contentElementId = (id: string): string => `${id}-content`
 
-/** CSS variable the compat tokens read for slide spacing; keep it in sync
- *  with the -ml-N/pl-N spacing classes (upstream default is 1rem). */
-const SPACING_VARIABLE = '--foldcn-carousel-spacing'
-const DEFAULT_SPACING = '1rem'
+// PLUGIN / ENGINE REGISTRIES
+//
+// Embla plugin instances (autoplay, …) are stateful objects — they cannot be
+// serialized into the model, so callers register them per id before mount:
+// `Carousel.configure('my-carousel', { plugins: [Autoplay(…)] })`.
+// The mounted engine is keyed by id here: the scroll subscription writes it
+// on attach and removes it on detach, and the scroll commands read it.
+
+const pluginsById = new Map<string, EmblaPluginType[]>()
+
+export type CarouselConfiguration = Readonly<{
+  plugins?: EmblaPluginType[]
+}>
+
+/** Registers non-serializable engine configuration (plugins) for a carousel
+ *  id. Call at module scope, before the carousel mounts. */
+export const configure = (id: string, config: CarouselConfiguration): void => {
+  pluginsById.set(id, config.plugins ?? [])
+}
+
+const engineById = new Map<string, EmblaCarouselType>()
 
 // MODEL
 
@@ -85,12 +107,12 @@ export const Model = S.Struct({
   orientation: Orientation,
   /** Number of slides, matching the view's items array. */
   count: S.Number,
-  /** Selected slide index (0-based). */
+  /** Selected slide index (0-based), from embla's selectedScrollSnap. */
   index: S.Number,
-  /** Last reachable slide index — the browser cannot scroll past
-   *  scrollWidth - clientWidth, so partial-width slides stop earlier than
-   *  count - 1. Corrected by the scroll subscription's measurements. */
-  scrollBound: S.Number,
+  /** Mirrors embla's canScrollPrev/canScrollNext (always true when loop). */
+  canScrollPrev: S.Boolean,
+  canScrollNext: S.Boolean,
+  options: Options,
 })
 export type Model = typeof Model.Type
 
@@ -101,11 +123,14 @@ export const Message = defineMessageUnion({
   PressedPrevious: {},
   /** The user (or a caller) asked for the next slide. */
   PressedNext: {},
-  /** The scroll port settled near a slide (every scroll tick reports the
-   *  currently-nearest slide). */
-  ScrolledContent: { index: S.Number, scrollBound: S.Number },
-  /** ApplyScroll finished touching the DOM; nothing to do. */
-  CompletedApplyScroll: {},
+  /** The engine reported a selection change (embla select/reInit). */
+  SelectedSlide: {
+    index: S.Number,
+    canScrollPrev: S.Boolean,
+    canScrollNext: S.Boolean,
+  },
+  /** A scroll command finished touching the engine; nothing to do. */
+  CompletedScrollCommand: {},
 })
 export type Message = typeof Message.Type
 
@@ -121,30 +146,48 @@ export type InitConfig = Readonly<{
   id: string
   count: number
   orientation?: Orientation
+  /** Serializable embla options (see `Options`). Plugins go through
+   *  `configure` instead. */
+  options?: Options
 }>
 
-/** Creates an initial carousel model. */
-export const init = (config: InitConfig): Model => ({
-  id: config.id,
-  orientation: config.orientation ?? 'horizontal',
-  count: config.count,
-  index: 0,
-  scrollBound: Math.max(0, config.count - 1),
-})
+/** Creates an initial carousel model. canScroll flags start from the
+ *  configured startIndex/loop and are corrected by the engine's first
+ *  SelectedSlide. */
+export const init = (config: InitConfig): Model => {
+  const options = config.options ?? {}
+  const index = Math.min(Math.max(options.startIndex ?? 0, 0), Math.max(0, config.count - 1))
+  const loop = options.loop === true
+  return {
+    id: config.id,
+    orientation: config.orientation ?? 'horizontal',
+    count: config.count,
+    index,
+    canScrollPrev: loop || index > 0,
+    canScrollNext: loop || index < config.count - 1,
+    options,
+  }
+}
 
 type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
-const clampIndex = (value: number, bound: number): number => Math.min(Math.max(value, 0), bound)
-
-/** Moves the selection one slide toward `delta` and commands the scroll.
- *  A no-op at either end (foldkit buttons stay focusable under
- *  aria-disabled, so keyboard activation still arrives here). */
-const step = (model: Model, delta: -1 | 1): UpdateReturn => {
-  const index = clampIndex(model.index + delta, model.scrollBound)
-  if (index === model.index) return { model }
+const selected = (
+  model: Model,
+  index: number,
+  canPrev: boolean,
+  canNext: boolean,
+): UpdateReturn => {
+  if (index === model.index && canPrev === model.canScrollPrev && canNext === model.canScrollNext) {
+    return { model }
+  }
+  const next = evo(model, {
+    index: () => index,
+    canScrollPrev: () => canPrev,
+    canScrollNext: () => canNext,
+  })
+  if (index === model.index) return { model: next }
   return {
-    model: evo(model, { index: () => index }),
-    commands: [ApplyScroll({ id: model.id, index, orientation: model.orientation })],
+    model: next,
     outMessage: OutMessage.ChangedIndex({ index }),
   }
 }
@@ -154,98 +197,137 @@ const step = (model: Model, delta: -1 | 1): UpdateReturn => {
 export const update = (model: Model, message: Message): UpdateReturn => {
   switch (message._tag) {
     case 'PressedPrevious':
-      return step(model, -1)
+      return { model, commands: [ScrollPrevious({ id: model.id })] }
     case 'PressedNext':
-      return step(model, 1)
-    case 'ScrolledContent': {
-      const index = clampIndex(message.index, model.count - 1)
-      const scrollBound = clampIndex(message.scrollBound, model.count - 1)
-      if (index === model.index && scrollBound === model.scrollBound) return { model }
-      const next = evo(model, { index: () => index, scrollBound: () => scrollBound })
-      if (index === model.index) return { model: next }
-      return {
-        model: next,
-        outMessage: OutMessage.ChangedIndex({ index }),
-      }
-    }
-    case 'CompletedApplyScroll':
+      return { model, commands: [ScrollNext({ id: model.id })] }
+    case 'SelectedSlide':
+      return selected(model, message.index, message.canScrollPrev, message.canScrollNext)
+    case 'CompletedScrollCommand':
       return { model }
   }
 }
 
 // COMMANDS
 
-/** Scrolls the port so slide `index` is flush with its start edge. Stride is
- *  measured from the slide elements, so any slide basis works. */
-export const ApplyScroll = Command.define('ApplyScroll', {
-  args: { id: S.String, index: S.Number, orientation: Orientation },
-  messages: [Message.CompletedApplyScroll],
-  execute: ({ id, index, orientation }) =>
-    Effect.sync(() => {
-      const element = document.getElementById(contentElementId(id))
-      if (element === null) return Message.CompletedApplyScroll()
-      const stride = strideOf(element, orientation === 'horizontal')
-      if (stride <= 0) return Message.CompletedApplyScroll()
-      if (orientation === 'horizontal') {
-        element.scrollTo({ left: index * stride, behavior: 'smooth' })
-      } else {
-        element.scrollTo({ top: index * stride, behavior: 'smooth' })
-      }
-      return Message.CompletedApplyScroll()
-    }),
+const engineEffect = (id: string, run: (engine: EmblaCarouselType) => void) =>
+  Effect.sync(() => {
+    const engine = engineById.get(id)
+    if (engine !== undefined) run(engine)
+    return Message.CompletedScrollCommand()
+  })
+
+/** Scrolls the mounted engine one slide back/forward (no-op while the engine
+ *  is not mounted, e.g. between mount and subscription start). */
+export const ScrollPrevious = Command.define('ScrollPrevious', {
+  args: { id: S.String },
+  messages: [Message.CompletedScrollCommand],
+  execute: ({ id }) => engineEffect(id, (engine) => engine.scrollPrev()),
 })
 
-/** Distance between consecutive slide snap points: one slide's extent (the
- *  -ml-4/pl-4 pairing keeps contents exactly one offset apart). */
-const strideOf = (element: HTMLElement, isHorizontal: boolean): number => {
-  const items = element.querySelectorAll<HTMLElement>('[data-slot="carousel-item"]')
-  const first = items.item(0)
-  const second = items.item(1)
-  if (first === null) return 0
-  const extentOf = (item: HTMLElement): number => (isHorizontal ? item.offsetLeft : item.offsetTop)
-  return second === null ? extentOf(first) : extentOf(second) - extentOf(first)
-}
+export const ScrollNext = Command.define('ScrollNext', {
+  args: { id: S.String },
+  messages: [Message.CompletedScrollCommand],
+  execute: ({ id }) => engineEffect(id, (engine) => engine.scrollNext()),
+})
 
-/** Nearest slide and last reachable slide for the port's current scroll
- *  position. */
-const geometry = (element: HTMLElement, isHorizontal: boolean) => {
-  const stride = strideOf(element, isHorizontal)
-  if (stride <= 0) return { index: 0, scrollBound: 0 } as const
-  const offset = isHorizontal ? element.scrollLeft : element.scrollTop
-  const maxOffset = isHorizontal
-    ? element.scrollWidth - element.clientWidth
-    : element.scrollHeight - element.clientHeight
-  return {
-    index: Math.round(offset / stride),
-    scrollBound: Math.max(0, Math.floor(maxOffset / stride + 0.001)),
-  } as const
-}
+/** Scrolls the mounted engine to a slide; `jump` skips the animation. */
+export const ScrollTo = Command.define('ScrollTo', {
+  args: { id: S.String, index: S.Number, jump: S.optional(S.Boolean) },
+  messages: [Message.CompletedScrollCommand],
+  execute: ({ id, index, jump }) =>
+    engineEffect(id, (engine) => engine.scrollTo(index, jump === true)),
+})
 
 // SUBSCRIPTIONS
 
-/** Tracks the scroll port: a capture-phase document scroll listener (scroll
- *  events do not bubble) filtered to this carousel's port element. The port
- *  is looked up per event, so remounts across style switches or routes need
- *  no re-attachment. */
+const toEmblaOptions = (orientation: Orientation, options: Options): EmblaOptionsType => {
+  const embla: EmblaOptionsType = { axis: orientation === 'horizontal' ? 'x' : 'y' }
+  if (options.align !== undefined) embla.align = options.align
+  if (options.loop !== undefined) embla.loop = options.loop
+  if (options.duration !== undefined) embla.duration = options.duration
+  if (options.startIndex !== undefined) embla.startIndex = options.startIndex
+  if (options.direction !== undefined) embla.direction = options.direction
+  if (options.containScroll !== undefined) embla.containScroll = options.containScroll
+  if (options.slidesToScroll !== undefined) embla.slidesToScroll = options.slidesToScroll
+  return embla
+}
+
+const report = (engine: EmblaCarouselType): Message =>
+  Message.SelectedSlide({
+    index: engine.selectedScrollSnap(),
+    canScrollPrev: engine.canScrollPrev(),
+    canScrollNext: engine.canScrollNext(),
+  })
+
+/** Owns the engine's lifecycle: a MutationObserver reconciles the viewport
+ *  element (looked up by id — the element can be inserted/removed by any
+ *  parent, so route changes and style switches re-attach without consumer
+ *  help). On attach it mounts embla with the model's options and the
+ *  registered plugins and feeds select/reInit back as SelectedSlide; on
+ *  detach it destroys the engine. */
 export const subscriptions = Subscription.make<Model, Message>()((entry) => ({
-  contentScroll: entry(
-    { id: S.String, orientation: Orientation },
+  engineEvents: entry(
+    { id: S.String, orientation: Orientation, options: Options },
     {
-      modelToDependencies: (model) => ({ id: model.id, orientation: model.orientation }),
-      dependenciesToStream: ({ id, orientation }) =>
-        Subscription.fromEventFilterMap<Event, Message>({
-          target: document,
-          type: 'scroll',
-          options: { capture: true, passive: true },
-          toMessage: (event) => {
-            const target = event.target
-            if (!(target instanceof HTMLElement)) return Option.none()
-            if (target.id !== contentElementId(id)) return Option.none()
-            return Option.some(
-              Message.ScrolledContent(geometry(target, orientation === 'horizontal')),
-            )
-          },
-        }),
+      modelToDependencies: (model) => ({
+        id: model.id,
+        orientation: model.orientation,
+        options: model.options,
+      }),
+      dependenciesToStream: ({ id, orientation, options }) =>
+        Stream.callback((queue) =>
+          Effect.acquireRelease(
+            Effect.sync(() => {
+              let engine: EmblaCarouselType | undefined
+              let observer: MutationObserver | undefined
+
+              const detach = () => {
+                if (engine !== undefined) {
+                  engineById.delete(id)
+                  engine.destroy()
+                  engine = undefined
+                }
+              }
+              const attach = (element: HTMLElement) => {
+                const mounted = EmblaCarousel(
+                  element,
+                  toEmblaOptions(orientation, options),
+                  pluginsById.get(id) ?? [],
+                )
+                engineById.set(id, mounted)
+                engine = mounted
+                mounted.on('select', () => Queue.offerUnsafe(queue, report(mounted)))
+                mounted.on('reInit', () => Queue.offerUnsafe(queue, report(mounted)))
+                Queue.offerUnsafe(queue, report(mounted))
+              }
+
+              const reconcile = () => {
+                const element = document.getElementById(contentElementId(id))
+                if (element === null) {
+                  detach()
+                  return
+                }
+                if (engine !== undefined && engine.rootNode() === element) return
+                // Wait for the slides to be in the DOM before mounting.
+                if (element.querySelector('[data-slot="carousel-item"]') === null) return
+                detach()
+                attach(element)
+              }
+
+              observer = new MutationObserver(() => reconcile())
+              observer.observe(document.documentElement, { childList: true, subtree: true })
+              reconcile()
+
+              return {
+                dispose: () => {
+                  observer?.disconnect()
+                  detach()
+                },
+              }
+            }),
+            (state) => Effect.sync(() => state.dispose()),
+          ).pipe(Effect.flatMap(() => Effect.never)),
+        ),
     },
   ),
 }))
@@ -266,16 +348,10 @@ export type CarouselItemInput = Readonly<{
 export type ViewInputs = Readonly<{
   items: ReadonlyArray<CarouselItemInput>
   className?: string
-  /** Class for the scroll port (upstream CarouselContent's viewport div) —
-   *  sizing such as a vertical height belongs here. */
-  contentClassName?: string
   /** Class for the flex track (upstream CarouselContent's inner div, where
-   *  upstream puts its className) — spacing overrides like -ml-1 belong
-   *  here, kept in sync with viewInputs.spacing. */
-  trackClassName?: string
-  /** Slide spacing as a CSS length; must match the -ml-N/pl-N classes.
-   *  Drives the compat snap margin so native scrolling stays flush. */
-  spacing?: string
+   *  upstream puts its className) — spacing overrides like -ml-1 and sizing
+   *  like a vertical height belong here, exactly like upstream. */
+  contentClassName?: string
   /** Upstream renders CarouselPrevious/CarouselNext as separate parts; here
    *  they are built-in, disable with false. */
   showNavigation?: boolean
@@ -283,7 +359,7 @@ export type ViewInputs = Readonly<{
   next?: CarouselButtonConfig
 }>
 
-/** Renders the carousel region: scroll port, track, and navigation buttons.
+/** Renders the carousel region: viewport, track, and navigation buttons.
  *  Embedded via `h.submodel`. */
 export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h) => {
   const isHorizontal = model.orientation === 'horizontal'
@@ -303,14 +379,8 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
       h.div(
         [
           h.Id(contentElementId(model.id)),
-          h.Class(
-            cn(
-              isHorizontal ? carouselContentClass : carouselContentVerticalClass,
-              viewInputs.contentClassName,
-            ),
-          ),
+          h.Class(carouselContentClass),
           h.DataAttribute('slot', 'carousel-content'),
-          h.Style({ [SPACING_VARIABLE]: viewInputs.spacing ?? DEFAULT_SPACING }),
         ],
         [
           h.div(
@@ -319,7 +389,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
                 cn(
                   carouselTrackClass,
                   isHorizontal ? carouselTrackHorizontalClass : carouselTrackVerticalClass,
-                  viewInputs.trackClassName,
+                  viewInputs.contentClassName,
                 ),
               ),
             ],
@@ -368,7 +438,7 @@ const navigationButton = (
     {
       variant: config?.variant ?? 'outline',
       size: config?.size ?? 'icon-sm',
-      isDisabled: isPrevious ? model.index <= 0 : model.index >= model.scrollBound,
+      isDisabled: isPrevious ? !model.canScrollPrev : !model.canScrollNext,
       onClick: isPrevious ? Message.PressedPrevious() : Message.PressedNext(),
       className: cn(
         isPrevious ? carouselPreviousClass : carouselNextClass,

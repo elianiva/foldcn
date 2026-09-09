@@ -1,4 +1,5 @@
 import { Update } from 'foldkit'
+import Autoplay from 'embla-carousel-autoplay'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
 import { evo } from 'foldkit/struct'
@@ -17,6 +18,7 @@ const Message = defineMessageUnion({
   GotCarouselOrientationMessage: { message: carousel.Message },
   GotCarouselSizeMessage: { message: carousel.Message },
   GotCarouselSpacingMessage: { message: carousel.Message },
+  GotCarouselPluginMessage: { message: carousel.Message },
   GotCarouselApiMessage: { message: carousel.Message },
 })
 type CarouselMessage =
@@ -24,9 +26,17 @@ type CarouselMessage =
   | typeof Message.GotCarouselOrientationMessage.Type
   | typeof Message.GotCarouselSizeMessage.Type
   | typeof Message.GotCarouselSpacingMessage.Type
+  | typeof Message.GotCarouselPluginMessage.Type
   | typeof Message.GotCarouselApiMessage.Type
 
 const SLIDE_COUNT = 5
+
+// Plugin instances are stateful objects that cannot live in the model — the
+// upstream demo passes them as the `plugins` prop; foldcn registers them per
+// carousel id before mount.
+carousel.configure('carousel-plugin', {
+  plugins: [Autoplay({ delay: 2000, stopOnInteraction: true })],
+})
 
 // Upstream demos wrap each card in a p-1 div and size the number per example;
 // the spacing example drops the wrapper (its pl-1 IS the spacing) and uses
@@ -70,10 +80,29 @@ const section = (label: string, content: Html, h: HtmlBuilder<AppMessage>): Html
   )
 
 // Spacing notes per example (mirrors the upstream demos): the track's -ml-N
-// and each item's pl-N pair with the carousel's `spacing` value so snap
-// positions stay on slide content — 1rem with the default -ml-4/pl-4,
-// 0.25rem with the -ml-1/pl-1 examples. The vertical example's height lives
-// on the scroll port (contentClassName), not the track.
+// and each item's pl-N pair so slide content stays flush — embla handles the
+// spacing natively, exactly like upstream.
+
+const embed = (
+  id:
+    | 'carousel'
+    | 'carouselOrientation'
+    | 'carouselSize'
+    | 'carouselSpacing'
+    | 'carouselPlugin'
+    | 'carouselApi',
+  model: Model,
+  viewInputs: carousel.ViewInputs,
+  toParentMessage: (message: carousel.Message) => CarouselMessage,
+  h: HtmlBuilder<AppMessage>,
+): Html =>
+  h.submodel({
+    slotId: model[id].id,
+    model: model[id],
+    view: carousel.view,
+    viewInputs,
+    toParentMessage,
+  })
 
 export const carouselView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
@@ -84,13 +113,13 @@ export const carouselView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
         h.div(
           [h.Class('w-full max-w-xs')],
           [
-            h.submodel({
-              slotId: model.carousel.id,
-              model: model.carousel,
-              view: carousel.view,
-              viewInputs: { items: slides(SLIDE_COUNT, {}, h) },
-              toParentMessage: (message) => Message.GotCarouselMessage({ message }),
-            }),
+            embed(
+              'carousel',
+              model,
+              { items: slides(SLIDE_COUNT, {}, h) },
+              (message) => Message.GotCarouselMessage({ message }),
+              h,
+            ),
           ],
         ),
         h,
@@ -100,18 +129,16 @@ export const carouselView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
         h.div(
           [h.Class('w-full max-w-xs')],
           [
-            h.submodel({
-              slotId: model.carouselOrientation.id,
-              model: model.carouselOrientation,
-              view: carousel.view,
-              viewInputs: {
+            embed(
+              'carouselOrientation',
+              model,
+              {
                 items: slides(SLIDE_COUNT, { itemClass: 'pt-1 md:basis-1/2' }, h),
-                contentClassName: 'h-[200px]',
-                trackClassName: '-mt-1',
-                spacing: '0.25rem',
+                contentClassName: '-mt-1 h-[200px]',
               },
-              toParentMessage: (message) => Message.GotCarouselOrientationMessage({ message }),
-            }),
+              (message) => Message.GotCarouselOrientationMessage({ message }),
+              h,
+            ),
           ],
         ),
         h,
@@ -121,15 +148,15 @@ export const carouselView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
         h.div(
           [h.Class('w-full max-w-sm')],
           [
-            h.submodel({
-              slotId: model.carouselSize.id,
-              model: model.carouselSize,
-              view: carousel.view,
-              viewInputs: {
+            embed(
+              'carouselSize',
+              model,
+              {
                 items: slides(SLIDE_COUNT, { itemClass: 'md:basis-1/2 lg:basis-1/3' }, h),
               },
-              toParentMessage: (message) => Message.GotCarouselSizeMessage({ message }),
-            }),
+              (message) => Message.GotCarouselSizeMessage({ message }),
+              h,
+            ),
           ],
         ),
         h,
@@ -139,11 +166,10 @@ export const carouselView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
         h.div(
           [h.Class('w-full max-w-sm')],
           [
-            h.submodel({
-              slotId: model.carouselSpacing.id,
-              model: model.carouselSpacing,
-              view: carousel.view,
-              viewInputs: {
+            embed(
+              'carouselSpacing',
+              model,
+              {
                 items: slides(
                   SLIDE_COUNT,
                   {
@@ -153,11 +179,27 @@ export const carouselView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                   },
                   h,
                 ),
-                trackClassName: '-ml-1',
-                spacing: '0.25rem',
+                contentClassName: '-ml-1',
               },
-              toParentMessage: (message) => Message.GotCarouselSpacingMessage({ message }),
-            }),
+              (message) => Message.GotCarouselSpacingMessage({ message }),
+              h,
+            ),
+          ],
+        ),
+        h,
+      ),
+      section(
+        'Plugin',
+        h.div(
+          [h.Class('w-full max-w-xs')],
+          [
+            embed(
+              'carouselPlugin',
+              model,
+              { items: slides(SLIDE_COUNT, {}, h) },
+              (message) => Message.GotCarouselPluginMessage({ message }),
+              h,
+            ),
           ],
         ),
         h,
@@ -167,13 +209,13 @@ export const carouselView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
         h.div(
           [h.Class('mx-auto w-full max-w-xs')],
           [
-            h.submodel({
-              slotId: model.carouselApi.id,
-              model: model.carouselApi,
-              view: carousel.view,
-              viewInputs: { items: slides(SLIDE_COUNT, {}, h) },
-              toParentMessage: (message) => Message.GotCarouselApiMessage({ message }),
-            }),
+            embed(
+              'carouselApi',
+              model,
+              { items: slides(SLIDE_COUNT, {}, h) },
+              (message) => Message.GotCarouselApiMessage({ message }),
+              h,
+            ),
             h.div(
               [h.Class('py-2 text-center text-sm text-muted-foreground')],
               [`Slide ${model.carouselApiIndex + 1} of ${model.carouselApi.count}`],
@@ -226,6 +268,7 @@ const fields = {
   carouselOrientation: carousel.Model,
   carouselSize: carousel.Model,
   carouselSpacing: carousel.Model,
+  carouselPlugin: carousel.Model,
   carouselApi: carousel.Model,
   carouselApiIndex: S.Number,
 }
@@ -239,12 +282,12 @@ const liftCarouselSubscriptions = (
   toParentMessage: (message: carousel.Message) => CarouselMessage,
 ) => {
   const lifted = Subscription.lift({
-    contentScroll: carousel.subscriptions.contentScroll,
+    engineEvents: carousel.subscriptions.engineEvents,
   })<State, CarouselMessage>({
     toChildModel: read,
     toParentMessage,
   })
-  return { [`${name}ContentScroll`]: lifted.contentScroll }
+  return { [`${name}EngineEvents`]: lifted.engineEvents }
 }
 
 export const subscriptions = Subscription.aggregate<State, CarouselMessage>()(
@@ -269,6 +312,11 @@ export const subscriptions = Subscription.aggregate<State, CarouselMessage>()(
     (message) => Message.GotCarouselSpacingMessage({ message }),
   ),
   liftCarouselSubscriptions(
+    'carouselPlugin',
+    (model) => model.carouselPlugin,
+    (message) => Message.GotCarouselPluginMessage({ message }),
+  ),
+  liftCarouselSubscriptions(
     'carouselApi',
     (model) => model.carouselApi,
     (message) => Message.GotCarouselApiMessage({ message }),
@@ -283,9 +331,19 @@ export const slice = defineSlice({
       id: 'carousel-orientation',
       count: SLIDE_COUNT,
       orientation: 'vertical',
+      options: { align: 'start' },
     }),
-    carouselSize: carousel.init({ id: 'carousel-size', count: SLIDE_COUNT }),
-    carouselSpacing: carousel.init({ id: 'carousel-spacing', count: SLIDE_COUNT }),
+    carouselSize: carousel.init({
+      id: 'carousel-size',
+      count: SLIDE_COUNT,
+      options: { align: 'start' },
+    }),
+    carouselSpacing: carousel.init({
+      id: 'carousel-spacing',
+      count: SLIDE_COUNT,
+      options: { align: 'start' },
+    }),
+    carouselPlugin: carousel.init({ id: 'carousel-plugin', count: SLIDE_COUNT }),
     carouselApi: carousel.init({ id: 'carousel-api', count: SLIDE_COUNT }),
     carouselApiIndex: 0,
   },
@@ -294,6 +352,7 @@ export const slice = defineSlice({
     Message.GotCarouselOrientationMessage,
     Message.GotCarouselSizeMessage,
     Message.GotCarouselSpacingMessage,
+    Message.GotCarouselPluginMessage,
     Message.GotCarouselApiMessage,
   ],
   handlers: (model: State) => ({
@@ -325,6 +384,14 @@ export const slice = defineSlice({
         (model, next) => evo(model, { carouselSpacing: () => next }),
         (message) => Message.GotCarouselSpacingMessage({ message }),
       )(model, payload.message),
+    GotCarouselPluginMessage: (
+      payload: typeof Message.GotCarouselPluginMessage.Type,
+    ): UpdateReturn =>
+      foldCarousel(
+        (model) => model.carouselPlugin,
+        (model, next) => evo(model, { carouselPlugin: () => next }),
+        (message) => Message.GotCarouselPluginMessage({ message }),
+      )(model, payload.message),
     GotCarouselApiMessage: (payload: typeof Message.GotCarouselApiMessage.Type): UpdateReturn =>
       Update.foldChild({
         update: carousel.update,
@@ -336,7 +403,11 @@ export const slice = defineSlice({
   }),
   samples: [
     Message.GotCarouselMessage({
-      message: carousel.Message.ScrolledContent({ index: 1, scrollBound: 4 }),
+      message: carousel.Message.SelectedSlide({
+        index: 1,
+        canScrollPrev: true,
+        canScrollNext: true,
+      }),
     }),
   ],
   subscriptions,

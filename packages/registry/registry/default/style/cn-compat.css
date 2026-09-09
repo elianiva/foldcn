@@ -274,25 +274,3 @@
 .cn-command-item-indicator {
   @apply size-4 shrink-0 ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100;
 }
-
-/* carousel: the embla engine (upstream) becomes a native scroll-snap scroll
- * port under foldkit. Upstream's viewport string is a bare "overflow-hidden";
- * the token below carries that literal plus the scroll behaviors, so the
- * component can reference a single token per axis without fighting cn's
- * last-wins merge (an overflow-hidden literal after the token would strip
- * overflow-x-auto). Slide spacing is paired (-ml-4 on the track, pl-4 on
- * items, default 1rem) — the negative scroll margin below cancels a slide's
- * inline/block-start padding so snap positions land on slide CONTENT, and
- * --foldcn-carousel-spacing (set inline by the component view) keeps the
- * pairing exact for non-default spacing like -ml-1/pl-1. */
-.cn-carousel-content {
-  @apply no-scrollbar snap-x snap-mandatory overflow-hidden overflow-x-auto overscroll-x-contain;
-}
-
-.cn-carousel-content-vertical {
-  @apply no-scrollbar snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-y-contain;
-}
-
-.cn-carousel-item {
-  @apply snap-start [scroll-margin-block-start:calc(var(--foldcn-carousel-spacing,1rem)*-1)] [scroll-margin-inline-start:calc(var(--foldcn-carousel-spacing,1rem)*-1)];
-}
