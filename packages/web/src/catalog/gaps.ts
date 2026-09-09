@@ -28,6 +28,11 @@ export const gapsByItem = {
   resizable: [
     'Two-pane percentage splitter — no min/max constraints, collapsible panes, or N-pane layouts.',
   ],
+  'scroll-area': [
+    "Wheel events over the scrollbar don't scroll the viewport — foldkit has no wheel-delta listener yet.",
+    'No RTL mirroring for the horizontal scrollbar — LTR geometry only.',
+    'Track clicks jump without continuing into a drag — dragging starts on the thumb only.',
+  ],
   'navigation-menu': [
     'Each dropdown is its own independently-anchored Popover panel — no shared/morphing Viewport panel or slide-direction indicator like upstream.',
   ],

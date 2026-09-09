@@ -54,6 +54,7 @@ import { slice as popoverSlice } from './views/popover'
 import { slice as progressSlice } from './views/progress'
 import { slice as radioGroupSlice } from './views/radio-group'
 import { slice as resizableSlice } from './views/resizable'
+import { slice as scrollAreaSlice } from './views/scroll-area'
 import { slice as selectSlice } from './views/select'
 import { slice as separatorSlice } from './views/separator'
 import { slice as settingsPageSlice } from './views/settings-page'
@@ -123,6 +124,7 @@ const ModelSchema = S.Struct({
   ...progressSlice.fields,
   ...radioGroupSlice.fields,
   ...resizableSlice.fields,
+  ...scrollAreaSlice.fields,
   ...selectSlice.fields,
   ...separatorSlice.fields,
   ...settingsPageSlice.fields,
@@ -192,6 +194,7 @@ const MessageSchema = S.Union([
   ...progressSlice.messages,
   ...radioGroupSlice.messages,
   ...resizableSlice.messages,
+  ...scrollAreaSlice.messages,
   ...selectSlice.messages,
   ...separatorSlice.messages,
   ...settingsPageSlice.messages,
@@ -265,6 +268,7 @@ export const init = (): DemoUpdateReturn => {
     ...progressSlice.init,
     ...radioGroupSlice.init,
     ...resizableSlice.init,
+    ...scrollAreaSlice.init,
     ...selectSlice.init,
     ...separatorSlice.init,
     ...settingsPageSlice.init,
@@ -326,6 +330,7 @@ export const update = (model: Model, message: Message): DemoUpdateReturn => {
       ...popoverSlice.handlers(model),
       ...radioGroupSlice.handlers(model),
       ...resizableSlice.handlers(model),
+      ...scrollAreaSlice.handlers(model),
       ...selectSlice.handlers(model),
       ...settingsPageSlice.handlers(model),
       ...sheetSlice.handlers(model),

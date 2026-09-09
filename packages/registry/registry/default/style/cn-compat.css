@@ -274,3 +274,11 @@
 .cn-command-item-indicator {
   @apply size-4 shrink-0 ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100;
 }
+
+/* scroll-area viewport: upstream hides the native scrollbars via the
+ * primitive's injected style (styleDisableScrollbar) and gives the viewport
+ * `overflow: scroll` on both axes; foldkit has no scroll-area primitive, so
+ * the viewport behavior is carried by this token definition. */
+.cn-scroll-area-viewport {
+  @apply no-scrollbar overflow-scroll;
+}
