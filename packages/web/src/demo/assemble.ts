@@ -19,6 +19,7 @@ import { slice as breadcrumbSlice } from './views/breadcrumb'
 import { slice as buttonGroupSlice } from './views/button-group'
 import { slice as buttonSlice } from './views/button'
 import { slice as calendarSlice } from './views/calendar'
+import { slice as carouselSlice } from './views/carousel'
 import { slice as cardSlice } from './views/card'
 import { slice as checkboxSlice } from './views/checkbox'
 import { slice as comboboxSlice } from './views/combobox'
@@ -87,6 +88,7 @@ const ModelSchema = S.Struct({
   ...breadcrumbSlice.fields,
   ...buttonGroupSlice.fields,
   ...buttonSlice.fields,
+  ...carouselSlice.fields,
   ...calendarSlice.fields,
   ...cardSlice.fields,
   ...checkboxSlice.fields,
@@ -156,6 +158,7 @@ const MessageSchema = S.Union([
   ...breadcrumbSlice.messages,
   ...buttonGroupSlice.messages,
   ...buttonSlice.messages,
+  ...carouselSlice.messages,
   ...calendarSlice.messages,
   ...cardSlice.messages,
   ...checkboxSlice.messages,
@@ -229,6 +232,7 @@ export const init = (): DemoUpdateReturn => {
     ...breadcrumbSlice.init,
     ...buttonGroupSlice.init,
     ...buttonSlice.init,
+    ...carouselSlice.init,
     ...calendarSlice.init,
     ...cardSlice.init,
     ...checkboxSlice.init,
@@ -298,6 +302,7 @@ export const update = (model: Model, message: Message): DemoUpdateReturn => {
       ...animationSlice.handlers(model),
       ...avatarSlice.handlers(model),
       ...buttonSlice.handlers(model),
+      ...carouselSlice.handlers(model),
       ...calendarSlice.handlers(model),
       ...cardSlice.handlers(model),
       ...checkboxSlice.handlers(model),

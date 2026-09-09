@@ -37,6 +37,10 @@ export const gapsByItem = {
   'input-group': [
     'Addons do not focus the input on click — foldkit has no scoped click-to-focus primitive yet.',
   ],
+  carousel: [
+    'Embla options are a serializable schema subset on the model (align/loop/duration/startIndex/direction/containScroll/slidesToScroll); plugin instances register via Carousel.configure(id, { plugins }) since they cannot be serialized.',
+    'No imperative API hand-off: listen for ChangedIndex out-messages instead of upstream setApi.',
+  ],
   menu: [
     'No submenu, checkbox-item, or radio-item kinds — submenus render as labelled groups and checkbox/radio rows run off demo state; toggling one closes the panel.',
   ],

@@ -67,6 +67,20 @@
       ]
     },
     {
+      "name": "carousel",
+      "type": "registry:ui",
+      "title": "Carousel",
+      "description": "Embla-powered carousel with orientation, slide basis/spacing, loop and align options, plugins, keyboard, and programmatic control.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/button"],
+      "files": [
+        {
+          "path": "carousel.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["embla-carousel"]
+    },
+    {
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
