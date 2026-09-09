@@ -37,6 +37,10 @@ export const gapsByItem = {
   'input-group': [
     'Addons do not focus the input on click — foldkit has no scoped click-to-focus primitive yet.',
   ],
+  carousel: [
+    'Native scroll-snap scroll port instead of embla — no loop, no align/duration options, and no plugins (autoplay).',
+    'No imperative API: listen for ChangedIndex out-messages instead of setApi; RTL layouts are not handled.',
+  ],
   menu: [
     'No submenu, checkbox-item, or radio-item kinds — submenus render as labelled groups and checkbox/radio rows run off demo state; toggling one closes the panel.',
   ],
