@@ -47,6 +47,12 @@ export const gapsByItem = {
     'Numeric codes only — non-digits are stripped with no pattern or alphanumeric mode like upstream.',
     'onInput fires on every change; onComplete alone doubles as the update channel, so derive completion from the stored value.',
   ],
+  questionnaire: [
+    'Data-driven Foldkit API: questions are declared as an items array on init instead of React children.',
+    'Focus stays where it was after moving between questions — upstream moves focus to the newly active question. Validation failures do focus the invalid answer.',
+    'No arrow-key answer traversal or left/right question navigation — Enter-to-advance and letter/number shortcuts work.',
+    'No native form semantics: no FormData or reset-event integration; answers flow out via the SubmittedAnswers out-message.',
+  ],
 } as const
 
 const isGapItem = (name: string): name is keyof typeof gapsByItem => name in gapsByItem

@@ -1,5 +1,14 @@
 # foldcn ↔ shadcn/ui v4 `bases/base/ui` parity audit
 
+> **Questionnaire update (2026-09-09):** `questionnaire` is now ported —
+> `packages/registry/registry/default/ui/questionnaire.ts` authors the flow in place
+> (there is no `@foldkit/ui` questionnaire primitive yet), data-driven instead of
+> React children: progress, single/multiple choices with freeform input, validation
+>
+> - skip, Enter-to-advance, letter/number shortcuts, `SubmittedAnswers` out-message.
+>   Behavioral deltas are listed in `packages/web/src/catalog/gaps.ts`. The
+>   "base-only, missing from foldcn" list below is now 9 items.
+>
 > **Status (post-migration):** every file in `packages/registry/registry/default/ui/*.ts`
 > now derives from `bases/base/ui` per `docs/deriving-from-base.md` — class strings are
 > the upstream `cn-*` token compositions, resolved at build time from the vendored

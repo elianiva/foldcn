@@ -537,6 +537,24 @@
       ]
     },
     {
+      "name": "questionnaire",
+      "type": "registry:ui",
+      "title": "Questionnaire",
+      "description": "Step-by-step questionnaire with progress, single/multiple choices, freeform input, validation and skip. Data-driven Foldkit API — questions are declared on init. Stateful submodel; no @foldkit/ui primitive yet, so the flow is authored in place (see gaps).",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
+      "cssVars": {
+        "theme": {
+          "font-heading": "var(--font-heading)"
+        }
+      },
+      "files": [
+        {
+          "path": "questionnaire.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "alert-dialog",
       "type": "registry:ui",
       "title": "Alert Dialog",
