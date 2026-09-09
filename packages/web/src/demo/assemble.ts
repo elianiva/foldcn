@@ -50,6 +50,7 @@ import { slice as menubarSlice } from './views/menubar'
 import { slice as navSlice } from './views/nav'
 import { slice as nativeSelectSlice } from './views/native-select'
 import { slice as navigationMenuSlice } from './views/navigation-menu'
+import { slice as paginationSlice } from './views/pagination'
 import { slice as popoverSlice } from './views/popover'
 import { slice as progressSlice } from './views/progress'
 import { slice as radioGroupSlice } from './views/radio-group'
@@ -119,6 +120,7 @@ const ModelSchema = S.Struct({
   ...navSlice.fields,
   ...navigationMenuSlice.fields,
   ...nativeSelectSlice.fields,
+  ...paginationSlice.fields,
   ...popoverSlice.fields,
   ...progressSlice.fields,
   ...radioGroupSlice.fields,
@@ -188,6 +190,7 @@ const MessageSchema = S.Union([
   ...navSlice.messages,
   ...navigationMenuSlice.messages,
   ...nativeSelectSlice.messages,
+  ...paginationSlice.messages,
   ...popoverSlice.messages,
   ...progressSlice.messages,
   ...radioGroupSlice.messages,
@@ -261,6 +264,7 @@ export const init = (): DemoUpdateReturn => {
     ...navSlice.init,
     ...navigationMenuSlice.init,
     ...nativeSelectSlice.init,
+    ...paginationSlice.init,
     ...popoverSlice.init,
     ...progressSlice.init,
     ...radioGroupSlice.init,

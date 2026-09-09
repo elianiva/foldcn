@@ -734,6 +734,19 @@
       ]
     },
     {
+      "name": "pagination",
+      "type": "registry:ui",
+      "title": "Pagination",
+      "description": "Presentational pagination landmark with content, item, link (button-styled anchors with active page marking), previous, next and ellipsis builders.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/icons", "@foldcn/button"],
+      "files": [
+        {
+          "path": "pagination.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation Menu",

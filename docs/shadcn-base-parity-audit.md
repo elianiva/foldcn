@@ -67,7 +67,7 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 ### Not covered (no counterpart)
 
 - **foldcn-only (7):** animation, date-picker, drag-and-drop, file-drop, listbox, nav, virtual-list
-- **base-only, missing from foldcn (10):** attachment, bubble, carousel, chart, message, message-scroller, native-select (partially covered inside foldcn `select.ts`), pagination, questionnaire, scroll-area
+- **base-only, missing from foldcn (9):** attachment, bubble, carousel, chart, message, message-scroller, native-select (partially covered inside foldcn `select.ts`), questionnaire, scroll-area
 - Renames: foldcn `menu` ↔ base `dropdown-menu`; foldcn `fieldset` ↔ base `field`.
 - Manifest `ui/registry.json`: 60 entries ↔ 60 files, no mismatches.
 
