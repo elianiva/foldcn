@@ -47,6 +47,9 @@ export const gapsByItem = {
     'Numeric codes only — non-digits are stripped with no pattern or alphanumeric mode like upstream.',
     'onInput fires on every change; onComplete alone doubles as the update channel, so derive completion from the stored value.',
   ],
+  bubble: [
+    "BubbleContent supports `as: 'div' | 'button' | 'a'` in place of upstream's render prop — other element substitutions need a manual wrapper.",
+  ],
 } as const
 
 const isGapItem = (name: string): name is keyof typeof gapsByItem => name in gapsByItem

@@ -819,6 +819,19 @@
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "bubble",
+      "type": "registry:ui",
+      "title": "Bubble",
+      "description": "Styled chat bubble with group, content and reactions sub-builders, variants and start/end alignment.",
+      "registryDependencies": ["@foldcn/utils"],
+      "files": [
+        {
+          "path": "bubble.ts",
+          "type": "registry:ui"
+        }
+      ]
     }
   ]
 }

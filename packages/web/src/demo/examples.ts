@@ -6,6 +6,7 @@ import aspectRatioViewSource from './views/aspect-ratio.ts?raw'
 import attachmentViewSource from './views/attachment.ts?raw'
 import avatarViewSource from './views/avatar.ts?raw'
 import badgeViewSource from './views/badge.ts?raw'
+import bubbleViewSource from './views/bubble.ts?raw'
 import buttonViewSource from './views/button.ts?raw'
 import calendarViewSource from './views/calendar.ts?raw'
 import cardViewSource from './views/card.ts?raw'
@@ -107,6 +108,11 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     path: 'src/demo/views/badge.ts',
     code: badgeViewSource,
     githubUrl: gh('src/demo/views/badge.ts'),
+  },
+  bubble: {
+    path: 'src/demo/views/bubble.ts',
+    code: bubbleViewSource,
+    githubUrl: gh('src/demo/views/bubble.ts'),
   },
   button: {
     path: 'src/demo/views/button.ts',
