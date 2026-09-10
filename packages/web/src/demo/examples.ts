@@ -30,6 +30,7 @@ import markerViewSource from './views/marker.ts?raw'
 import menuViewSource from './views/menu.ts?raw'
 import nativeSelectViewSource from './views/native-select.ts?raw'
 import navViewSource from './views/nav.ts?raw'
+import paginationViewSource from './views/pagination.ts?raw'
 import popoverViewSource from './views/popover.ts?raw'
 import progressViewSource from './views/progress.ts?raw'
 import radioGroupViewSource from './views/radio-group.ts?raw'
@@ -222,6 +223,11 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     path: 'src/demo/views/nav.ts',
     code: navViewSource,
     githubUrl: gh('src/demo/views/nav.ts'),
+  },
+  pagination: {
+    path: 'src/demo/views/pagination.ts',
+    code: paginationViewSource,
+    githubUrl: gh('src/demo/views/pagination.ts'),
   },
   popover: {
     path: 'src/demo/views/popover.ts',
