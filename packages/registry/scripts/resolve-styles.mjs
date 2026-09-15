@@ -117,6 +117,7 @@ const KNOWN_REGISTRY_HOOKS = new Set([
   'cn-progress-root',
   'cn-resizable-handle',
   'cn-resizable-panel-group',
+  'cn-scroll-area',
   'cn-select-item-indicator-icon',
   'cn-sidebar-trigger',
   'cn-tabs-list-variant-default',

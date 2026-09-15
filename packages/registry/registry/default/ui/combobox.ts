@@ -5,7 +5,14 @@
 import { Combobox as FoldkitCombobox } from '@foldkit/ui'
 import type { AnchorConfig } from '@foldkit/ui/combobox'
 import type { Option } from 'effect/Option'
-import { childAttributes, inertHtml, type Html, type HtmlBuilder } from 'foldkit/html'
+import {
+  childAttributes,
+  inertHtml,
+  type Attribute,
+  type ChildAttribute,
+  type Html,
+  type HtmlBuilder,
+} from 'foldkit/html'
 
 import { icon } from '@/lib/icons'
 import { Check, ChevronDown } from 'lucide'
@@ -51,7 +58,7 @@ export const comboboxButtonClass =
   'absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4'
 
 export const comboboxItemsClass =
-  'cn-combobox-content cn-combobox-content-logical cn-menu-target cn-menu-translucent group/combobox-content relative max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) data-[chips=true]:min-w-(--anchor-width)'
+  'cn-combobox-content cn-combobox-content-logical cn-menu-target cn-menu-translucent group/combobox-content relative isolate z-50 max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) data-[chips=true]:min-w-(--anchor-width)'
 
 export const comboboxItemsAnimatedClass = comboboxItemsClass
 
@@ -107,6 +114,8 @@ type CommonConfig<Item extends string> = Readonly<{
   openOnFocus?: boolean
   ariaLabel?: string
   ariaLabelledBy?: string
+  inputAttributes?: ReadonlyArray<ChildAttribute>
+  itemsAttributes?: ReadonlyArray<Attribute<unknown>>
   itemGroupKey?: (item: Item, index: number) => string
   groupToHeading?: (groupKey: string) => GroupHeading | undefined
   formName?: string
@@ -134,9 +143,12 @@ const common = <Item extends string>(config: CommonConfig<Item>) => ({
   isDisabled: config.isDisabled,
   isReadOnly: config.isReadOnly,
   isInvalid: config.isInvalid,
-  openOnFocus: config.openOnFocus,
+  // Base UI opens the popup when the input receives focus. Keep the option
+  // overridable for callers that need explicit keyboard-only opening.
+  openOnFocus: config.openOnFocus ?? true,
   ariaLabel: config.ariaLabel,
   ariaLabelledBy: config.ariaLabelledBy,
+  inputAttributes: config.inputAttributes,
   itemGroupKey: config.itemGroupKey,
   groupToHeading: config.groupToHeading,
   inputClassName: cn(comboboxInputClass, config.inputClass),
@@ -144,7 +156,10 @@ const common = <Item extends string>(config: CommonConfig<Item>) => ({
     config.isAnimated !== false ? comboboxItemsAnimatedClass : comboboxItemsClass,
     config.itemsClass,
   ),
-  itemsAttributes: childAttributes([inertHtml.DataAttribute('slot', 'combobox-content')]),
+  itemsAttributes: childAttributes([
+    inertHtml.DataAttribute('slot', 'combobox-content'),
+    ...(config.itemsAttributes ?? []),
+  ]),
   itemsScrollClassName: config.itemsScrollClass ?? comboboxItemsScrollClass,
   itemToConfig: (item: Item, context: Parameters<CommonConfig<Item>['itemToConfig']>[1]) => {
     const { className, content } = config.itemToConfig(item, context)

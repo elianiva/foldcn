@@ -67,6 +67,20 @@
       ]
     },
     {
+      "name": "carousel",
+      "type": "registry:ui",
+      "title": "Carousel",
+      "description": "Embla-powered carousel with orientation, slide basis/spacing, loop and align options, plugins, keyboard, and programmatic control.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/button"],
+      "files": [
+        {
+          "path": "carousel.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["embla-carousel"]
+    },
+    {
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
@@ -752,6 +766,19 @@
       ]
     },
     {
+      "name": "pagination",
+      "type": "registry:ui",
+      "title": "Pagination",
+      "description": "Presentational pagination landmark with content, item, link (button-styled anchors with active page marking), previous, next and ellipsis builders.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/icons", "@foldcn/button"],
+      "files": [
+        {
+          "path": "pagination.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation Menu",
@@ -826,6 +853,19 @@
       ]
     },
     {
+      "name": "scroll-area",
+      "type": "registry:ui",
+      "title": "Scroll Area",
+      "description": "Styled overlay scrollbars over a native-scroll viewport, with draggable thumb and track-click jumping.",
+      "registryDependencies": ["@foldcn/utils"],
+      "files": [
+        {
+          "path": "scroll-area.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "attachment",
       "type": "registry:ui",
       "title": "Attachment",
@@ -834,6 +874,19 @@
       "files": [
         {
           "path": "attachment.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "bubble",
+      "type": "registry:ui",
+      "title": "Bubble",
+      "description": "Styled chat bubble with group, content and reactions sub-builders, variants and start/end alignment.",
+      "registryDependencies": ["@foldcn/utils"],
+      "files": [
+        {
+          "path": "bubble.ts",
           "type": "registry:ui"
         }
       ]
