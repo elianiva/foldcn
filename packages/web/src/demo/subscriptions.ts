@@ -6,6 +6,7 @@ import type { Model, Message } from './assemble'
 import { subscriptions as carouselSubscriptions } from './views/carousel'
 import { subscriptions as dragAndDropSubscriptions } from './views/drag-and-drop'
 import { subscriptions as drawerSubscriptions } from './views/drawer'
+import { subscriptions as resizableSubscriptions } from './views/resizable'
 import { subscriptions as scrollAreaSubscriptions } from './views/scroll-area'
 import { subscriptions as sidebarSubscriptions } from './views/sidebar'
 import { subscriptions as sliderSubscriptions } from './views/slider'
@@ -16,6 +17,7 @@ export const subscriptions = Subscription.aggregate<Model, Message>()(
   commandSubscriptions,
   dragAndDropSubscriptions,
   drawerSubscriptions,
+  resizableSubscriptions,
   scrollAreaSubscriptions,
   sidebarSubscriptions,
   sliderSubscriptions,

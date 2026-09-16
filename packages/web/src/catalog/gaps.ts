@@ -25,9 +25,6 @@ export const gapsByItem = {
   drawer: [
     'No snap points, nested stacks, or non-modal drawers — handle drag-to-dismiss and all four directions work.',
   ],
-  resizable: [
-    'Two-pane percentage splitter — no min/max constraints, collapsible panes, or N-pane layouts.',
-  ],
   'scroll-area': [
     "Wheel events over the scrollbar don't scroll the viewport — foldkit has no wheel-delta listener yet.",
     'No RTL mirroring for the horizontal scrollbar — LTR geometry only.',
@@ -61,6 +58,7 @@ export const gapsByItem = {
     'Focus stays where it was after moving between questions — upstream moves focus to the newly active question. Validation failures do focus the invalid answer.',
     'No arrow-key answer traversal or left/right question navigation — Enter-to-advance and letter/number shortcuts work.',
     'No native form semantics: no FormData or reset-event integration; answers flow out via the SubmittedAnswers out-message.',
+  ],
   bubble: [
     "BubbleContent supports `as: 'div' | 'button' | 'a'` in place of upstream's render prop — other element substitutions need a manual wrapper.",
   ],

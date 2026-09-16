@@ -9,6 +9,19 @@
 >   Behavioral deltas are listed in `packages/web/src/catalog/gaps.ts`. The
 >   "base-only, missing from foldcn" list below is now 9 items.
 >
+> **Resizable update (2026-09-16):** `resizable` no longer fakes the split with a
+> hidden range input. `packages/registry/registry/default/ui/resizable-box.ts`
+> models `react-resizable-panels` in Foldkit — N panels, pointer-drag and keyboard
+> separators (WAI-ARIA window splitter: arrows/Home/End/Enter), min/max constraints,
+> collapsible panels — by porting the upstream `adjustLayoutByDelta`,
+> `validatePanelSize`, and `validatePanelGroupLayout` math. `resizable.ts` renders
+> the styled shadcn parts over it, and the demo covers horizontal, vertical,
+> with-handle, nested groups, and a controlled layout driven by the `LayoutChanged`
+> out-message. Panel sizes are numeric percentages on the Model instead of the
+> upstream string/unit API; the `gaps.ts` entry is removed. Not ported from
+> upstream: panel/separator `disabled`, separator `disableDoubleClick`,
+> `resizeTargetMinimumSize`, and F6 separator focus cycling.
+>
 > **Status (post-migration):** every file in `packages/registry/registry/default/ui/*.ts`
 > now derives from `bases/base/ui` per `docs/deriving-from-base.md` — class strings are
 > the upstream `cn-*` token compositions, resolved at build time from the vendored
@@ -172,7 +185,13 @@ Beyond styling, several foldcn components are missing their **defining behaviors
 ### Misc
 
 - **table — MINOR.** Slots identical. foldcn adds `border-collapse *:border-border` (in neither registry); misses `has-aria-expanded:bg-muted/50`; head `text-muted-foreground` vs base `text-foreground`; keeps legacy checkbox translate-y.
-- **resizable — MAJOR.** Hand-rolled 2-pane percentage splitter (hidden range input) vs react-resizable-panels: no min/max/collapsible/N-panes, no hit-area/focus-ring on handle, slot named `resizable` not `resizable-panel-group`.
+- **resizable — RESOLVED (2026-09-16).** `resizable-box.ts` is a Foldkit port of
+  react-resizable-panels' layout engine (N panels, min/max, collapsible, pointer +
+  keyboard separators) and `resizable.ts` renders the upstream parts
+  (`resizable-panel-group`/`resizable-panel`/`resizable-handle` slots, `withHandle`
+  grip). Sizes are numeric percentages on the Model rather than upstream's
+  `"25%"`/px/rem strings, which the data-driven Foldkit API cannot resolve before
+  init. See the Resizable update blockquote above.
 - **sidebar — MINOR (was MAJOR — fixed 2026-08-26).** Interactive shell (provider submodel, mobile sheet, keyboard shortcut, rail, all parts) now matches upstream. Remaining behavioral gaps are the two items noted in bug #10; class diffs reduced to separator and menu refinements that the style tokens already absorb.
 - **sonner — MAJOR.** Foldkit toast engine restyled; no theme sync, no `--normal-*`/`--radius` wiring, `bg-background rounded-lg` vs popover/`rounded-2xl`; inert `cn-toast` class.
 - **toast — MAJOR.** Single entry is a close visual copy (colors/focus/icon/close hit-area match); missing swipe, stack expansion, Action part, portal/viewport composition; exit fade 200ms vs 500ms cubic-bezier choreography.

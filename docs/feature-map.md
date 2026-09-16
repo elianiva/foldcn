@@ -13,11 +13,11 @@ npx shadcn@latest add @foldcn/button @foldcn/dialog
 
 ## Component families
 
-| Family                   | Pattern                                                       | When                                                                                                                                                                          |
-| ------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Helpers**              | Stateless builder (`ViewConfig + builder → Html`)             | Simple controls: button, input, switch, checkbox                                                                                                                              |
-| **Submodels**            | Stateful (`Model + Message + update + view` via `h.submodel`) | Focus/open/selection: dialog, popover, menu, calendar, toast. Some re-export `@foldkit/ui`, others (toggle, accordion, collapsible, resizable, command) are authored in place |
-| **Presentational ports** | Static markup, no state machine                               | Layout matching shadcn: badge, separator, card, table, sidebar                                                                                                                |
+| Family                   | Pattern                                                       | When                                                                                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Helpers**              | Stateless builder (`ViewConfig + builder → Html`)             | Simple controls: button, input, switch, checkbox                                                                                                                                             |
+| **Submodels**            | Stateful (`Model + Message + update + view` via `h.submodel`) | Focus/open/selection: dialog, popover, menu, calendar, toast. Some re-export `@foldkit/ui`, others (toggle, accordion, collapsible, resizable, resizable-box, command) are authored in place |
+| **Presentational ports** | Static markup, no state machine                               | Layout matching shadcn: badge, separator, card, table, sidebar                                                                                                                               |
 
 If it manages focus, open state, or selection → submodel. If purely visual → helper or presentational.
 

@@ -840,11 +840,23 @@
       ]
     },
     {
+      "name": "resizable-box",
+      "type": "registry:ui",
+      "title": "Resizable Box",
+      "description": "Headless resize engine: N panels with draggable, keyboard-operable separators, min/max constraints, collapsible panels, and a layout out-message. Powers Resizable.",
+      "files": [
+        {
+          "path": "resizable-box.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "resizable",
       "type": "registry:ui",
       "title": "Resizable",
-      "description": "Stateful two-pane split with a draggable, keyboard-accessible handle.",
-      "registryDependencies": ["@foldcn/utils"],
+      "description": "Resizable panel group with pointer-drag and keyboard separators, N panels, min/max constraints, and collapsible panels.",
+      "registryDependencies": ["@foldcn/resizable-box", "@foldcn/utils"],
       "files": [
         {
           "path": "resizable.ts",
