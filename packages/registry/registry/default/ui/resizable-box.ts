@@ -1,5 +1,8 @@
-/** Stateful submodel — import the whole module as a namespace and wire its
- *  Model/Message/init/update/subscriptions into your app:
+/** The headless layout engine behind `resizable.ts`, shipped in the same
+ *  registry item. It has no view of its own: install Resizable for the styled
+ *  panel group, and reach for this module directly only when you want to render
+ *  the panels yourself.
+ *
  *  `import * as ResizableBox from '@/components/ui/resizable-box'`
  */
 import { Effect, Function, Option, Schema as S, Stream } from 'effect'

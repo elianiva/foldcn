@@ -17,6 +17,7 @@ const Message = defineMessageUnion({
   GotResizableNestedOuterMessage: { message: resizable.Message },
   GotResizableNestedInnerMessage: { message: resizable.Message },
   GotResizableControlledMessage: { message: resizable.Message },
+  GotResizableCollapsibleMessage: { message: resizable.Message },
 })
 
 const panelLabel = (text: string, h: HtmlBuilder<AppMessage>): Html =>
@@ -163,6 +164,31 @@ export const resizableView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           ),
         ],
       ),
+      h.div(
+        [h.Class('flex w-full flex-col gap-2')],
+        [
+          h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['Collapsible']),
+          group(
+            model.resizableCollapsible,
+            {
+              className: 'min-h-[200px] rounded-lg border',
+              panels: [{}, {}],
+              handles: [{}],
+              handleLabel: 'Resize the collapsible sidebar',
+              toPanelContent: (index) =>
+                index === 0 ? panelLabel('Sidebar', h) : panelLabel('Content', h),
+            },
+            (message) => Message.GotResizableCollapsibleMessage({ message }),
+            h,
+          ),
+          h.div(
+            [h.Class('px-1 text-xs text-muted-foreground')],
+            [
+              'The sidebar starts at 25% with a 15% minimum. Drag it under the minimum to snap it shut, or focus the handle and press Enter.',
+            ],
+          ),
+        ],
+      ),
     ],
   )
 
@@ -235,6 +261,14 @@ const foldResizableControlled = Update.foldChild({
   foldOutMessage: foldControlledOutMessage,
 })
 
+const foldResizableCollapsible = Update.foldChild({
+  update: resizable.update,
+  read: (model: State) => Option.some(model.resizableCollapsible),
+  write: (model, next) => evo(model, { resizableCollapsible: () => next }),
+  toParentMessage: (message) => Message.GotResizableCollapsibleMessage({ message }),
+  foldOutMessage: foldOtherOutMessage,
+})
+
 const fields = {
   resizableHorizontal: resizable.Model,
   resizableVertical: resizable.Model,
@@ -243,6 +277,7 @@ const fields = {
   resizableNestedInner: resizable.Model,
   resizableControlled: resizable.Model,
   resizableControlledLayout: S.Record(S.String, S.Number),
+  resizableCollapsible: resizable.Model,
 }
 
 const stateSchema = S.Struct(fields)
@@ -255,6 +290,7 @@ type ResizableAppMessage =
   | typeof Message.GotResizableNestedOuterMessage.Type
   | typeof Message.GotResizableNestedInnerMessage.Type
   | typeof Message.GotResizableControlledMessage.Type
+  | typeof Message.GotResizableCollapsibleMessage.Type
 
 const liftDragPointer = (
   name: string,
@@ -301,6 +337,11 @@ export const subscriptions = Subscription.aggregate<State, ResizableAppMessage>(
     (model) => model.resizableControlled,
     (message) => Message.GotResizableControlledMessage({ message }),
   ),
+  liftDragPointer(
+    'resizableCollapsible',
+    (model) => model.resizableCollapsible,
+    (message) => Message.GotResizableCollapsibleMessage({ message }),
+  ),
 )
 
 export const slice = defineSlice({
@@ -336,6 +377,13 @@ export const slice = defineSlice({
       ],
     }),
     resizableControlledLayout: { left: 30, right: 70 },
+    resizableCollapsible: resizable.init({
+      id: 'resizable-demo-collapsible',
+      panels: [
+        { id: 'sidebar', defaultSize: 25, minSize: 15, collapsible: true, collapsedSize: 0 },
+        { id: 'content' },
+      ],
+    }),
   },
   messages: [
     Message.GotResizableHorizontalMessage,
@@ -344,6 +392,7 @@ export const slice = defineSlice({
     Message.GotResizableNestedOuterMessage,
     Message.GotResizableNestedInnerMessage,
     Message.GotResizableControlledMessage,
+    Message.GotResizableCollapsibleMessage,
   ],
   handlers: (model: State) => ({
     GotResizableHorizontalMessage: (
@@ -364,6 +413,9 @@ export const slice = defineSlice({
     GotResizableControlledMessage: (
       payload: typeof Message.GotResizableControlledMessage.Type,
     ): UpdateReturn => foldResizableControlled(model, payload.message),
+    GotResizableCollapsibleMessage: (
+      payload: typeof Message.GotResizableCollapsibleMessage.Type,
+    ): UpdateReturn => foldResizableCollapsible(model, payload.message),
   }),
   samples: [
     Message.GotResizableHorizontalMessage({
