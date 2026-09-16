@@ -91,16 +91,35 @@ Checks:
 
 ```bash
 # snapshot + screenshot diff via agent-browser (no Playwright):
-agent-browser --help  # ensure 0.35+ installed — see .agents/skills/agent-browser/SKILL.md
+agent-browser --version  # ensure 0.35+ installed; run `agent-browser skills get core` first
 node .agents/skills/verify-parity/scripts/verify-visual-parity.mjs --states --images
-# or run the unified harness (inventory + tokens + attributes + behavior + visual):
+# or run the unified harness (inventory + tokens + visual):
 node .agents/skills/verify-parity/scripts/verify-parity.mjs --visual
 ```
+
+### Component update (e2e)
+
+**Do:** after touching `packages/registry/registry/default/ui/<name>.ts` (or its demo view),
+prove the component still renders in every applicable state before calling it done:
+
+```bash
+export AGENT_BROWSER_SESSION="$(agent-browser session id --scope worktree --prefix verify-parity)"
+node .agents/skills/verify-parity/scripts/verify-visual-parity.mjs --states --component <name>
+FOLDCN_URL=http://localhost:5173 \
+  node .agents/skills/verify-parity/scripts/verify-visual-parity.mjs --images --component <name>
+```
+
+Manual equivalent per state (same core loop the harness runs): `agent-browser open
+"http://localhost:5173/docs/<name>"` → `snapshot -s '[data-slot="<name>"]' -i` →
+`hover|focus|click @eN` (canonical `@eN` ref form, re-snapshot after each mutation) →
+`screenshot '[data-slot="<name>"]' .tmp/visual-parity/<name>/<state>/light-default.png`.
+Evidence lands in `.tmp/visual-parity/<name>/<state>/` (gitignored). The demo route is
+`/docs/<name>` (see `packages/web/src/route.ts`) — not a hash route.
 
 Checks:
 
 - **State matrix:** every paired component exercised in every applicable state — `idle`, `hover`, `focus-visible`, `active/pressed`, `disabled`, `open`/`closed` (overlays, accordions), `checked`/`selected`/`on` (toggles, checkboxes, tabs), `invalid`, plus component-specific states (e.g. `indeterminate` for progress, `empty` for command). States sourced from upstream `style-nova.css` selectors, `bases/base/ui` props, and (when no checkout) `web_search` against `https://ui.shadcn.com/docs/components` + `agent-browser read` of component pages. The [checklist](references/parity-checklist.md) §6 enumerates the matrix; any state that cannot be reached is `verified-unreachable` with prerequisite (auth, OS, external) and route attempted.
-- **Images per state (agent-browser):** capture screenshots of foldcn (via `packages/web` demo or `styles/default` resolved fixtures) and upstream (local `apps/v4` dev server or `https://ui.shadcn.com` reference renders — sourced via `web_search` / `agent-browser read` when no checkout) at identical viewport (`1280×800`, `deviceScaleFactor 1`), theme (`light` + `dark` via `agent-browser set media`), and density. Core loop per state: `agent-browser open <url>` → `agent-browser snapshot -i -s '[data-slot="<name>"]'` → `agent-browser hover|focus|click <ref>` for the target state → `agent-browser screenshot "[data-slot=\"<name>\"]" <out.png>` (element crop, not full page, to avoid chrome drift). Diff with pixel comparison (`pixelmatch` where available, otherwise existence/size check) — CSS computed-style fallback when `agent-browser` is absent.
+- **Images per state (agent-browser):** capture screenshots of foldcn (via `packages/web` demo or `styles/default` resolved fixtures) and upstream (local `apps/v4` dev server or `https://ui.shadcn.com` reference renders — sourced via `web_search` / `agent-browser read` when no checkout) at identical viewport (`1280×800`, `deviceScaleFactor 1`), theme (`light` + `dark` via `agent-browser set media`), and density. Core loop per state: `agent-browser open <url>` → `agent-browser snapshot -i -s '[data-slot="<name>"]'` → `agent-browser hover|focus|click @eN` (canonical `@eN` ref form; re-snapshot after each mutation) for the target state → `agent-browser screenshot "[data-slot=\"<name>\"]" <out.png>` (element crop, not full page, to avoid chrome drift). Diff with pixel comparison (`pixelmatch` where available, otherwise existence/size check) — CSS computed-style fallback when `agent-browser` is absent.
 - **Thresholds:** ≤1% pixel diff = `VISUAL_MATCH`, 1–5% = `VISUAL_MINOR` (token-level drift), >5% or missing state = `VISUAL_MAJOR`. Token drift that is invisible at rendered pixels still counts as drift in §3, but visual verdict reflects what the user sees.
 - **Multi-style coverage:** at minimum `default` (nova) against upstream `nova`; when `--all-styles` is set, repeat for `vega`, `maia`, `lyra`, `mira`, `luma`, `sera`, `rhea` and report per-style visual verdicts. Vendored `style-*.css` must stay byte-identical (ADR-015) so cross-style drift is token-level, not structural.
 - **Evidence:** screenshots and diff images are written to `.tmp/visual-parity/<component>/<state>/` (gitignored) and the report references them by path. The harness never edits product code — a missing or wrong visual is doc drift (fix the map) or a product regression (file it, don't paper over it).
@@ -116,12 +135,12 @@ Checks:
 ## Quick verify (CI)
 
 ```bash
-node .agents/skills/verify-parity/scripts/verify-parity.mjs          # inventory + tokens + attributes + behavior
+node .agents/skills/verify-parity/scripts/verify-parity.mjs          # inventory + tokens (attributes + behavior are manual checklist steps)
 node .agents/skills/verify-parity/scripts/verify-parity.mjs --visual # + visual/state image diffs (needs agent-browser + preview servers)
 node .agents/skills/verify-parity/scripts/verify-visual-parity.mjs --states  # state matrix only (no browser)
 ```
 
-Exits non-zero on leaked `cn-*`, inventory drift, stale audit, or (with `--visual`) visual `VISUAL_MAJOR`.
+Exits non-zero on leaked `cn-*` or (with `--visual`) visual `VISUAL_MAJOR`. Inventory drift and audit staleness warn but do not fail.
 
 Visual image diffs are opt-in for CI — they require `agent-browser` (`npm i -g agent-browser && agent-browser install`) and running preview servers. The `--states` / `--images` flags control which visual sub-steps run. Without `agent-browser` the harness falls back to a CSS state-coverage check and warns that image evidence is missing. Upstream docs are resolved via `web_search` + `agent-browser read https://ui.shadcn.com/docs/components/<name>` when no local `SHADCN_UI_DIR` checkout is present.
 

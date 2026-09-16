@@ -25,8 +25,10 @@ export const gapsByItem = {
   drawer: [
     'No snap points, nested stacks, or non-modal drawers — handle drag-to-dismiss and all four directions work.',
   ],
-  resizable: [
-    'Two-pane percentage splitter — no min/max constraints, collapsible panes, or N-pane layouts.',
+  'scroll-area': [
+    "Wheel events over the scrollbar don't scroll the viewport — foldkit has no wheel-delta listener yet.",
+    'No RTL mirroring for the horizontal scrollbar — LTR geometry only.',
+    'Track clicks jump without continuing into a drag — dragging starts on the thumb only.',
   ],
   'navigation-menu': [
     'Each dropdown is its own independently-anchored Popover panel — no shared/morphing Viewport panel or slide-direction indicator like upstream.',
@@ -36,6 +38,10 @@ export const gapsByItem = {
   combobox: ['Filtering is owned by your model — no built-in chips UI for multi-select.'],
   'input-group': [
     'Addons do not focus the input on click — foldkit has no scoped click-to-focus primitive yet.',
+  ],
+  carousel: [
+    'Embla options are a serializable schema subset on the model (align/loop/duration/startIndex/direction/containScroll/slidesToScroll); plugin instances register via Carousel.configure(id, { plugins }) since they cannot be serialized.',
+    'No imperative API hand-off: listen for ChangedIndex out-messages instead of upstream setApi.',
   ],
   menu: [
     'No submenu, checkbox-item, or radio-item kinds — submenus render as labelled groups and checkbox/radio rows run off demo state; toggling one closes the panel.',
@@ -49,6 +55,15 @@ export const gapsByItem = {
   ],
   'message-scroller': [
     'Reimplemented as a Foldkit submodel — @foldkit/ui has no message-scroller primitive. Auto-follow at the live edge, the default open position, anchored-turn alignment with previous-turn peek, and the scroll-to-end/start button all work; no visibility tracking (currentAnchorId / visibleMessageIds), no prepend preservation, and no anchored-turn tail spacer — a reply streaming below an anchored turn is not held while it grows (the anchor scrolls once; follow resumes once the reply reaches the live edge).',
+  ],
+  questionnaire: [
+    'Data-driven Foldkit API: questions are declared as an items array on init instead of React children.',
+    'Focus stays where it was after moving between questions — upstream moves focus to the newly active question. Validation failures do focus the invalid answer.',
+    'No arrow-key answer traversal or left/right question navigation — Enter-to-advance and letter/number shortcuts work.',
+    'No native form semantics: no FormData or reset-event integration; answers flow out via the SubmittedAnswers out-message.',
+  ],
+  bubble: [
+    "BubbleContent supports `as: 'div' | 'button' | 'a'` in place of upstream's render prop — other element substitutions need a manual wrapper.",
   ],
 } as const
 

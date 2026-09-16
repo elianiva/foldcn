@@ -6,7 +6,7 @@
  *   --states   enumerate applicable states per paired component and check CSS coverage
  *              in resolved output (no browser needed)
  *   --images   --states + agent-browser snapshot + screenshot + pixel/snapshot diff
- *              (needs agent-browser + preview servers; see .agents/skills/agent-browser/SKILL.md)
+ *              (needs agent-browser + preview servers; run `agent-browser skills get core` first)
  *   (no flag)  alias for --states
  *
  * Flags:
@@ -29,24 +29,8 @@ const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const REPO_DIR = resolve(SKILL_DIR, '..', '..', '..')
 const REGISTRY_JSON = join(REPO_DIR, 'packages/registry/registry/default/ui/registry.json')
 const UI_DIR = join(REPO_DIR, 'packages/registry/registry/default/ui')
-const STYLES_DIR = join(REPO_DIR, 'packages/registry/styles')
-const DEFAULT_STYLE_CSS = join(REPO_DIR, 'packages/registry/registry/styles/style-nova.css')
-const _COMPAT_CSS = join(REPO_DIR, 'packages/registry/registry/default/style/cn-compat.css')
 
 const args = process.argv.slice(2)
-const _wantStates =
-  args.includes('--states') ||
-  args.includes('--images') ||
-  args.length === 0 ||
-  args.some(
-    (a) =>
-      a.startsWith('--component') ||
-      a.startsWith('--theme') ||
-      a.startsWith('--foldcn-url') ||
-      a.startsWith('--shadcn-url') ||
-      a.startsWith('--out') ||
-      a === '--all-styles',
-  )
 const wantImages = args.includes('--images')
 const allStyles = args.includes('--all-styles')
 
@@ -296,18 +280,6 @@ function applicableStates(name) {
   return states.filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)))
 }
 
-function _cssForStyle(styleName) {
-  if (styleName === 'default') return readFileSync(DEFAULT_STYLE_CSS, 'utf8')
-  const p = join(STYLES_DIR, `style-${styleName}.css`)
-  if (existsSync(p)) return readFileSync(p, 'utf8')
-  return readFileSync(DEFAULT_STYLE_CSS, 'utf8')
-}
-
-function _resolvedUiExists(styleName) {
-  const dir = join(REPO_DIR, `packages/registry/styles/${styleName}/ui`)
-  return existsSync(dir)
-}
-
 function checkCssCoverage(name, styleName) {
   const resolvedPath = join(REPO_DIR, `packages/registry/styles/${styleName}/ui/${name}.ts`)
   const hasResolved = existsSync(resolvedPath)
@@ -448,7 +420,7 @@ async function tryCaptureImages(names) {
     console.log(
       '  skipped — agent-browser not found (npm i -g agent-browser && agent-browser install)',
     )
-    console.log('  See .agents/skills/agent-browser/SKILL.md → agent-browser skills get core')
+    console.log('  See `agent-browser skills get core` for the snapshot → ref → screenshot core loop')
     console.log(
       '  CSS state coverage above is the fallback; install agent-browser and run with --images for snapshot + pixel evidence.',
     )
@@ -504,12 +476,18 @@ async function tryCaptureImages(names) {
     `  upstream: ${shadcnUrl} ${shadcnReachable ? '(reachable)' : '(unreachable — foldcn-only captures)'}`,
   )
   console.log(`  out: ${outRoot}`)
+
+  // Session isolation: honor an already-exported AGENT_BROWSER_SESSION (the documented
+  // pattern: `export AGENT_BROWSER_SESSION="$(agent-browser session id --scope worktree
+  // --prefix verify-parity)"`) and fall back to a worktree-scoped id so parallel
+  // agents never share one browser.
+  const SESSION =
+    process.env.AGENT_BROWSER_SESSION?.trim() || deriveSessionId() || 'verify-parity'
   console.log(
-    `  session: verify-parity (agent-browser --session verify-parity) — see agent-browser skills get core for core loop`,
+    `  session: ${SESSION} (isolated per worktree — see \`agent-browser skills get core\` for the core loop)`,
   )
 
   // helper to run agent-browser with session
-  const SESSION = 'verify-parity'
   const ab = (args, opts = {}) => {
     const res = spawnSync('agent-browser', ['--session', SESSION, ...args], {
       encoding: 'utf8',
@@ -518,23 +496,49 @@ async function tryCaptureImages(names) {
     })
     return res
   }
-  const _abJson = (args) => {
-    const res = ab([...args, '--json'])
+
+  // Extract the first @eN ref from agent-browser snapshot output.
+  // --json shape is { data: { refs: { eN: {...} } } }; human shape is `@eN [role] ...` /
+  // `[ref=eN]`. Returns the canonical `@eN` form the CLI accepts.
+  function firstSnapshotRef(text, role) {
+    const parsed = tryParseSnapshotJson(text)
+    if (parsed) {
+      const keys = Object.keys(parsed)
+      if (role) {
+        const hit = keys.find((k) => (parsed[k]?.role ?? '').toLowerCase() === role)
+        if (hit) return `@${hit}`
+      }
+      if (keys.length > 0) return `@${keys[0]}`
+    }
+    const m = text.match(/@(e\d+)/) || text.match(/\[ref=(e\d+)\]/)
+    return m ? `@${m[1]}` : null
+  }
+
+  function tryParseSnapshotJson(text) {
     try {
-      return JSON.parse(res.stdout)
+      const start = text.indexOf('{')
+      if (start === -1) return null
+      const json = JSON.parse(text.slice(start))
+      const refs = json?.data?.refs ?? json?.refs
+      return refs && typeof refs === 'object' ? refs : null
     } catch {
-      return res.stdout
+      return null
     }
   }
 
-  // Derive session id for isolation (best effort) — not fatal if it fails
-  try {
-    spawnSync(
-      'agent-browser',
-      ['session', 'id', '--scope', 'worktree', '--prefix', 'verify-parity'],
-      { encoding: 'utf8', timeout: 5000 },
-    )
-  } catch {}
+  function deriveSessionId() {
+    try {
+      const res = spawnSync(
+        'agent-browser',
+        ['session', 'id', '--scope', 'worktree', '--prefix', 'verify-parity'],
+        { encoding: 'utf8', timeout: 5000 },
+      )
+      const id = (res.stdout || '').trim().split(/\s+/).pop()
+      return id || null
+    } catch {
+      return null
+    }
+  }
 
   let hasMajor = false
   const results = []
@@ -562,7 +566,7 @@ async function tryCaptureImages(names) {
 
           // -------- foldcn capture --------
           try {
-            const url = `${foldcnUrl.replace(/\/$/, '')}/#Item/${name}`
+            const url = `${foldcnUrl.replace(/\/$/, '')}/docs/${name}`
             ab(['open', url])
             ab(['set', 'viewport', '1280', '800'])
             // set style via localStorage before re-navigating (active-style.ts reads it at boot)
@@ -576,24 +580,13 @@ async function tryCaptureImages(names) {
             ab(['wait', '--load', 'networkidle'])
             // collect snapshot scoped to component for attr + ref discovery
             const snapRes = ab(['snapshot', '-s', elementSelector(name), '-i', '--json'])
-            let snapText = snapRes.stdout || ''
-            let firstRef = null
-            try {
-              void JSON.parse(snapText)
-              // snapshot --json shape varies; try to find first ref
-              const m = snapText.match(/"ref"\s*:\s*"(e\d+)"/)
-              if (m) firstRef = m[1]
-              writeFileSync(snapPath, snapText)
-            } catch {
-              const m = snapText.match(/ref=(e\d+)/)
-              if (m) firstRef = m[1]
-              writeFileSync(snapPath, snapText)
-            }
+            const snapText = snapRes.stdout || ''
+            writeFileSync(snapPath, snapText)
+            let firstRef = firstSnapshotRef(snapText)
             // fallback: full interactive snapshot if scoped empty
             if (!firstRef) {
               const full = ab(['snapshot', '-i'])
-              const m2 = (full.stdout || '').match(/ref=(e\d+)/)
-              if (m2) firstRef = m2[1]
+              firstRef = firstSnapshotRef(full.stdout || '')
             }
             // drive state if we have a ref
             if (firstRef) {
@@ -602,10 +595,8 @@ async function tryCaptureImages(names) {
               if (state.id === 'open' || state.id === 'expanded') {
                 // click trigger if present, otherwise click the element itself
                 const triggerSnap = ab(['snapshot', '-i'])
-                const trigRef = (triggerSnap.stdout || '').match(
-                  /\[role="button"\][^\n]*ref=(e\d+)/,
-                )
-                if (trigRef) ab(['click', trigRef[1]])
+                const trigRef = firstSnapshotRef(triggerSnap.stdout || '', 'button')
+                if (trigRef) ab(['click', trigRef])
                 else ab(['click', firstRef])
                 ab(['wait', '500'])
               }
@@ -640,22 +631,17 @@ async function tryCaptureImages(names) {
             try {
               const upstreamUrl = shadcnUrl.includes('ui.shadcn.com')
                 ? `${shadcnUrl.replace(/\/$/, '')}/docs/components/${upstreamComponentName(name)}`
-                : `${shadcnUrl.replace(/\/$/, '')}/#Item/${name}`
+                : `${shadcnUrl.replace(/\/$/, '')}/docs/${upstreamComponentName(name)}`
               ab(['open', upstreamUrl])
               ab(['set', 'viewport', '1280', '800'])
               ab(['set', 'media', ...mediaArgs, 'reduced-motion'])
               ab(['wait', '--load', 'networkidle'])
               const upSnapRes = ab(['snapshot', '-s', elementSelector(name), '-i', '--json'])
-              let upRef = null
-              try {
-                writeFileSync(upstreamSnapPath, upSnapRes.stdout || '')
-                const m = (upSnapRes.stdout || '').match(/"ref"\s*:\s*"(e\d+)"|ref=(e\d+)/)
-                if (m) upRef = m[1] || m[2]
-              } catch {}
+              writeFileSync(upstreamSnapPath, upSnapRes.stdout || '')
+              let upRef = firstSnapshotRef(upSnapRes.stdout || '')
               if (!upRef) {
                 const full = ab(['snapshot', '-i'])
-                const m2 = (full.stdout || '').match(/ref=(e\d+)/)
-                if (m2) upRef = m2[1]
+                upRef = firstSnapshotRef(full.stdout || '')
               }
               if (upRef) {
                 if (state.id === 'hover') ab(['hover', upRef])

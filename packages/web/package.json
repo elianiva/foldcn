@@ -27,6 +27,8 @@
     "cn": "^0.2.4",
     "defuddle": "^0.19.3",
     "effect": "4.0.0-rc.112",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-autoplay": "^8.6.0",
     "foldkit": "^0.156.0",
     "linkedom": "^0.18.13",
     "lucide": "^1.37.0",

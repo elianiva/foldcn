@@ -24,6 +24,9 @@ export const City = S.Literals([
 ])
 export type City = typeof City.Type
 
+export const Framework = S.Literals(['Next.js', 'SvelteKit', 'Nuxt.js', 'Remix', 'Astro'])
+export type Framework = typeof Framework.Type
+
 export const Plan = S.Literals(['Startup', 'Business', 'Enterprise'])
 export type Plan = typeof Plan.Type
 
@@ -56,7 +59,8 @@ export const DEMO_TODAY = FoldkitCalendar.make(2025, 1, 15)
 
 export const DemoMenu = Menu.create<string>()
 export const ItemListbox = Listbox.create<ListboxItem>()
-export const CityCombobox = Combobox.create<City>()
+export const FrameworkCombobox = Combobox.create<Framework>()
+export const FrameworkMultiCombobox = Combobox.Multi.create<Framework>()
 export const DemoTabs = Tabs.create<DemoTab>()
 export const PlanRadioGroup = RadioGroup.create<Plan>()
 export const LanguageSelect = Select.create<{ value: string; label: string }, string>()

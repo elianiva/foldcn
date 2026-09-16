@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -28,7 +28,11 @@ resolveStyles()
 
 // 1. Build the registry catalog with the shadcn CLI. `-c` pins the working
 //    directory (this package) and `-o` puts the flattened catalog + per-item
-//    JSON wherever we like — the deploy worker serves them from here.
+//    JSON wherever we like — the deploy worker serves them from here. The
+//    CLI does not clean its output directory, so a removed item (or a removed
+//    style) would linger and stay resolvable from `r/`; wipe it first.
+rmSync(OUT_DIR, { recursive: true, force: true })
+mkdirSync(OUT_DIR, { recursive: true })
 run('pnpm', ['dlx', 'shadcn@latest', 'build', '-c', REGISTRY_DIR, '-o', OUT_DIR])
 
 // 2. Swap every embedded ui source for its resolved counterpart. Item paths

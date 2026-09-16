@@ -1,19 +1,26 @@
 #!/usr/bin/env node
 /**
- * verify-parity.mjs — inventory + token + attribute parity checks for foldcn vs upstream.
+ * verify-parity.mjs — inventory + token parity checks for foldcn vs upstream.
  *
  * Usage:
- *   node .agents/skills/verify-parity/scripts/verify-parity.mjs              # full check (inventory + tokens + attributes + behavior)
+ *   node .agents/skills/verify-parity/scripts/verify-parity.mjs              # full check (inventory + tokens)
  *   node .agents/skills/verify-parity/scripts/verify-parity.mjs --inventory  # inventory only
  *   node .agents/skills/verify-parity/scripts/verify-parity.mjs --tokens     # token leak check
  *   node .agents/skills/verify-parity/scripts/verify-parity.mjs --visual     # + visual (agent-browser snapshot + screenshot per state)
  *
- * Visual requires agent-browser (npm i -g agent-browser && agent-browser install) + preview servers.
- * See references/visual-parity.md and .agents/skills/agent-browser/SKILL.md → agent-browser skills get core.
- * Upstream without checkout is discovered via web_search + agent-browser read (see references/upstream-source.md).
+ * Attributes/state (data-slot, data-enter/leave, data-side, disabled twins) and
+ * behavior gaps (#1-12) are manual checklist steps — see references/parity-checklist.md
+ * §3-§4. This script covers inventory + built-artifact token leaks and delegates
+ * --visual to verify-visual-parity.mjs.
  *
- * Exit non-zero on failure. Prints a ParityReport-shaped summary.
+ * Visual requires agent-browser (npm i -g agent-browser && agent-browser install) + preview servers.
+ * Run `agent-browser skills get core` first. Upstream without a checkout is discovered
+ * via web_search + agent-browser read (see references/upstream-source.md).
+ *
+ * Exit non-zero on leaked cn-* literals in dist/r or (with --visual) VISUAL_MAJOR.
+ * Inventory drift and audit staleness warn but do not fail. Prints a summary.
  */
+import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -66,28 +73,12 @@ function loadUpstreamInventory() {
 
 function tryCommit(repoDir) {
   try {
-    const { execFileSync } = awaitImport('node:child_process')
     return execFileSync('git', ['-C', repoDir, 'rev-parse', '--short=7', 'HEAD'], {
       encoding: 'utf8',
     }).trim()
   } catch {
     return null
   }
-}
-
-function awaitImport(spec) {
-  // sync import helper for tryCommit — avoid top-level await for Node 20 compat
-  // eslint-disable-next-line no-eval
-  return (
-    eval(`import.meta.resolve ? null : null`),
-    (() => {
-      try {
-        return eval('require')(spec)
-      } catch {
-        return null
-      }
-    })()
-  )
 }
 
 function classifyInventory(localNames, upstreamNames) {
@@ -262,17 +253,29 @@ async function main() {
 
   // Visual parity — delegates to verify-visual-parity.mjs (state matrix + agent-browser snapshot/screenshot per state)
   // Opt-in: only when --visual or --images is passed. Default CI run stays fast (inventory + tokens).
-  // Use --visual for state coverage + image diffs when preview servers + agent-browser are available.
-  // See references/visual-parity.md and .agents/skills/agent-browser/SKILL.md → agent-browser skills get core.
+  // See references/visual-parity.md; run `agent-browser skills get core` before driving the browser.
   if (wantVisual) {
+    // Forward visual flags (both `--flag value` and `--flag=value` forms) to the child harness.
+    const passthrough = ['--component', '--theme', '--out', '--foldcn-url', '--shadcn-url']
     const visualArgs = ['--states', '--images']
-    if (args.includes('--all-styles')) visualArgs.push('--all-styles')
-    const comp = args.find((a) => a.startsWith('--component='))
-    if (comp) visualArgs.push(comp)
-    const foldcnUrlArg = args.find((a) => a.startsWith('--foldcn-url'))
-    if (foldcnUrlArg) visualArgs.push(foldcnUrlArg)
-    const shadcnUrlArg = args.find((a) => a.startsWith('--shadcn-url'))
-    if (shadcnUrlArg) visualArgs.push(shadcnUrlArg)
+    for (let i = 0; i < args.length; i++) {
+      const a = args[i]
+      if (a === '--all-styles') {
+        visualArgs.push('--all-styles')
+        continue
+      }
+      for (const flag of passthrough) {
+        if (a === flag && args[i + 1] && !args[i + 1].startsWith('--')) {
+          visualArgs.push(flag, args[i + 1])
+          i++
+          break
+        }
+        if (a.startsWith(`${flag}=`)) {
+          visualArgs.push(a)
+          break
+        }
+      }
+    }
     console.log('\n-- Visual parity (states + images) --')
     try {
       const { spawnSync } = await import('node:child_process')

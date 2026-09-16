@@ -28,53 +28,55 @@ A state a component never has is `N/A`. A state that needs a missing prerequisit
 
 ### Inputs
 
-- **Foldcn target:** `packages/web` item page `/#Item/<name>` or a resolved fixture under `styles/default/ui/<name>.ts` rendered in isolation. The demo is the canonical target because it renders the resolved tree users actually ship. Style switching is via `active-style.ts` live bindings — capture per style by setting `localStorage["foldcn-style"]` before load or by pointing at `styles/<style>/ui/` fixtures.
+- **Foldcn target:** `packages/web` item page `/docs/<name>` or a resolved fixture under `styles/default/ui/<name>.ts` rendered in isolation. The demo is the canonical target because it renders the resolved tree users actually ship. Style switching is via `active-style.ts` live bindings — capture per style by setting `localStorage["foldcn-style"]` before load or by pointing at `styles/<style>/ui/` fixtures.
 - **Upstream target:** preferred — local `apps/v4` dev server (`http://localhost:3000` by convention, set via `SHADCN_URL`); fallback — `https://ui.shadcn.com/docs/components/<name>` reference renders (discover via `web_search` for `site:ui.shadcn.com/docs/components <name>` when no checkout, then fetch with `agent-browser read https://ui.shadcn.com/docs/components/<name>` or `scripts/fetch-upstream.mjs`). Record the commit SHA when using a checkout.
 - **Themes:** `light` and `dark` via `agent-browser set media light|dark` (toggles `prefers-color-scheme`, not just a class).
 - **Viewport:** `1280×800`, `deviceScaleFactor: 1` via `agent-browser set viewport 1280 800`; `agent-browser set media <scheme> reduced-motion` for idle snapshots; allow motion for `data-enter`/`data-leave` captures where the transition window is the subject.
 
 ### How to capture (agent-browser snapshot + screenshot)
 
-The harness (`scripts/verify-visual-parity.mjs --images`) uses the `agent-browser` CLI core loop (see `.agents/skills/agent-browser/SKILL.md` → `agent-browser skills get core`). No Playwright dependency.
+The harness (`scripts/verify-visual-parity.mjs --images`) uses the `agent-browser` CLI core loop (run `agent-browser skills get core` first for the version-matched guide). No Playwright dependency.
 
 ```bash
 # one-off setup (once per machine)
 npm i -g agent-browser && agent-browser install
 agent-browser doctor --quick  # verify browser
 
-# per run — the harness derives a worktree-scoped session automatically:
+# per run — isolate one browser per worktree (the harness honors this when exported,
+# otherwise it derives its own worktree-scoped id):
 export AGENT_BROWSER_SESSION="$(agent-browser session id --scope worktree --prefix verify-parity)"
+S="$AGENT_BROWSER_SESSION"
 ```
 
 Per paired component × applicable state × theme × style, the harness runs the core loop:
 
 ```bash
-agent-browser --session "$SESSION" open "$FOLDCN_URL/#Item/<name>"
-agent-browser --session "$SESSION" set viewport 1280 800
-agent-browser --session "$SESSION" set media light reduced-motion  # or dark
-agent-browser --session "$SESSION" snapshot -s '[data-slot="<name>"]' -i       # scoped a11y tree, get ref for state
-agent-browser --session "$SESSION" snapshot -i --json  # optional: JSON for attr diff
-# drive the state (use the ref from the snapshot):
-#   hover:            agent-browser --session "$SESSION" hover <ref>
-#   focus-visible:    agent-browser --session "$SESSION" focus <ref>
-#   active/pressed:   agent-browser --session "$SESSION" click <ref>  # or eval to set data-active
-#   open/expanded:    agent-browser --session "$SESSION" click <trigger-ref>  # then wait --text / snapshot for data-enter
+agent-browser --session "$S" open "$FOLDCN_URL/docs/<name>"
+agent-browser --session "$S" set viewport 1280 800
+agent-browser --session "$S" set media light reduced-motion  # or dark
+agent-browser --session "$S" snapshot -s '[data-slot="<name>"]' -i       # scoped a11y tree, get @eN ref for state
+agent-browser --session "$S" snapshot -i --json  # optional: JSON for attr diff
+# drive the state (use the @eN ref from the snapshot; re-snapshot after each mutation):
+#   hover:            agent-browser --session "$S" hover @eN
+#   focus-visible:    agent-browser --session "$S" focus @eN
+#   active/pressed:   agent-browser --session "$S" click @eN  # or eval to set data-active
+#   open/expanded:    agent-browser --session "$S" click @eN-trigger  # then wait / snapshot for data-enter
 #   disabled/invalid: fixture already renders isDisabled/aria-invalid — snapshot asserts aria-disabled
-agent-browser --session "$SESSION" screenshot "[data-slot=\"<name>\"]" ".tmp/visual-parity/<name>/<state>/light-default.png"  # element crop
+agent-browser --session "$S" screenshot "[data-slot=\"<name>\"]" ".tmp/visual-parity/<name>/<state>/light-default.png"  # element crop
 # same for upstream:
-agent-browser --session "$SESSION" open "$SHADCN_URL/docs/components/<name>"  # or local apps/v4
-agent-browser --session "$SESSION" snapshot -s '[data-slot="<name>"]' -i
-agent-browser --session "$SESSION" screenshot "[data-slot=\"<name>\"]" ".tmp/visual-parity/<name>/<state>/light-default-upstream.png"
-agent-browser --session "$SESSION" close  # after all components
+agent-browser --session "$S" open "$SHADCN_URL/docs/components/<name>"  # or local apps/v4
+agent-browser --session "$S" snapshot -s '[data-slot="<name>"]' -i
+agent-browser --session "$S" screenshot "[data-slot=\"<name>\"]" ".tmp/visual-parity/<name>/<state>/light-default-upstream.png"
+agent-browser --session "$S" close  # after all components
 ```
 
 Key patterns from `agent-browser skills get core` the harness relies on:
 
 - `snapshot -i` vs `snapshot -i --json` — human vs machine diff (JSON includes roles, names, `ref`, and `attributes` for state-attr comparison).
 - `snapshot -s "<selector>"` — scope to the component root so refs are stable per state.
-- Refs (`e1`, `e2`, …) are fresh per snapshot — re-snapshot after any `hover`/`click`/`open` that mutates the page.
-- `wait --text "..."` / `wait --load networkidle` / `wait <ref>` after open/click before snapshot.
-- `get styles <ref>` / `eval` for computed-style spot checks when snapshot attrs aren't enough.
+- Refs (`@e1`, `@e2`, …) are fresh per snapshot — re-snapshot after any `hover`/`click`/`open` that mutates the page.
+- `wait --text "..."` / `wait --load networkidle` / `wait @eN` after open/click before snapshot.
+- `get styles @eN` / `eval` for computed-style spot checks when snapshot attrs aren't enough.
 - `screenshot "<selector>" <path>` — element crop avoids full-page chrome drift; `screenshot --full` is only for layout debugging.
 
 Evidence is written to `.tmp/visual-parity/<component>/<state>/<theme>-<style>.png` and `<theme>-<style>-upstream.png` plus `diff.png` when pixel-compared. Without `agent-browser` (`which agent-browser` fails), the harness skips image capture and reports `images: skipped — no browser (install agent-browser)` — the run is still useful via `--states` (CSS coverage).

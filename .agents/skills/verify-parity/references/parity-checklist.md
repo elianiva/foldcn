@@ -73,7 +73,7 @@ This parses upstream `style-nova.css` selectors and `bases/base/ui/*.tsx` props 
 | State                         | Upstream selector cue                                                    | foldcn equivalent                                                                                             | How to verify (agent-browser)                                                                                                                             |
 | ----------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `idle` (default)              | no pseudo / base `cn-*`                                                  | same                                                                                                          | `agent-browser open <url>` → `agent-browser snapshot -s '[data-slot="<name>"]'` → `agent-browser screenshot "[data-slot=\"<name>\"]" idle.png`            |
-| `hover`                       | `hover:` / `group-hover:` / `data-hover`                                 | same (or `hover:` via `cn-compat.css` twin)                                                                   | `snapshot -s` to get ref → `agent-browser hover <ref>` → `screenshot` ; also `agent-browser get styles <ref>` should show `hover:` utility                |
+| `hover`                       | `hover:` / `group-hover:` / `data-hover`                                 | same (or `hover:` via `cn-compat.css` twin)                                                                   | `snapshot -s` to get ref → `agent-browser hover @eN` → `screenshot` ; also `agent-browser get styles @eN` should show `hover:` utility                |
 | `focus-visible`               | `focus-visible:` / `focus:` / `data-focus`                               | same                                                                                                          | `snapshot` → `agent-browser focus <ref>` → `screenshot`; `snapshot -i` should list `:focus-visible` ring                                                  |
 | `active` / `pressed`          | `active:` / `data-active` / `aria-pressed`                               | `data-active` (foldkit) vs `data-highlighted`/`data-active` upstream — verify mapping in `resolve-styles.mjs` | `agent-browser click <ref>` (hold) or `agent-browser eval "el.setAttribute('data-active','')"` → `screenshot`                                             |
 | `disabled`                    | `disabled:` / `aria-disabled:` / `data-disabled:`                        | `aria-disabled:` + `data-disabled:` twins (native never matches — see deriving-from-base.md)                  | render fixture with `isDisabled:true` → `snapshot` shows `aria-disabled="true"` → `screenshot`                                                            |
@@ -98,16 +98,17 @@ FOLDCN_URL=http://localhost:5173 SHADCN_URL=http://localhost:3000 node .agents/s
 
 For each paired component × applicable state × theme (`light`, `dark`) × style (`default` minimum, `--all-styles` for all 9):
 
-- Render foldcn via `packages/web` item page (`/#Item/<name>`) or resolved fixture page, and upstream via local `apps/v4` dev server or `https://ui.shadcn.com/docs/components/<name>` reference (when no checkout, upstream pages are discovered via `web_search` for `site:ui.shadcn.com/docs/components <name>` and fetched via `agent-browser read` / `fetch-upstream.mjs` — see `references/upstream-source.md`).
+- Render foldcn via `packages/web` item page (`/docs/<name>`) or resolved fixture page, and upstream via local `apps/v4` dev server or `https://ui.shadcn.com/docs/components/<name>` reference (when no checkout, upstream pages are discovered via `web_search` for `site:ui.shadcn.com/docs/components <name>` and fetched via `agent-browser read` / `fetch-upstream.mjs` — see `references/upstream-source.md`).
 - Fixed viewport via `agent-browser set viewport 1280 800`, color scheme via `agent-browser set media light|dark`, reduced motion via `agent-browser set media <scheme> reduced-motion` for idle snapshots (allow motion for `data-enter`/`data-leave`). Same font loading.
 - Capture element screenshot of `[data-slot="<name>"]` root (or component container) — not full page — at `png` with `agent-browser screenshot "[data-slot=\"<name>\"]" <out.png>` (element crop avoids chrome drift). Drive state first via scoped snapshot + ref interaction:
   ```bash
   export AGENT_BROWSER_SESSION="$(agent-browser session id --scope worktree --prefix verify-parity)"
-  agent-browser --session "$SESSION" open "$FOLDCN_URL/#Item/<name>"
-  agent-browser --session "$SESSION" snapshot -s '[data-slot="<name>"]' -i  # get ref
-  agent-browser --session "$SESSION" hover <ref>            # or focus/click per state
-  agent-browser --session "$SESSION" screenshot "[data-slot=\"<name>\"]" "$OUT/<state>/<theme>-<style>.png"
-  agent-browser --session "$SESSION" close
+  S="$AGENT_BROWSER_SESSION"
+  agent-browser --session "$S" open "$FOLDCN_URL/docs/<name>"
+  agent-browser --session "$S" snapshot -s '[data-slot="<name>"]' -i  # get @eN ref
+  agent-browser --session "$S" hover @eN            # or focus/click per state (re-snapshot after each mutation)
+  agent-browser --session "$S" screenshot "[data-slot=\"<name>\"]" "$OUT/<state>/<theme>-<style>.png"
+  agent-browser --session "$S" close
   ```
   Snapshot (`agent-browser snapshot -i --json`) is also used to assert state attributes directly (`aria-disabled`, `data-enter`, `data-active`) without pixels — so a missing visual is caught structurally even before pixel diff.
 - Evidence lands in `.tmp/visual-parity/<component>/<state>/<theme>-<style>.png` plus `diff.png` when a comparison was made. Paths are gitignored; the report references them.

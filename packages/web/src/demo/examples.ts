@@ -6,8 +6,10 @@ import aspectRatioViewSource from './views/aspect-ratio.ts?raw'
 import attachmentViewSource from './views/attachment.ts?raw'
 import avatarViewSource from './views/avatar.ts?raw'
 import badgeViewSource from './views/badge.ts?raw'
+import bubbleViewSource from './views/bubble.ts?raw'
 import buttonViewSource from './views/button.ts?raw'
 import calendarViewSource from './views/calendar.ts?raw'
+import carouselViewSource from './views/carousel.ts?raw'
 import cardViewSource from './views/card.ts?raw'
 import checkboxViewSource from './views/checkbox.ts?raw'
 import comboboxViewSource from './views/combobox.ts?raw'
@@ -31,8 +33,10 @@ import menuViewSource from './views/menu.ts?raw'
 import messageScrollerViewSource from './views/message-scroller.ts?raw'
 import nativeSelectViewSource from './views/native-select.ts?raw'
 import navViewSource from './views/nav.ts?raw'
+import paginationViewSource from './views/pagination.ts?raw'
 import popoverViewSource from './views/popover.ts?raw'
 import progressViewSource from './views/progress.ts?raw'
+import questionnaireViewSource from './views/questionnaire.ts?raw'
 import radioGroupViewSource from './views/radio-group.ts?raw'
 import selectViewSource from './views/select.ts?raw'
 import separatorViewSource from './views/separator.ts?raw'
@@ -59,6 +63,7 @@ import sidebarViewSource from './views/sidebar.ts?raw'
 import tableViewSource from './views/table.ts?raw'
 import commandViewSource from './views/command.ts?raw'
 import resizableViewSource from './views/resizable.ts?raw'
+import scrollAreaViewSource from './views/scroll-area.ts?raw'
 import switchViewSource from './views/switch.ts?raw'
 import tabsViewSource from './views/tabs.ts?raw'
 import textareaViewSource from './views/textarea.ts?raw'
@@ -109,10 +114,20 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     code: badgeViewSource,
     githubUrl: gh('src/demo/views/badge.ts'),
   },
+  bubble: {
+    path: 'src/demo/views/bubble.ts',
+    code: bubbleViewSource,
+    githubUrl: gh('src/demo/views/bubble.ts'),
+  },
   button: {
     path: 'src/demo/views/button.ts',
     code: buttonViewSource,
     githubUrl: gh('src/demo/views/button.ts'),
+  },
+  carousel: {
+    path: 'src/demo/views/carousel.ts',
+    code: carouselViewSource,
+    githubUrl: gh('src/demo/views/carousel.ts'),
   },
   calendar: {
     path: 'src/demo/views/calendar.ts',
@@ -224,6 +239,11 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     code: navViewSource,
     githubUrl: gh('src/demo/views/nav.ts'),
   },
+  pagination: {
+    path: 'src/demo/views/pagination.ts',
+    code: paginationViewSource,
+    githubUrl: gh('src/demo/views/pagination.ts'),
+  },
   popover: {
     path: 'src/demo/views/popover.ts',
     code: popoverViewSource,
@@ -233,6 +253,11 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     path: 'src/demo/views/progress.ts',
     code: progressViewSource,
     githubUrl: gh('src/demo/views/progress.ts'),
+  },
+  questionnaire: {
+    path: 'src/demo/views/questionnaire.ts',
+    code: questionnaireViewSource,
+    githubUrl: gh('src/demo/views/questionnaire.ts'),
   },
   'radio-group': {
     path: 'src/demo/views/radio-group.ts',
@@ -373,6 +398,11 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     path: 'src/demo/views/resizable.ts',
     code: resizableViewSource,
     githubUrl: gh('src/demo/views/resizable.ts'),
+  },
+  'scroll-area': {
+    path: 'src/demo/views/scroll-area.ts',
+    code: scrollAreaViewSource,
+    githubUrl: gh('src/demo/views/scroll-area.ts'),
   },
   switch: {
     path: 'src/demo/views/switch.ts',
