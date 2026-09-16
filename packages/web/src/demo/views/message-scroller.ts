@@ -5,6 +5,7 @@ import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import * as MessageScroller from '../../generated/registry/ui/message-scroller'
+import { Bubble } from '../../generated/registry/ui/bubble'
 import { button } from '../../generated/registry/ui/button'
 import { inputClass } from '../../generated/registry/ui/input'
 import { icon } from '../../generated/registry/lib/icons'
@@ -87,38 +88,28 @@ const mintId = (prefix: string): string => {
 }
 
 const userBubble = (message: ChatMessage, h: HtmlBuilder<AppMessage>): Html =>
-  h.div(
-    [h.Class('flex justify-end')],
-    [
-      h.div(
-        [
-          h.Class(
-            'max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm text-primary-foreground',
-          ),
-        ],
-        [message.text],
-      ),
-    ],
+  Bubble<AppMessage>(
+    { align: 'end' },
+    [Bubble.content<AppMessage>({ className: 'whitespace-pre-wrap' }, [message.text], h)],
+    h,
   )
 
 const assistantBubble = (message: ChatMessage, h: HtmlBuilder<AppMessage>): Html =>
-  h.div(
-    [h.Class('flex justify-start')],
+  Bubble<AppMessage>(
+    { variant: 'secondary', align: 'start' },
     [
-      h.div(
-        [
-          h.Class(
-            'max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-sm',
-          ),
-        ],
+      Bubble.content<AppMessage>(
+        { className: 'whitespace-pre-wrap' },
         [
           message.text,
           ...(message.isStreaming
             ? [h.span([h.Class('animate-pulse text-muted-foreground')], ['▍'])]
             : []),
         ],
+        h,
       ),
     ],
+    h,
   )
 
 export const messageScrollerView = (model: Model, h: HtmlBuilder<AppMessage>): Html => {
