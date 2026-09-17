@@ -1,10 +1,9 @@
 import { Update } from 'foldkit'
-import { Effect, Match as M, Option } from 'effect'
+import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
 import { evo } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import { childAttributes, type Html, type HtmlBuilder } from 'foldkit/html'
-import * as Mount from 'foldkit/mount'
 
 import { Combobox as FoldkitCombobox } from '@foldkit/ui'
 
@@ -19,51 +18,6 @@ import { X } from 'lucide'
 const Message = defineMessageUnion({
   GotComboboxMessage: { message: combobox.Message },
   GotMultiComboboxMessage: { message: combobox.Message },
-})
-
-// The shared combobox primitive anchors its popup to the input wrapper. In
-// multiple mode that wrapper is only the space after the chips, while Base UI
-// anchors the popup to the complete ComboboxChips control. Keep the primitive
-// behavior and synchronize the popup's horizontal geometry to the demo's
-// full-width input group instead of translating it by the current chip width.
-export const AlignMultiComboboxGroup = Mount.define('AlignMultiComboboxGroup', {
-  messages: [Message.GotMultiComboboxMessage],
-  execute: ({ element }) =>
-    Effect.gen(function* () {
-      const cleanup = yield* Effect.sync(() => {
-        const align = () => {
-          if (!(element instanceof HTMLElement)) return
-          const group = document.getElementById('combobox-multi-input-group')
-          const popup = document.getElementById('combobox-multi-demo-items')
-          if (!group || !popup) return
-          const groupRect = group.getBoundingClientRect()
-          const position = getComputedStyle(popup).position
-          const containingBlock = popup.offsetParent?.getBoundingClientRect()
-          const left =
-            position === 'fixed' ? groupRect.left : groupRect.left - (containingBlock?.left ?? 0)
-          popup.style.setProperty('left', `${left}px`, 'important')
-          popup.style.setProperty('width', `${groupRect.width}px`, 'important')
-          popup.style.setProperty('visibility', 'visible', 'important')
-        }
-        const observer = new MutationObserver(align)
-        const resizeObserver = new ResizeObserver(align)
-        align()
-        observer.observe(element, { childList: true, subtree: true, attributes: true })
-        resizeObserver.observe(element)
-        window.addEventListener('resize', align)
-        window.addEventListener('scroll', align, true)
-        return () => {
-          observer.disconnect()
-          resizeObserver.disconnect()
-          window.removeEventListener('resize', align)
-          window.removeEventListener('scroll', align, true)
-        }
-      })
-      yield* Effect.acquireRelease(Effect.succeed(cleanup), (release) => Effect.sync(release))
-      return Message.GotMultiComboboxMessage({
-        message: combobox.Message.CompletedAnchorCombobox(),
-      })
-    }),
 })
 
 const FRAMEWORKS: ReadonlyArray<Framework> = ['Next.js', 'SvelteKit', 'Nuxt.js', 'Remix', 'Astro']
@@ -130,8 +84,7 @@ export const comboboxView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['Multi']),
           h.div(
             [
-              h.Id('combobox-multi-input-group'),
-              h.OnMount(AlignMultiComboboxGroup()),
+              h.Id('combobox-multi-demo-input-wrapper'),
               h.Class('flex w-full max-w-xs flex-wrap items-center gap-1 rounded-lg border p-1'),
             ],
             [
@@ -187,6 +140,7 @@ export const comboboxView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                   // width, then wrap only after the row has no room left.
                   wrapperClass: 'min-w-16 flex-1',
                   inputWrapperClass: 'w-full min-w-0',
+                  inputWrapperAttributes: [h.Id('combobox-multi-input-inner')],
                   inputAttributes: childAttributes([
                     h.OnInput(() =>
                       Message.GotMultiComboboxMessage({

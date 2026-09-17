@@ -128,6 +128,7 @@ type CommonConfig<Item extends string> = Readonly<{
   backdropClass?: string
   wrapperClass?: string
   inputWrapperClass?: string
+  inputWrapperAttributes?: ReadonlyArray<Attribute<unknown>>
 }>
 
 const common = <Item extends string>(config: CommonConfig<Item>) => ({
@@ -174,6 +175,7 @@ const common = <Item extends string>(config: CommonConfig<Item>) => ({
   inputWrapperClassName: cn(comboboxInputWrapperClass, config.inputWrapperClass),
   inputWrapperAttributes: childAttributes([
     inertHtml.DataAttribute('slot', 'combobox-input-wrapper'),
+    ...(config.inputWrapperAttributes ?? []),
   ]),
   backdropClassName: cn(comboboxBackdropClass, config.backdropClass),
   className: cn(comboboxWrapperClass, config.wrapperClass),

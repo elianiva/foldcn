@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { Scene } from 'foldkit/test'
 import * as FoldkitCombobox from '@foldkit/ui/combobox'
 import * as Combobox from '../../registry/registry/default/ui/combobox'
-import { AlignMultiComboboxGroup, comboboxView } from './demo/views/combobox'
+import { comboboxView } from './demo/views/combobox'
 import * as Demo from './demo/assemble'
 
 const items = ['Next.js', 'SvelteKit', 'Nuxt.js'] as const
@@ -78,15 +78,6 @@ describe('combobox rendered contract', () => {
       Scene.Mount.resolve(
         FoldkitCombobox.AnchorCombobox,
         FoldkitCombobox.Message.CompletedAnchorCombobox(),
-      ),
-      Scene.Mount.resolve(
-        // The demo mount only aligns the popup; its completion is a regular
-        // multi-combobox message and must not consume option selection.
-        AlignMultiComboboxGroup,
-        {
-          _tag: 'GotMultiComboboxMessage',
-          message: Combobox.Message.CompletedAnchorCombobox(),
-        },
       ),
       Scene.Mount.resolve(
         FoldkitCombobox.AttachComboboxPreventBlur,
