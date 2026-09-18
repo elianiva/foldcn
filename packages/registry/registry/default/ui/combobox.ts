@@ -58,12 +58,12 @@ export const comboboxButtonClass =
   'absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4'
 
 export const comboboxItemsClass =
-  'cn-combobox-content cn-combobox-content-logical cn-menu-target cn-menu-translucent group/combobox-content relative isolate z-50 max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) data-[chips=true]:min-w-(--anchor-width)'
+  'cn-combobox-content cn-combobox-content-logical cn-menu-target cn-menu-translucent group/combobox-content relative isolate z-50 max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) data-[chips=true]:min-w-(--anchor-width)'
 
 export const comboboxItemsAnimatedClass = comboboxItemsClass
 
 export const comboboxItemClass =
-  'cn-combobox-item relative flex w-full cursor-default items-center outline-hidden select-none data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+  'cn-combobox-item relative flex w-full cursor-default items-center pl-8 outline-hidden select-none data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
 
 export const comboboxGroupHeadingClass = 'cn-combobox-label'
 
@@ -87,7 +87,7 @@ export const comboboxChevron = <M>(h: HtmlBuilder<M>): Html =>
   h.span([h.Class('shrink-0 text-muted-foreground')], [icon(h, ChevronDown, 'size-4')])
 
 export const comboboxCheck = <M>(h: HtmlBuilder<M>): Html =>
-  h.span([h.Class('absolute right-2 flex size-4 items-center justify-center')], [icon(h, Check)])
+  h.span([h.Class('absolute left-2 flex size-4 items-center justify-center')], [icon(h, Check)])
 
 type CommonConfig<Item extends string> = Readonly<{
   items: ReadonlyArray<Item>

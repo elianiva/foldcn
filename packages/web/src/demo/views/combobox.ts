@@ -68,7 +68,7 @@ export const comboboxView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                     className: isActive ? 'font-medium' : '',
                     content: h.span(
                       [h.Class('flex w-full items-center justify-between gap-2')],
-                      [h.span([], [item]), ...(isSelected ? [h.span([], ['✓'])] : [])],
+                      [h.span([], [item]), ...(isSelected ? [combobox.comboboxCheck(h)] : [])],
                     ),
                   }),
                 }),
@@ -85,7 +85,9 @@ export const comboboxView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
           h.div(
             [
               h.Id('combobox-multi-demo-input-wrapper'),
-              h.Class('flex w-full max-w-xs flex-wrap items-center gap-1 rounded-lg border p-1'),
+              h.Class(
+                'flex w-full max-w-xs flex-wrap items-center gap-1 rounded-md border p-1 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50',
+              ),
             ],
             [
               h.div(
@@ -140,7 +142,6 @@ export const comboboxView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                   // width, then wrap only after the row has no room left.
                   wrapperClass: 'min-w-16 flex-1',
                   inputWrapperClass: 'w-full min-w-0',
-                  inputWrapperAttributes: [h.Id('combobox-multi-input-inner')],
                   inputAttributes: childAttributes([
                     h.OnInput(() =>
                       Message.GotMultiComboboxMessage({
