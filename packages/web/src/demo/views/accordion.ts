@@ -12,6 +12,7 @@ import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
 const Message = defineMessageUnion({
+  GotAccordionPeekMessage: { message: accordion.Message },
   GotAccordionBasicMessage: { message: accordion.Message },
   GotAccordionMultipleMessage: { message: accordion.Message },
   GotAccordionBordersMessage: { message: accordion.Message },
@@ -123,6 +124,37 @@ export const accordionView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
     [h.Class('flex w-full flex-col gap-8')],
     [
+      h.section(
+        [h.DataAttribute('peek-example', '')],
+        [
+          h.h3([h.Class('mb-3 font-medium')], ['Collapsed preview']),
+          h.submodel({
+            slotId: model.accordionPeek.id,
+            model: model.accordionPeek,
+            view: accordion.view,
+            viewInputs: {
+              items: [
+                {
+                  id: 'accordion-peek-item',
+                  title: 'Collapsed preview',
+                  peek: '2.5rem',
+                  content: h.div(
+                    [],
+                    [
+                      h.p([], ['Preview this content before opening.']),
+                      h.a(
+                        [h.Href('#preview-details'), h.DataAttribute('peek-link', '')],
+                        ['Read the details'],
+                      ),
+                    ],
+                  ),
+                },
+              ],
+            },
+            toParentMessage: (message) => Message.GotAccordionPeekMessage({ message }),
+          }),
+        ],
+      ),
       h.div(
         [h.Class('flex w-full flex-col gap-2')],
         [
@@ -281,7 +313,16 @@ const folds = {
   ),
 }
 
+const foldPeek = Update.foldChild({
+  update: accordion.update,
+  read: (model: State) => Option.some(model.accordionPeek),
+  write: (model, next) => evo(model, { accordionPeek: () => next }),
+  toParentMessage: (message) => Message.GotAccordionPeekMessage({ message }),
+  foldOutMessage: () => (model: State) => ({ model }),
+})
+
 const fields = {
+  accordionPeek: accordion.Model,
   accordionBasic: accordion.Model,
   accordionMultiple: accordion.Model,
   accordionBorders: accordion.Model,
@@ -295,6 +336,7 @@ type State = typeof stateSchema.Type
 export const slice = defineSlice({
   fields,
   init: {
+    accordionPeek: accordion.init({ id: 'accordion-peek', value: [false] }),
     accordionBasic: accordion.init({
       id: 'accordion-basic',
       type: 'single',
@@ -322,6 +364,7 @@ export const slice = defineSlice({
     }),
   },
   messages: [
+    Message.GotAccordionPeekMessage,
     Message.GotAccordionBasicMessage,
     Message.GotAccordionMultipleMessage,
     Message.GotAccordionBordersMessage,
@@ -329,6 +372,8 @@ export const slice = defineSlice({
     Message.GotAccordionDisabledMessage,
   ],
   handlers: (model: State) => ({
+    GotAccordionPeekMessage: (p: typeof Message.GotAccordionPeekMessage.Type): UpdateReturn =>
+      foldPeek(model, p.message),
     GotAccordionBasicMessage: (p: typeof Message.GotAccordionBasicMessage.Type): UpdateReturn =>
       folds.basic(model, p.message),
     GotAccordionMultipleMessage: (

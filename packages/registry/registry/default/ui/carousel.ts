@@ -2,7 +2,7 @@
  *  Model/Message/init/update/subscriptions into your app:
  *  `import * as Carousel from '@/components/ui/carousel'`
  */
-import { Effect, Option, Queue, Schema as S, Stream } from 'effect'
+import { Effect, Option, Queue, Schema as S, Stream, Match } from 'effect'
 import { Command, Subscription, Update } from 'foldkit'
 import EmblaCarousel, {
   type EmblaCarouselType,
@@ -195,16 +195,22 @@ const selected = (
 /** Processes a carousel message and returns the next model, commands, and an
  *  optional out-message for the parent. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'PressedPrevious':
-      return { model, commands: [ScrollPrevious({ id: model.id })] }
-    case 'PressedNext':
-      return { model, commands: [ScrollNext({ id: model.id })] }
-    case 'SelectedSlide':
-      return selected(model, message.index, message.canScrollPrev, message.canScrollNext)
-    case 'CompletedScrollCommand':
-      return { model }
-  }
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      PressedPrevious: () => {
+        return { model, commands: [ScrollPrevious({ id: model.id })] }
+      },
+      PressedNext: () => {
+        return { model, commands: [ScrollNext({ id: model.id })] }
+      },
+      SelectedSlide: (message) => {
+        return selected(model, message.index, message.canScrollPrev, message.canScrollNext)
+      },
+      CompletedScrollCommand: () => {
+        return { model }
+      },
+    }),
+  )
 }
 
 // COMMANDS

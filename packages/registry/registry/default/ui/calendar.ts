@@ -1,3 +1,4 @@
+import type { ViewLabels } from '@foldkit/ui/calendar'
 /** Stateful submodel — import the whole module as a namespace and wire its
  *  Model/Message/init/update into your app:
  *  `import * as Calendar from '@/components/ui/calendar'`
@@ -253,7 +254,8 @@ export type StyledViewInputs = Readonly<{
   maybeSelectedDate: Option.Option<CalendarDate>
   containerClass?: string
   showOutsideDays?: boolean
-}>
+}> &
+  ViewLabels
 
 /** Styled calendar `toView` callback for the Days/Months/Years modes. Shared
  *  with the date picker's popover panel. */
@@ -275,6 +277,17 @@ export const styledViewInputs = <M>(
   h: HtmlBuilder<M>,
 ): ViewInputs => ({
   maybeSelectedDate: viewInputs.maybeSelectedDate,
+  previousMonthLabel: viewInputs.previousMonthLabel,
+  nextMonthLabel: viewInputs.nextMonthLabel,
+  previousYearsPageLabel: viewInputs.previousYearsPageLabel,
+  nextYearsPageLabel: viewInputs.nextYearsPageLabel,
+  daysHeadingButtonLabel: viewInputs.daysHeadingButtonLabel,
+  monthsHeadingButtonLabel: viewInputs.monthsHeadingButtonLabel,
+  toDaysGridLabel: viewInputs.toDaysGridLabel,
+  toWeekLabel: viewInputs.toWeekLabel,
+  toMonthsGridLabel: viewInputs.toMonthsGridLabel,
+  toYearsGridLabel: viewInputs.toYearsGridLabel,
+
   toView: calendarToView(h, {
     containerClass: viewInputs.containerClass,
     showOutsideDays: viewInputs.showOutsideDays ?? true,

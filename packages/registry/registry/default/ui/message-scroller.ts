@@ -2,7 +2,7 @@
  *  Model/Message/init/update/subscriptions into your app:
  *  `import * as MessageScroller from '@/components/ui/message-scroller'`
  */
-import { Cause, Effect, Queue, Schema as S, Stream } from 'effect'
+import { Cause, Effect, Queue, Schema as S, Stream, Match } from 'effect'
 import * as Command from 'foldkit/command'
 import type { Html } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
@@ -325,58 +325,61 @@ const initialPosition = (model: Model, snapshot: Model): UpdateReturn => {
 /** Processes a message-scroller message and returns the next model and any
  *  scroll commands. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'SyncedViewport': {
-      const snapshot = evo(model, {
-        scrollTop: () => message.scrollTop,
-        viewportHeight: () => message.viewportHeight,
-        contentHeight: () => message.contentHeight,
-        measured: () => true,
-      })
-      if (!model.initialPositionApplied && message.contentHeight > 0) {
-        return initialPosition(model, snapshot)
-      }
-      // Follow the live end only while the reader already is there: the
-      // previous snapshot decides, so scrolling away is a deliberate opt-out.
-      const wasAtEnd =
-        model.measured &&
-        endScrollTop(model.viewportHeight, model.contentHeight) - model.scrollTop <=
-          model.scrollEdgeThreshold
-      const grew = model.measured && message.contentHeight > model.contentHeight + 0.5
-      if (model.autoScroll && wasAtEnd && grew) {
-        return issueScroll(
-          snapshot,
-          endScrollTop(message.viewportHeight, message.contentHeight),
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      SyncedViewport: (message) => {
+        const snapshot = evo(model, {
+          scrollTop: () => message.scrollTop,
+          viewportHeight: () => message.viewportHeight,
+          contentHeight: () => message.contentHeight,
+          measured: () => true,
+        })
+        if (!model.initialPositionApplied && message.contentHeight > 0) {
+          return initialPosition(model, snapshot)
+        }
+        const wasAtEnd =
+          model.measured &&
+          endScrollTop(model.viewportHeight, model.contentHeight) - model.scrollTop <=
+            model.scrollEdgeThreshold
+        const grew = model.measured && message.contentHeight > model.contentHeight + 0.5
+        if (model.autoScroll && wasAtEnd && grew) {
+          return issueScroll(
+            snapshot,
+            endScrollTop(message.viewportHeight, message.contentHeight),
+            'auto',
+          )
+        }
+        return { model: snapshot }
+      },
+      AppendedScrollAnchor: (message) => {
+        return issueScrollToMessage(
+          model,
+          message.messageId,
+          'start',
+          SCROLL_PREVIOUS_ITEM_PEEK,
           'auto',
         )
-      }
-      return { model: snapshot }
-    }
-    case 'AppendedScrollAnchor':
-      return issueScrollToMessage(
-        model,
-        message.messageId,
-        'start',
-        SCROLL_PREVIOUS_ITEM_PEEK,
-        'auto',
-      )
-    case 'CompletedApplyScroll':
-      return {
-        model:
-          message.version === model.pendingScrollVersion
-            ? evo(model, { autoscrolling: () => false })
-            : model,
-      }
-    case 'RequestedScroll':
-      if (!model.measured) return { model }
-      return message.direction === 'end'
-        ? issueScroll(
-            model,
-            endScrollTop(model.viewportHeight, model.contentHeight),
-            message.behavior,
-          )
-        : issueScroll(model, 0, message.behavior)
-  }
+      },
+      CompletedApplyScroll: (message) => {
+        return {
+          model:
+            message.version === model.pendingScrollVersion
+              ? evo(model, { autoscrolling: () => false })
+              : model,
+        }
+      },
+      RequestedScroll: (message) => {
+        if (!model.measured) return { model }
+        return message.direction === 'end'
+          ? issueScroll(
+              model,
+              endScrollTop(model.viewportHeight, model.contentHeight),
+              message.behavior,
+            )
+          : issueScroll(model, 0, message.behavior)
+      },
+    }),
+  )
 }
 
 // PUBLIC SCROLL COMMANDS

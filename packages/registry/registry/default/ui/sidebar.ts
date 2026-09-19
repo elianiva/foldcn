@@ -243,19 +243,15 @@ export const subscriptions = Subscription.make<Model, Message>()((entry) => {
         modelToDependencies: () => ({ isListening: true }),
         dependenciesToStream: ({ isListening }) =>
           Stream.when(
-            Subscription.fromEventFilterMap<KeyboardEvent, Message>({
-              target: window,
-              type: 'keydown',
-              toMessage: (event) => {
-                if (
-                  event.key.toLowerCase() === SIDEBAR_KEYBOARD_SHORTCUT &&
-                  (event.metaKey || event.ctrlKey)
-                ) {
-                  event.preventDefault()
-                  return Option.some(Message.Toggled())
-                }
-                return Option.none()
-              },
+            Subscription.keyBindings({
+              bindings: [
+                {
+                  keys: `Mod+${SIDEBAR_KEYBOARD_SHORTCUT}`,
+                  whileTyping: 'Allow',
+                  whenRepeated: 'Ignore',
+                  toMessage: () => Message.Toggled(),
+                },
+              ],
             }),
             Effect.sync(() => isListening),
           ),
@@ -493,6 +489,7 @@ export const view = defineView<Model, Message, ProviderViewInputs>((model, viewI
     // Custom ViewInputs that adds upstream's data-mobile / data-slot / data-sidebar
     // to the Sheet panel (Sheet.styledViewInputs would emit data-slot="sheet-content").
     const mobileSheetInputs: Sheet.ViewInputs = {
+      hasDescription: true,
       toView: ({
         dialog,
         backdrop,

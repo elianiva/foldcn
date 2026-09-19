@@ -43,6 +43,7 @@ export const checkbox = <M>(config: CheckboxConfig<M>, h: HtmlBuilder<M>): Html 
   FoldkitCheckbox.view<M>(
     {
       id: config.id,
+      hasDescription: config.description !== undefined,
       isChecked: config.isChecked,
       onToggle: config.onToggle,
       isDisabled: config.isDisabled,

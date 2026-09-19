@@ -1,7 +1,5 @@
 import { Subscription } from 'foldkit'
 
-import { subscriptions as commandSubscriptions } from './views/command'
-
 import type { Model, Message } from './assemble'
 import { subscriptions as carouselSubscriptions } from './views/carousel'
 import { subscriptions as dragAndDropSubscriptions } from './views/drag-and-drop'
@@ -15,7 +13,6 @@ import { subscriptions as virtualListSubscriptions } from './views/virtual-list'
 
 export const subscriptions = Subscription.aggregate<Model, Message>()(
   carouselSubscriptions,
-  commandSubscriptions,
   dragAndDropSubscriptions,
   drawerSubscriptions,
   messageScrollerSubscriptions,

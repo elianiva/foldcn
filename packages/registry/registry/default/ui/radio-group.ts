@@ -7,12 +7,22 @@ import type { Option } from 'effect/Option'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
 import { cn } from '@/lib/utils'
+import {
+  fieldBaseClass,
+  fieldContentClass,
+  fieldDescriptionClass,
+  fieldLabelClass,
+  fieldOrientationClasses,
+  fieldTitleClass,
+  labelClass,
+} from './fieldset'
 
 /**
  * Two rendering paths in `styledViewInputs`:
  *  - `optionLabel` (+ optional `optionDescription`) → upstream anatomy: a
  *    16px circle control carrying the foldkit attributes, an indicator dot
- *    mounted only while selected, and a wired label/description pair.
+ *    mounted only while selected, and a wired label/description pair. Set
+ *    `optionLayout` to compose the documented Field or Choice Card anatomy.
  *  - legacy `option` callback → consumer-owned row content inside a
  *    group-attributed wrapper (kept for backward compatibility).
  *
@@ -94,8 +104,12 @@ export type StyledViewInputs<M, Value extends string = string> = Readonly<{
    *  circle control with the indicator dot. */
   optionLabel?: (value: Value) => string
   optionDescription?: (value: Value) => string
+  /** `field` matches upstream's Description, Fieldset, Disabled, Invalid, and
+   * RTL examples. `choice-card` places the control at the end of a card row. */
+  optionLayout?: 'default' | 'field' | 'choice-card'
   orientation?: 'Horizontal' | 'Vertical'
   isOptionDisabled?: (value: Value, index: number) => boolean
+  isInvalid?: boolean
   isDisabled?: boolean
   isReadOnly?: boolean
   name?: string
@@ -108,44 +122,154 @@ const defaultOptionRow = <M, Value extends string>(
   labelText: string,
   descriptionText: string | undefined,
   optionClass: string | undefined,
+  isInvalid: boolean | undefined,
+  optionLayout: 'default' | 'field' | 'choice-card',
   h: HtmlBuilder<M>,
-): Html =>
-  h.label(
-    [h.Class(cn('flex w-full items-center gap-2', optionClass))],
+): Html => {
+  const isDisabled = info.isDisabled
+  const control = h.button(
     [
-      h.button(
-        [...info.option, h.DataAttribute('slot', 'radio-group-item'), h.Class(radioItemClass)],
-        info.isSelected
-          ? [
-              h.span(
-                [h.DataAttribute('slot', 'radio-group-indicator'), h.Class(radioIndicatorClass)],
-                [h.span([h.Class(radioDotClass)])],
-              ),
-            ]
-          : [],
-      ),
-      h.span(
-        [
-          ...info.label,
-          h.DataAttribute('slot', 'radio-group-item-label'),
-          h.Class(radioItemLabelClass),
-        ],
-        [labelText],
-      ),
-      ...(descriptionText === undefined
-        ? []
-        : [
-            h.span(
+      ...info.option,
+      ...(isDisabled ? [h.Disabled(true), h.Tabindex(-1)] : []),
+      ...(isInvalid ? [h.Attribute('aria-invalid', 'true')] : []),
+      h.DataAttribute('slot', 'radio-group-item'),
+      h.Class(radioItemClass),
+    ],
+    info.isSelected
+      ? [
+          h.span(
+            [h.DataAttribute('slot', 'radio-group-indicator'), h.Class(radioIndicatorClass)],
+            [h.span([h.Class(radioDotClass)])],
+          ),
+        ]
+      : [],
+  )
+
+  if (optionLayout === 'choice-card') {
+    return h.label(
+      [
+        h.DataAttribute('slot', 'field-label'),
+        h.Class(cn(labelClass, fieldLabelClass, optionClass)),
+      ],
+      [
+        h.div(
+          [
+            h.Role('group'),
+            h.DataAttribute('slot', 'field'),
+            h.DataAttribute('orientation', 'horizontal'),
+            ...(isDisabled ? [h.DataAttribute('disabled', 'true')] : []),
+            ...(isInvalid ? [h.DataAttribute('invalid', 'true')] : []),
+            h.Class(cn(fieldBaseClass, fieldOrientationClasses.horizontal)),
+          ],
+          [
+            h.div(
+              [h.DataAttribute('slot', 'field-content'), h.Class(fieldContentClass)],
               [
-                ...info.description,
-                h.DataAttribute('slot', 'radio-group-item-description'),
-                h.Class(radioItemDescriptionClass),
+                h.div(
+                  [...info.label, h.DataAttribute('slot', 'field-label'), h.Class(fieldTitleClass)],
+                  [labelText],
+                ),
+                ...(descriptionText === undefined
+                  ? []
+                  : [
+                      h.p(
+                        [
+                          ...info.description,
+                          h.DataAttribute('slot', 'field-description'),
+                          h.Class(cn(fieldDescriptionClass, 'cn-radio-group-field-description')),
+                        ],
+                        [descriptionText],
+                      ),
+                    ]),
               ],
-              [descriptionText],
             ),
-          ]),
+            control,
+          ],
+        ),
+      ],
+    )
+  }
+
+  const label = h.span(
+    [
+      ...info.label,
+      h.DataAttribute('slot', optionLayout === 'field' ? 'field-label' : 'radio-group-item-label'),
+      h.Class(
+        optionLayout === 'field'
+          ? cn(
+              labelClass,
+              fieldLabelClass,
+              descriptionText === undefined ? 'cn-radio-group-field-label' : undefined,
+            )
+          : radioItemLabelClass,
+      ),
+    ],
+    [labelText],
+  )
+
+  if (optionLayout === 'field') {
+    return h.label(
+      [
+        h.DataAttribute('slot', 'field'),
+        h.DataAttribute('orientation', 'horizontal'),
+        ...(isDisabled ? [h.DataAttribute('disabled', 'true')] : []),
+        ...(isInvalid ? [h.DataAttribute('invalid', 'true')] : []),
+        h.Class(cn(fieldBaseClass, fieldOrientationClasses.horizontal, optionClass)),
+      ],
+      [
+        control,
+        descriptionText === undefined
+          ? label
+          : h.span(
+              [h.DataAttribute('slot', 'field-content'), h.Class(fieldContentClass)],
+              [
+                label,
+                h.span(
+                  [
+                    ...info.description,
+                    h.DataAttribute('slot', 'field-description'),
+                    h.Class(cn(fieldDescriptionClass, 'cn-radio-group-field-description')),
+                  ],
+                  [descriptionText],
+                ),
+              ],
+            ),
+      ],
+    )
+  }
+
+  return h.label(
+    [
+      h.Class(
+        cn(
+          descriptionText === undefined
+            ? 'flex w-full items-center gap-2'
+            : 'cn-radio-group-description-row',
+          optionClass,
+        ),
+      ),
+    ],
+    [
+      control,
+      descriptionText === undefined
+        ? label
+        : h.span(
+            [h.Class('cn-radio-group-description-content')],
+            [
+              label,
+              h.span(
+                [
+                  ...info.description,
+                  h.DataAttribute('slot', 'radio-group-item-description'),
+                  h.Class(radioItemDescriptionClass),
+                ],
+                [descriptionText],
+              ),
+            ],
+          ),
     ],
   )
+}
 
 /** Build styled `RadioGroup.ViewInputs`. Pass your view's `h`. */
 export const styledViewInputs = <M, Value extends string = string>(
@@ -159,6 +283,8 @@ export const styledViewInputs = <M, Value extends string = string>(
     ariaLabel: viewInputs.ariaLabel,
     orientation: viewInputs.orientation,
     isOptionDisabled: viewInputs.isOptionDisabled,
+    hasOptionDescription: (value) =>
+      viewInputs.option === undefined && viewInputs.optionDescription?.(value) !== undefined,
     isDisabled: viewInputs.isDisabled,
     isReadOnly: viewInputs.isReadOnly,
     name: viewInputs.name,
@@ -182,6 +308,8 @@ export const styledViewInputs = <M, Value extends string = string>(
               return h.div(
                 [
                   ...option.option,
+                  ...(option.isDisabled ? [h.Tabindex(-1)] : []),
+                  ...(viewInputs.isInvalid ? [h.Attribute('aria-invalid', 'true')] : []),
                   h.DataAttribute('slot', 'radio-group-item'),
                   h.Class(cn(radioOptionClass, viewInputs.optionClass)),
                 ],
@@ -193,6 +321,8 @@ export const styledViewInputs = <M, Value extends string = string>(
               viewInputs.optionLabel?.(option.value) ?? String(option.value),
               viewInputs.optionDescription?.(option.value),
               viewInputs.optionClass,
+              viewInputs.isInvalid,
+              viewInputs.optionLayout ?? 'default',
               h,
             )
           }),

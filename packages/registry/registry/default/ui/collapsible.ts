@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as Collapsible from '@/components/ui/collapsible'`
  */
-import { Function, Schema as S } from 'effect'
+import { Function, Schema as S, Match } from 'effect'
 import { Disclosure as FoldkitDisclosure } from '@foldkit/ui'
 import type { Html } from 'foldkit/html'
 import * as Update from 'foldkit/update'
@@ -91,15 +91,19 @@ type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 /** Processes a collapsible message and returns the next model, commands, and
  *  an optional out-message for the parent. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'Toggled': {
-      const isOpen = !model.isOpen
-      return {
-        model: evo(model, { isOpen: () => isOpen }),
-        outMessage: OutMessage.ChangedOpen({ isOpen }),
-      }
-    }
-  }
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      Toggled: () => {
+        {
+          const isOpen = !model.isOpen
+          return {
+            model: evo(model, { isOpen: () => isOpen }),
+            outMessage: OutMessage.ChangedOpen({ isOpen }),
+          }
+        }
+      },
+    }),
+  )
 }
 
 // VIEW
@@ -107,6 +111,8 @@ export const update = (model: Model, message: Message): UpdateReturn => {
 export type ViewInputs = Readonly<{
   title: Child
   content: Child
+  /** Collapsed visual preview height. Enables animated panel rendering. */
+  peek?: string
   isDisabled?: boolean
   ariaLabel?: string
   ariaLabelledBy?: string
@@ -177,7 +183,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
                 ),
               ],
             ),
-            model.isAnimated
+            model.isAnimated || viewInputs.peek !== undefined
               ? animatePanel(
                   h.div(
                     [
@@ -187,6 +193,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
                     ],
                     [viewInputs.content],
                   ),
+                  { peek: viewInputs.peek },
                 )
               : model.isOpen
                 ? h.div(

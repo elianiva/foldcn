@@ -168,35 +168,29 @@ export const commandView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   )
 
 // cmdk also leaves the global shortcut to its caller. Scope this demo to its page.
-export const subscriptions = Subscription.make<State, typeof Message.ToggledCommandDialog.Type>()(
-  (entry) => ({
-    commandShortcut: entry(
-      { enabled: S.Boolean },
-      {
-        modelToDependencies: () => ({ enabled: true }),
-        dependenciesToStream: () =>
-          Subscription.fromEventFilterMap<KeyboardEvent, typeof Message.ToggledCommandDialog.Type>({
-            target: window,
-            type: 'keydown',
-            toMessage: (event) => {
-              if (
-                window.location.pathname === '/docs/command' &&
-                !event.defaultPrevented &&
-                !event.isComposing &&
-                !event.repeat &&
-                (event.metaKey || event.ctrlKey) &&
-                event.key.toLowerCase() === 'k'
-              ) {
-                event.preventDefault()
-                return Option.some(Message.ToggledCommandDialog())
-              }
-              return Option.none()
+export const subscriptions = Subscription.make<
+  State & { isCommandPage: boolean },
+  typeof Message.ToggledCommandDialog.Type
+>()((entry) => ({
+  commandShortcut: entry(
+    { isEnabled: S.Boolean },
+    {
+      modelToDependencies: (model) => ({ isEnabled: model.isCommandPage }),
+      dependenciesToStream: ({ isEnabled }) =>
+        Subscription.keyBindings({
+          bindings: [
+            {
+              keys: 'Mod+K',
+              isEnabled,
+              whileTyping: 'Allow',
+              whenRepeated: 'Ignore',
+              toMessage: () => Message.ToggledCommandDialog(),
             },
-          }),
-      },
-    ),
-  }),
-)
+          ],
+        }),
+    },
+  ),
+}))
 
 export const slice = defineSlice({
   fields,

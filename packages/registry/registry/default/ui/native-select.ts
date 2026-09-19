@@ -73,6 +73,7 @@ export const nativeSelect = <M>(config: NativeSelectConfig<M>, h: HtmlBuilder<M>
   FoldkitSelect.view<M>(
     {
       id: config.id,
+      hasDescription: config.description !== undefined,
       onChange: config.onChange,
       value: config.value,
       isDisabled: config.isDisabled,

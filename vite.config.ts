@@ -29,6 +29,7 @@ export default defineConfig({
     },
     plugins: ['typescript'],
     jsPlugins: [
+      { name: 'foldkit', specifier: '@foldkit/oxlint-plugin' },
       { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' },
       {
         name: 'anti-slop-effect',
@@ -36,6 +37,15 @@ export default defineConfig({
       },
     ],
     rules: {
+      'foldkit/acquire-release-constructs-in-acquire-body': 'error',
+      'foldkit/no-direct-submodel-state-update': 'error',
+      'foldkit/require-fold-for-child-update-result': 'error',
+      'foldkit/prefer-option-over-nullable-in-model': 'error',
+      'foldkit/no-route-query-constructor-default': 'error',
+      'foldkit/no-switch-on-message-tag': 'error',
+      'foldkit/prefer-command-mapmessage': 'error',
+      'foldkit/no-prevent-default-in-stream-operator': 'error',
+
       'no-unused-vars': [
         'error',
         {

@@ -175,17 +175,21 @@ const foldThemeToggleGroup = (model: Model, message: ToggleGroup.Message): Updat
     return { model: evo(model, { themeToggleGroup: () => next }), commands: mappedCommands }
   }
 
-  switch (outMessage._tag) {
-    case 'ChangedValue': {
-      const raw = outMessage.value[0]
-      const preference =
-        raw === 'Light' || raw === 'Dark' || raw === 'System'
-          ? raw
-          : // Ignore deselect (single toggle clears on re-click) — keep current preference.
-            (Option.getOrUndefined(model.maybeThemePreference) ?? 'System')
-      return applyThemePreference(model, preference)
-    }
-  }
+  return M.value(outMessage).pipe(
+    M.tagsExhaustive({
+      ChangedValue: (outMessage) => {
+        {
+          const raw = outMessage.value[0]
+          const preference =
+            raw === 'Light' || raw === 'Dark' || raw === 'System'
+              ? raw
+              : // Ignore deselect (single toggle clears on re-click) — keep current preference.
+                (Option.getOrUndefined(model.maybeThemePreference) ?? 'System')
+          return applyThemePreference(model, preference)
+        }
+      },
+    }),
+  )
 }
 
 /** Boot-time load of everything only the browser knows: the stored theme
@@ -226,19 +230,22 @@ const foldInstallTabs = (model: Model, message: Tabs.Message): UpdateReturn => {
     return { model: evo(model, { installTabs: () => next }), commands: mappedCommands }
   }
 
-  switch (outMessage._tag) {
-    case 'Selected':
-      return {
-        model: evo(model, {
-          installTabs: () => next,
-          selectedPackageManager: () => outMessage.value satisfies PackageManager,
-        }),
-        commands: [
-          ...mappedCommands,
-          SavePackageManager({ packageManager: outMessage.value satisfies PackageManager }),
-        ],
-      }
-  }
+  return M.value(outMessage).pipe(
+    M.tagsExhaustive({
+      Selected: (outMessage) => {
+        return {
+          model: evo(model, {
+            installTabs: () => next,
+            selectedPackageManager: () => outMessage.value satisfies PackageManager,
+          }),
+          commands: [
+            ...mappedCommands,
+            SavePackageManager({ packageManager: outMessage.value satisfies PackageManager }),
+          ],
+        }
+      },
+    }),
+  )
 }
 
 const foldNavSheet = (model: Model, message: Sheet.Message): UpdateReturn => {

@@ -1,7 +1,6 @@
 import { Option } from 'effect'
-import { Command } from 'foldkit'
 import type { Url } from 'foldkit'
-import type * as Update from 'foldkit/update'
+import * as Update from 'foldkit/update'
 import * as Tabs from '@foldkit/ui/tabs'
 
 import * as ToggleGroup from './generated/registry/ui/toggle-group'
@@ -24,26 +23,24 @@ export type InitReturn = Update.Return<Model, MessageType>
  * boot Command, which the runtime runs once hydration has completed.
  */
 export const init = (url: Url.Url): InitReturn => {
-  const { model: demo, commands: demoCommands = [] } = Demo.init()
-  const installTabs = Tabs.init({ id: 'install-tabs' })
-
-  return {
-    model: {
+  const initialized = Update.foldChildInit(Demo.init(), {
+    toParentModel: (demo): Model => ({
       route: parseRoute(url),
       maybeThemePreference: Option.none(),
       resolvedTheme: 'Light',
       maybeCopiedValue: Option.none(),
       demo,
-      installTabs,
+      installTabs: Tabs.init({ id: 'install-tabs' }),
       themeToggleGroup: ToggleGroup.init({ id: 'theme-toggle-group', type: 'single' }),
       navSheet: Sheet.init({ id: 'nav-sheet' }),
       selectedPackageManager: 'pnpm',
       selectedStyle: 'default',
       expandedCodeBlocks: new Set<string>(),
-    },
-    commands: [
-      LoadBrowserEnvironment(),
-      ...Command.mapMessages(demoCommands, (message) => Message.GotDemoMessage({ message })),
-    ],
+    }),
+    toParentMessage: (message) => Message.GotDemoMessage({ message }),
+  })
+  return {
+    ...initialized,
+    commands: [LoadBrowserEnvironment(), ...(initialized.commands ?? [])],
   }
 }

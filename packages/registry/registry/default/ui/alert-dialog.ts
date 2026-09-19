@@ -27,6 +27,8 @@ export type OutMessage = typeof OutMessage.Type
 
 export const init = (config: InitConfig): Model =>
   FoldkitDialog.init({ isAnimated: true, ...config })
+/** Starts open; fold the result into the parent with Update.foldChildInit. */
+export const boot = (config: InitConfig) => FoldkitDialog.boot({ isAnimated: true, ...config })
 export const update = FoldkitDialog.update
 export const open = FoldkitDialog.open
 export const close = FoldkitDialog.close
@@ -204,6 +206,8 @@ export type AlertDialogContent<M> = Readonly<{
 }>
 
 export type StyledViewInputs<M> = Readonly<{
+  /** Set when content renders the description element. */
+  hasDescription?: boolean
   content: (render: AlertDialogContent<M>, h: HtmlBuilder<M>) => ReadonlyArray<Child>
   className?: string
   backdropClass?: string
@@ -219,6 +223,7 @@ export const styledViewInputs = <M>(
   viewInputs: StyledViewInputs<M>,
   h: HtmlBuilder<M>,
 ): FoldkitDialog.ViewInputs => ({
+  hasDescription: viewInputs.hasDescription,
   toView: ({ dialog, backdrop, panel, closeButton, title, description, isVisible }) =>
     h.dialog(
       [

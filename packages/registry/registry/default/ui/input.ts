@@ -43,6 +43,7 @@ export const input = <M>(config: InputConfig<M>, h: HtmlBuilder<M>): Html =>
   FoldkitInput.view<M>(
     {
       id: config.id,
+      hasDescription: config.description !== undefined,
       onInput: config.onInput,
       value: config.value,
       isDisabled: config.isDisabled,
