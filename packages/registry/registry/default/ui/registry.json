@@ -302,7 +302,7 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "Stacked toast notifications \u2014 measured-height choreography matching Base UI: uniform collapsed stack with peek layers, hover-to-expand spread, limited visible entries, enter/exit motion, auto-dismiss and hover-pause \u2014 built on the @foldkit/ui Toast submodel (embed via h.submodel). \u26a0 No swipe-to-dismiss.",
+      "description": "Stacked toast notifications \u2014 measured-height choreography matching Base UI: uniform collapsed stack with peek layers, hover-to-expand spread, limited visible entries, enter/exit motion, auto-dismiss, hover-pause and opt-in swipe-to-dismiss \u2014 built on the @foldkit/ui Toast submodel (embed via h.submodel).",
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [
         {

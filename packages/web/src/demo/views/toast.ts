@@ -1,6 +1,6 @@
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { Command, Update } from 'foldkit'
+import { Command, Subscription, Update } from 'foldkit'
 import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
@@ -17,8 +17,11 @@ export const Message = defineMessageUnion({
   ClickedShowSuccessToast: {},
   ClickedShowWarningToast: {},
   ClickedShowErrorToast: {},
+  ClickedShowStickyToast: {},
   ClickedDismissAllToasts: {},
 })
+
+type ToastMessage = typeof Message.GotToastMessage.Type
 
 export const toastView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
@@ -33,7 +36,10 @@ export const toastView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
             [
               h.div(
                 [h.Class('flex flex-wrap gap-2')],
-                [hButton(h, 'Show toast', Message.ClickedShowInfoToast())],
+                [
+                  hButton(h, 'Show toast', Message.ClickedShowInfoToast()),
+                  hButton(h, 'Sticky toast', Message.ClickedShowStickyToast()),
+                ],
               ),
               h.div(
                 [h.Class('flex flex-wrap gap-2')],
@@ -146,9 +152,11 @@ const showToast = (
   variant: 'Info' | 'Success' | 'Warning' | 'Error',
   title: string,
   description: Option.Option<string>,
+  sticky = false,
 ): UpdateReturn => {
   const { model: next, commands = [] } = Toast.show(model.toast, {
     variant,
+    sticky,
     payload: { title, description },
   })
   return {
@@ -162,15 +170,21 @@ const fields = { toast: Toast.Model }
 const stateSchema = S.Struct(fields)
 type State = typeof stateSchema.Type
 
+export const subscriptions = Subscription.lift(Toast.subscriptions)<State, ToastMessage>({
+  toChildModel: (model) => model.toast,
+  toParentMessage: (message) => Message.GotToastMessage({ message }),
+})
+
 export const slice = defineSlice({
   fields,
-  init: { toast: Toast.init({ id: 'toast-demo' }) },
+  init: { toast: Toast.init({ id: 'toast-demo', swipeToDismiss: {} }) },
   messages: [
     Message.GotToastMessage,
     Message.ClickedShowInfoToast,
     Message.ClickedShowSuccessToast,
     Message.ClickedShowWarningToast,
     Message.ClickedShowErrorToast,
+    Message.ClickedShowStickyToast,
     Message.ClickedDismissAllToasts,
   ],
   handlers: (model: State) => ({
@@ -199,6 +213,10 @@ export const slice = defineSlice({
         'Failed to save',
         Option.some('Check your connection and try again.'),
       ),
+    // Sticky so a swipe can be tried by hand without racing the auto-dismiss
+    // timer.
+    ClickedShowStickyToast: (): UpdateReturn =>
+      showToast(model, 'Info', 'Sticky toast', Option.some('Drag me sideways to dismiss.'), true),
     ClickedDismissAllToasts: (): UpdateReturn => {
       const { model: next, commands = [] } = Toast.dismissAll(model.toast)
       return {
