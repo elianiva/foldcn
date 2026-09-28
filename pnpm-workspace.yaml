@@ -8,5 +8,13 @@ allowBuilds:
   sharp: true
   workerd: true
 # Keep the platform-node transitive peer on the same exact Effect RC.
+# Alchemy declares the Effect SQL integrations as optional peers with a
+# `>=4.0.0-rc.115` range; left alone pnpm resolves them to the newest rc, which
+# requires a newer `effect` peer. Pin them to the RC the app is built against.
+# Its `@effect/vitest` optional peer is unused and only ever accepts Vitest 5,
+# while the app is on Vitest 4, so drop it.
 overrides:
   '@effect/platform-node@4.0.0-rc.116>@effect/platform-node-shared': 4.0.0-rc.116
+  '@effect/sql-d1': 4.0.0-rc.116
+  '@effect/sql-sqlite-do': 4.0.0-rc.116
+  '@effect/vitest': '-'
