@@ -191,7 +191,7 @@ const measureHeights = (containerId: string) => {
   // offsetHeight per-card would each force a reflow. Cards whose heights
   // are already known render with the frontmost's forced height, so the
   // natural value is irrelevant — mergeHeights discards those reads.
-  const items = container.querySelectorAll(':scope > li[id]')
+  const items = container.querySelectorAll(':scope > [id]')
   for (const item of Array.from(items)) {
     if (!(item instanceof HTMLElement) || item.id === '') {
       continue
@@ -539,7 +539,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
           h.DataAttribute('slot', 'toast'),
           ...(placement.isExpanded ? [h.DataAttribute('expanded', '')] : []),
           ...(placement.isLimited ? [h.DataAttribute('limited', '')] : []),
-          // Docked inside the fixed <ol>'s 16px padding so the stack sits
+          // Docked inside the fixed container's 16px padding so the stack sits
           // inset from the viewport corner like upstream's viewport.
           h.Style({
             right: '1rem',

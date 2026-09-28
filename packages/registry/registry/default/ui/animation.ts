@@ -3,7 +3,7 @@
  *  `import * as Animation from '@/components/ui/animation'`
  */
 import { Animation as FoldkitAnimation } from '@foldkit/ui'
-import type { ChildAttribute, Html, TagName } from 'foldkit/html'
+import type { ChildAttribute, Html } from 'foldkit/html'
 
 import { cn } from '@/lib/utils'
 
@@ -46,7 +46,7 @@ export type StyledViewInputs = Readonly<{
   className?: string
   animateSize?: boolean
   attributes?: ReadonlyArray<ChildAttribute>
-  element?: TagName
+  element?: ViewInputs['element']
 }>
 
 /** Build styled `Animation.ViewInputs` with foldcn's enter/leave classes. */

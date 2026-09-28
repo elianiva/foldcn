@@ -58,6 +58,7 @@ export const dialogView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                 view: Dialog.view,
                 viewInputs: Dialog.styledViewInputs(
                   {
+                    hasDescription: true,
                     panelClass: DialogSizePanelClass[model.dialogSize],
                     content: ({ closeButton, title, description }, h) =>
                       model.dialogContent === 'scroll'

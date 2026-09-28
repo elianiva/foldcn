@@ -48,6 +48,7 @@ export const sheetView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                 view: Sheet.view,
                 viewInputs: Sheet.styledViewInputs(
                   {
+                    hasDescription: true,
                     side: model.sheetSide,
                     content: ({ closeButton, title, description }, h) => [
                       Sheet.header(

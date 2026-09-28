@@ -14,6 +14,7 @@ import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
 const Message = defineMessageUnion({
+  GotCollapsiblePeekMessage: { message: collapsible.Message },
   GotCollapsibleMessage: { message: collapsible.Message },
   GotCollapsibleComponentsMessage: { message: collapsible.Message },
   GotCollapsibleLibMessage: { message: collapsible.Message },
@@ -30,6 +31,32 @@ export const collapsibleView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
   h.div(
     [h.Class('flex w-full flex-col gap-8')],
     [
+      h.section(
+        [h.DataAttribute('peek-example', '')],
+        [
+          h.h3([h.Class('mb-3 font-medium')], ['Collapsed preview']),
+          h.submodel({
+            slotId: model.collapsiblePeek.id,
+            model: model.collapsiblePeek,
+            view: collapsible.view,
+            viewInputs: {
+              title: 'Collapsed preview',
+              peek: '2.5rem',
+              content: h.div(
+                [],
+                [
+                  h.p([], ['Preview this content before opening.']),
+                  h.a(
+                    [h.Href('#preview-details'), h.DataAttribute('peek-link', '')],
+                    ['Read the details'],
+                  ),
+                ],
+              ),
+            },
+            toParentMessage: (message) => Message.GotCollapsiblePeekMessage({ message }),
+          }),
+        ],
+      ),
       h.div(
         [h.Class('flex w-full flex-col gap-2')],
         [
@@ -210,7 +237,16 @@ const folds = {
   ),
 }
 
+const foldPeek = Update.foldChild({
+  update: collapsible.update,
+  read: (model: State) => Option.some(model.collapsiblePeek),
+  write: (model, next) => evo(model, { collapsiblePeek: () => next }),
+  toParentMessage: (message) => Message.GotCollapsiblePeekMessage({ message }),
+  foldOutMessage: () => (model: State) => ({ model }),
+})
+
 const fields = {
+  collapsiblePeek: collapsible.Model,
   collapsible: collapsible.Model,
   collapsibleComponents: collapsible.Model,
   collapsibleLib: collapsible.Model,
@@ -223,6 +259,7 @@ type State = typeof stateSchema.Type
 export const slice = defineSlice({
   fields,
   init: {
+    collapsiblePeek: collapsible.init({ id: 'collapsible-peek' }),
     collapsible: collapsible.init({ id: 'collapsible-demo', isAnimated: true }),
     collapsibleComponents: collapsible.init({
       id: 'collapsible-components',
@@ -233,12 +270,15 @@ export const slice = defineSlice({
     collapsibleSettings: collapsible.init({ id: 'collapsible-settings', isAnimated: true }),
   },
   messages: [
+    Message.GotCollapsiblePeekMessage,
     Message.GotCollapsibleMessage,
     Message.GotCollapsibleComponentsMessage,
     Message.GotCollapsibleLibMessage,
     Message.GotCollapsibleSettingsMessage,
   ],
   handlers: (model: State) => ({
+    GotCollapsiblePeekMessage: (p: typeof Message.GotCollapsiblePeekMessage.Type): UpdateReturn =>
+      foldPeek(model, p.message),
     GotCollapsibleMessage: (p: typeof Message.GotCollapsibleMessage.Type): UpdateReturn =>
       folds.main(model, p.message),
     GotCollapsibleComponentsMessage: (

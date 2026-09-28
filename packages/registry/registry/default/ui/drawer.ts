@@ -2,7 +2,7 @@
  *  Model/Message/init/update/subscriptions into your app:
  *  `import * as Drawer from '@/components/ui/drawer'`
  */
-import { Effect, Option, Schema as S, Stream } from 'effect'
+import { Effect, Option, Schema as S, Stream, Match } from 'effect'
 import { Command, Update } from 'foldkit'
 import { Dialog as FoldkitDialog } from '@foldkit/ui'
 import type { Attribute, ChildAttribute, Html, HtmlBuilder } from 'foldkit/html'
@@ -78,7 +78,6 @@ export type InitConfig = Readonly<{
   swipeDirection?: SwipeDirection
   /** When true, the view renders the grab handle that starts the drag gesture. */
   isHandleVisible?: boolean
-  isOpen?: boolean
   focusSelector?: string
 }>
 
@@ -89,7 +88,6 @@ export const init = (config: InitConfig): Model => ({
   dialog: FoldkitDialog.init({
     id: config.id,
     isAnimated: true,
-    isOpen: config.isOpen ?? false,
     // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread
     ...(config.focusSelector === undefined ? {} : { focusSelector: config.focusSelector }),
   }),
@@ -97,6 +95,22 @@ export const init = (config: InitConfig): Model => ({
   isHandleVisible: config.isHandleVisible ?? false,
   drag: idleDrag(),
 })
+
+/** Starts open and returns the Commands that acquire modal resources.
+ *  Fold this result into the parent with Update.foldChildInit. */
+export const boot = (config: InitConfig): UpdateReturn =>
+  Update.foldChildInit(
+    FoldkitDialog.boot({
+      id: config.id,
+      isAnimated: true,
+      ...(config.focusSelector !== undefined && { focusSelector: config.focusSelector }),
+    }),
+    {
+      toParentModel: (dialog) => ({ ...init(config), dialog }),
+      toParentMessage: (message) => Message.GotDialogMessage({ message }),
+      toParentOutMessage: (outMessage) => outMessage,
+    },
+  )
 
 /** Release offset in px that dismisses the drawer. Anything shorter snaps back. */
 export const DISMISS_THRESHOLD_PX = 96
@@ -124,53 +138,55 @@ const liftDialogReturn = (
  *  any dialog close also parks an in-flight drag, so backdrop/Esc dismissal
  *  can never strand the panel mid-translate. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'GotDialogMessage': {
-      const result = liftDialogReturn(model, FoldkitDialog.update(model.dialog, message.message))
-      return result.outMessage?._tag === 'Closed'
-        ? { ...result, model: evo(result.model, { drag: () => idleDrag() }) }
-        : result
-    }
-    case 'PressedHandle': {
-      if (!model.dialog.isOpen) return { model }
-      return {
-        model: evo(model, {
-          drag: () => ({
-            activity: 'Dragging' as const,
-            originX: message.clientX,
-            originY: message.clientY,
-            offset: 0,
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      GotDialogMessage: (message) => {
+        const result = liftDialogReturn(model, FoldkitDialog.update(model.dialog, message.message))
+        return result.outMessage?._tag === 'Closed'
+          ? { ...result, model: evo(result.model, { drag: () => idleDrag() }) }
+          : result
+      },
+      PressedHandle: (message) => {
+        if (!model.dialog.isOpen) return { model }
+        return {
+          model: evo(model, {
+            drag: () => ({
+              activity: 'Dragging' as const,
+              originX: message.clientX,
+              originY: message.clientY,
+              offset: 0,
+            }),
           }),
-        }),
-      }
-    }
-    case 'MovedPointer': {
-      if (model.drag.activity !== 'Dragging') return { model }
-      const delta =
-        swipeAxis(model.swipeDirection) === 'y'
-          ? message.clientY - model.drag.originY
-          : message.clientX - model.drag.originX
-      return {
-        model: evo(model, {
-          drag: () => ({
-            ...model.drag,
-            offset: Math.max(0, dismissSign(model.swipeDirection) * delta),
+        }
+      },
+      MovedPointer: (message) => {
+        if (model.drag.activity !== 'Dragging') return { model }
+        const delta =
+          swipeAxis(model.swipeDirection) === 'y'
+            ? message.clientY - model.drag.originY
+            : message.clientX - model.drag.originX
+        return {
+          model: evo(model, {
+            drag: () => ({
+              ...model.drag,
+              offset: Math.max(0, dismissSign(model.swipeDirection) * delta),
+            }),
           }),
-        }),
-      }
-    }
-    case 'ReleasedPointer': {
-      if (model.drag.activity !== 'Dragging') return { model }
-      if (model.drag.offset < DISMISS_THRESHOLD_PX) {
+        }
+      },
+      ReleasedPointer: () => {
+        if (model.drag.activity !== 'Dragging') return { model }
+        if (model.drag.offset < DISMISS_THRESHOLD_PX) {
+          return { model: evo(model, { drag: () => idleDrag() }) }
+        }
+        const parked = evo(model, { drag: () => idleDrag() })
+        return liftDialogReturn(parked, FoldkitDialog.close(parked.dialog))
+      },
+      CancelledDrag: () => {
         return { model: evo(model, { drag: () => idleDrag() }) }
-      }
-      const parked = evo(model, { drag: () => idleDrag() })
-      return liftDialogReturn(parked, FoldkitDialog.close(parked.dialog))
-    }
-    case 'CancelledDrag': {
-      return { model: evo(model, { drag: () => idleDrag() }) }
-    }
-  }
+      },
+    }),
+  )
 }
 
 export const open = (model: Model): UpdateReturn =>
@@ -429,6 +445,8 @@ export type DrawerContent<M> = Readonly<{
 }>
 
 export type StyledViewInputs<M> = Readonly<{
+  /** Set when content renders the description element. */
+  hasDescription?: boolean
   content: (render: DrawerContent<M>, h: HtmlBuilder<M>) => ReadonlyArray<Child>
   className?: string
   backdropClass?: string
@@ -446,6 +464,7 @@ export type RenderInput = FoldkitDialog.RenderInfo &
   }>
 
 export type ViewInputs = Readonly<{
+  hasDescription?: boolean
   toView: (render: RenderInput) => Html
 }>
 
@@ -458,6 +477,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
     model: model.dialog,
     view: FoldkitDialog.view,
     viewInputs: {
+      hasDescription: viewInputs.hasDescription,
       toView: (render) =>
         viewInputs.toView({
           ...render,
@@ -478,6 +498,7 @@ export const styledViewInputs = <M>(
   viewInputs: StyledViewInputs<M>,
   h: HtmlBuilder<M>,
 ): ViewInputs => ({
+  hasDescription: viewInputs.hasDescription,
   toView: ({
     dialog,
     backdrop,

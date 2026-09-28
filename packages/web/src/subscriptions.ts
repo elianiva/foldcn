@@ -1,6 +1,7 @@
 import { Effect, Option, Queue, Schema as S, Stream } from 'effect'
 import { Subscription } from 'foldkit'
 
+import { subscriptions as commandSubscriptions } from './demo/views/command'
 import { subscriptions as demoSubscriptions } from './demo/subscriptions'
 import { Message } from './message'
 import type { Message as AppMessage } from './message'
@@ -48,7 +49,16 @@ const demoLiftedSubscriptions = Subscription.lift(demoSubscriptions)<Model, AppM
   toParentMessage: (message) => Message.GotDemoMessage({ message }),
 })
 
+const commandLiftedSubscriptions = Subscription.lift(commandSubscriptions)<Model, AppMessage>({
+  toChildModel: (model) => ({
+    ...model.demo,
+    isCommandPage: model.route._tag === 'Item' && model.route.name === 'command',
+  }),
+  toParentMessage: (message) => Message.GotDemoMessage({ message }),
+})
+
 export const subscriptions = Subscription.aggregate<Model, AppMessage>()(
   systemThemeSubscriptions,
   demoLiftedSubscriptions,
+  commandLiftedSubscriptions,
 )

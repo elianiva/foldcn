@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as Toggle from '@/components/ui/toggle'`
  */
-import { Function, Schema as S } from 'effect'
+import { Function, Schema as S, Match } from 'effect'
 import type { Html } from 'foldkit/html'
 import * as Update from 'foldkit/update'
 import { defineMessageUnion } from 'foldkit/message'
@@ -86,15 +86,17 @@ type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 /** Processes a toggle message and returns the next model, commands, and an
  *  optional out-message for the parent. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'Toggled': {
-      const isPressed = !model.isPressed
-      return {
-        model: evo(model, { isPressed: () => isPressed }),
-        outMessage: OutMessage.ChangedPressed({ isPressed }),
-      }
-    }
-  }
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      Toggled: () => {
+        const isPressed = !model.isPressed
+        return {
+          model: evo(model, { isPressed: () => isPressed }),
+          outMessage: OutMessage.ChangedPressed({ isPressed }),
+        }
+      },
+    }),
+  )
 }
 
 // VIEW

@@ -60,6 +60,7 @@ export const switch_ = <M>(config: SwitchConfig<M>, h: HtmlBuilder<M>): Html =>
   FoldkitSwitch.view<M>(
     {
       id: config.id,
+      hasDescription: config.description !== undefined,
       isChecked: config.isChecked,
       onToggle: config.onToggle,
       isDisabled: config.isDisabled,

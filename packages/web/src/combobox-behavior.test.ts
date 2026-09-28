@@ -44,7 +44,7 @@ describe('combobox rendered contract', () => {
         FoldkitCombobox.Message.CompletedAnchorCombobox(),
       ),
       Scene.click(Scene.role('option', { name: 'Next.js' })),
-      Scene.expectOutMessage(Combobox.OutMessage.Selected({ value: 'Next.js' })),
+      Scene.expectOutMessage({ _tag: 'Selected', value: 'Next.js' } as const),
     )
   })
 

@@ -39,6 +39,7 @@ export const alertDialogView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                 view: AlertDialog.view,
                 viewInputs: AlertDialog.styledViewInputs(
                   {
+                    hasDescription: true,
                     content: ({ closeButton, title, description }, h) => [
                       AlertDialog.header(
                         {},

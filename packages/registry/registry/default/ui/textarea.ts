@@ -43,6 +43,7 @@ export const textarea = <M>(config: TextareaConfig<M>, h: HtmlBuilder<M>): Html 
   FoldkitTextarea.view<M>(
     {
       id: config.id,
+      hasDescription: config.description !== undefined,
       onInput: config.onInput,
       value: config.value,
       isDisabled: config.isDisabled,

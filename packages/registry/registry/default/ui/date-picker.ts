@@ -1,3 +1,4 @@
+import type { ViewLabels } from '@foldkit/ui/calendar'
 /** Stateful submodel — import the whole module as a namespace and wire its
  *  Model/Message/init/update into your app:
  *  `import * as DatePicker from '@/components/ui/date-picker'`
@@ -5,7 +6,7 @@
 import { Option } from 'effect'
 import { DatePicker as FoldkitDatePicker } from '@foldkit/ui'
 import type { AnchorConfig } from '@foldkit/ui/anchor'
-import type { CalendarDate } from 'foldkit/calendar'
+import { formatLong, type LocaleConfig, type CalendarDate } from 'foldkit/calendar'
 import type { HtmlBuilder } from 'foldkit/html'
 
 import { icon } from '@/lib/icons'
@@ -56,6 +57,9 @@ const formatTriggerLabel = (date: Readonly<{ year: number; month: number; day: n
   `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
 
 export type StyledViewInputs = Readonly<{
+  /** Pass model.calendar.locale to keep the trigger and calendar in the same locale. */
+  locale?: LocaleConfig
+  placeholder?: string
   maybeSelectedDate: Option.Option<CalendarDate>
   anchor?: AnchorConfig
   isDisabled?: boolean
@@ -66,7 +70,8 @@ export type StyledViewInputs = Readonly<{
   panelClass?: string
   backdropClass?: string
   wrapperClass?: string
-}>
+}> &
+  ViewLabels
 
 /** Build styled `DatePicker.ViewInputs`. Pass your view's `h`. The trigger
  *  face shows the ISO date or a placeholder; the popover panel renders the
@@ -77,6 +82,17 @@ export const styledViewInputs = <M>(
 ): ViewInputs => ({
   anchor: viewInputs.anchor ?? DATE_PICKER_ANCHOR,
   maybeSelectedDate: viewInputs.maybeSelectedDate,
+  previousMonthLabel: viewInputs.previousMonthLabel,
+  nextMonthLabel: viewInputs.nextMonthLabel,
+  previousYearsPageLabel: viewInputs.previousYearsPageLabel,
+  nextYearsPageLabel: viewInputs.nextYearsPageLabel,
+  daysHeadingButtonLabel: viewInputs.daysHeadingButtonLabel,
+  monthsHeadingButtonLabel: viewInputs.monthsHeadingButtonLabel,
+  toDaysGridLabel: viewInputs.toDaysGridLabel,
+  toWeekLabel: viewInputs.toWeekLabel,
+  toMonthsGridLabel: viewInputs.toMonthsGridLabel,
+  toYearsGridLabel: viewInputs.toYearsGridLabel,
+
   isDisabled: viewInputs.isDisabled,
   name: viewInputs.name,
   className: cn(datePickerWrapperClass, viewInputs.wrapperClass),
@@ -94,8 +110,16 @@ export const styledViewInputs = <M>(
       [h.Class('flex w-full items-center justify-between gap-4')],
       [
         Option.match(maybeDate, {
-          onNone: () => h.span([h.Class(datePickerPlaceholderClass)], ['Pick a date']),
-          onSome: (date) => h.span([], [formatTriggerLabel(date)]),
+          onNone: () =>
+            h.span(
+              [h.Class(datePickerPlaceholderClass)],
+              [viewInputs.placeholder ?? 'Pick a date'],
+            ),
+          onSome: (date) =>
+            h.span(
+              [],
+              [viewInputs.locale ? formatLong(date, viewInputs.locale) : formatTriggerLabel(date)],
+            ),
         }),
         icon(h, ChevronDown),
       ],

@@ -287,3 +287,21 @@
 .cn-scroll-area-viewport {
   @apply no-scrollbar overflow-scroll;
 }
+
+/* Radio labels and descriptions share a column beside the control. */
+.cn-radio-group-description-row {
+  @apply flex w-full items-start gap-2 [&>[role=radio]]:mt-0.5;
+}
+.cn-radio-group-description-content {
+  @apply flex min-w-0 flex-1 flex-col gap-0.5 peer-aria-disabled:opacity-50;
+}
+
+/* Upstream Field-based radio examples use font-normal on labels. */
+.cn-radio-group-field-label {
+  @apply font-normal;
+}
+
+/* The shared Field token is physical text-left; RTL examples need its mirror. */
+.cn-radio-group-field-description {
+  @apply rtl:text-right;
+}

@@ -1,5 +1,13 @@
 # foldcn ↔ shadcn/ui v4 `bases/base/ui` parity audit
 
+> **RadioGroup update (2026-09-19):** `styledViewInputs` now renders the upstream
+> circle and indicator anatomy and supports Field rows, Choice Cards, accessible
+> descriptions, per-option disabled state, and invalid Fields. The demo covers
+> Basic, Description, Choice Card, Fieldset, Disabled, Invalid, and RTL as
+> independent stateful groups. Click, keyboard selection, disabled tab order,
+> invalid attributes, RTL direction, accessible descriptions, and form values
+> have regression coverage. Browser image comparisons remain outstanding.
+
 > **Questionnaire update (2026-09-09):** `questionnaire` is now ported —
 > `packages/registry/registry/default/ui/questionnaire.ts` authors the flow in place
 > (there is no `@foldkit/ui` questionnaire primitive yet), data-driven instead of
@@ -144,7 +152,13 @@ resumes once the reply reaches the live edge).
 - **input / textarea — MINOR.** Legacy strings verbatim; base differs in h-8, rounded-lg, px-2.5, `disabled:bg-input/50 dark:disabled:bg-input/80`, `dark:aria-invalid:border-destructive/50`; foldcn adds `shadow-xs` + selection colors. API superset (label/description wrapper baked in).
 - **checkbox — MINOR.** Anatomy/hit-area match. Diffs: unchecked track `bg-input/90`+`shadow-xs` vs transparent; `transition-shadow` vs `transition-colors`; missing `aria-invalid:aria-checked:border-primary` precedence and Field integration hooks.
 - **switch — MAJOR.** Track 20×36 vs 18.4×32; thumb travel fixed px vs `calc(100%-2px)` (sm thumb lands flush); custom cubic-bezier motion; zero invalid styling; hidden-input drop (bug #3).
-- **radio-group — MAJOR.** Paradigm clash: foldcn renders p-4 option cards (checked = border color only); exports circle/dot indicator classes but `styledViewInputs` renders neither. Keyboard is richer (PageUp/PageDown, readonly navigate mode); attr names diverge (`data-checked` vs `data-state=checked`).
+- **radio-group — updated, structural and behavioral parity re-audited.** The
+  Foldkit submodel renders the upstream circle/indicator parts and composes the
+  documented Field row and Choice Card layouts. The demo covers Basic,
+  Description, Choice Card, Fieldset, per-option Disabled, Invalid, and RTL.
+  Foldkit keeps its richer PageUp/PageDown and readonly navigation behavior and
+  emits `data-checked` instead of Base UI's internal state attribute. Browser
+  image comparisons remain outstanding.
 
 ### Menus & selection
 

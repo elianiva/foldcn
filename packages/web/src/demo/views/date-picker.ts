@@ -1,3 +1,4 @@
+import { germanLocale, germanLabels } from '../calendar-locale'
 import { Update } from 'foldkit'
 import { Calendar as FoldkitCalendar } from 'foldkit'
 import { Match as M, Option } from 'effect'
@@ -13,17 +14,53 @@ import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
 const Message = defineMessageUnion({
+  GotLocalizedDatePickerMessage: { message: datePicker.Message },
   GotDatePickerMessage: { message: datePicker.Message },
 })
 
 export const datePickerView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
-  h.submodel({
-    slotId: model.datePicker.id,
-    model: model.datePicker,
-    view: datePicker.view,
-    viewInputs: datePicker.styledViewInputs({ maybeSelectedDate: model.maybePickedDate }, h),
-    toParentMessage: (message) => Message.GotDatePickerMessage({ message }),
-  })
+  h.div(
+    [h.Class('flex flex-col gap-8')],
+    [
+      h.section(
+        [],
+        [
+          h.h3([h.Class('mb-3 font-medium')], ['Default']),
+          h.submodel({
+            slotId: model.datePicker.id,
+            model: model.datePicker,
+            view: datePicker.view,
+            viewInputs: datePicker.styledViewInputs(
+              { maybeSelectedDate: model.maybePickedDate },
+              h,
+            ),
+            toParentMessage: (message) => Message.GotDatePickerMessage({ message }),
+          }),
+        ],
+      ),
+      h.section(
+        [h.DataAttribute('localized-example', '')],
+        [
+          h.h3([h.Class('mb-3 font-medium')], ['Deutsch']),
+          h.submodel({
+            slotId: model.localizedDatepicker.id,
+            model: model.localizedDatepicker,
+            view: datePicker.view,
+            viewInputs: datePicker.styledViewInputs(
+              {
+                ...germanLabels,
+                maybeSelectedDate: model.localizedPickerDate,
+                locale: model.localizedDatepicker.calendar.locale,
+                placeholder: 'Datum wählen',
+              },
+              h,
+            ),
+            toParentMessage: (message) => Message.GotLocalizedDatePickerMessage({ message }),
+          }),
+        ],
+      ),
+    ],
+  )
 
 const foldDatePickerOutMessage = M.type<datePicker.OutMessage>().pipe(
   M.withReturnType<Update.Step<State, unknown>>(),
@@ -44,7 +81,30 @@ const foldDatePicker = Update.foldChild({
   foldOutMessage: foldDatePickerOutMessage,
 })
 
+const foldLocalizedOutMessage = M.type<datePicker.OutMessage>().pipe(
+  M.withReturnType<Update.Step<State, unknown>>(),
+  M.tagsExhaustive({
+    SelectedDate:
+      ({ date }) =>
+      (model) => ({ model: evo(model, { localizedPickerDate: () => Option.some(date) }) }),
+    ClearedDate: () => (model) => ({
+      model: evo(model, { localizedPickerDate: () => Option.none() }),
+    }),
+    ChangedViewMonth: () => (model) => ({ model }),
+  }),
+)
+
+const foldLocalized = Update.foldChild({
+  update: datePicker.update,
+  read: (model: State) => Option.some(model.localizedDatepicker),
+  write: (model, next) => evo(model, { localizedDatepicker: () => next }),
+  toParentMessage: (message) => Message.GotLocalizedDatePickerMessage({ message }),
+  foldOutMessage: foldLocalizedOutMessage,
+})
+
 const fields = {
+  localizedDatepicker: datePicker.Model,
+  localizedPickerDate: S.Option(FoldkitCalendar.CalendarDate),
   datePicker: datePicker.Model,
   maybePickedDate: S.Option(FoldkitCalendar.CalendarDate),
 }
@@ -55,6 +115,12 @@ type State = typeof stateSchema.Type
 export const slice = defineSlice({
   fields,
   init: {
+    localizedDatepicker: datePicker.init({
+      id: 'date-picker-german',
+      today: DEMO_TODAY,
+      locale: germanLocale,
+    }),
+    localizedPickerDate: Option.some(DEMO_TODAY),
     datePicker: datePicker.init({
       id: 'date-picker-demo',
       today: DEMO_TODAY,
@@ -63,8 +129,11 @@ export const slice = defineSlice({
     }),
     maybePickedDate: Option.none(),
   },
-  messages: [Message.GotDatePickerMessage],
+  messages: [Message.GotLocalizedDatePickerMessage, Message.GotDatePickerMessage],
   handlers: (model: State) => ({
+    GotLocalizedDatePickerMessage: (
+      payload: typeof Message.GotLocalizedDatePickerMessage.Type,
+    ): UpdateReturn => foldLocalized(model, payload.message),
     GotDatePickerMessage: (payload: typeof Message.GotDatePickerMessage.Type): UpdateReturn =>
       foldDatePicker(model, payload.message),
   }),

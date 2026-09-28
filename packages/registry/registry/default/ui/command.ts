@@ -1,4 +1,4 @@
-import { Effect, Option, Schema as S } from 'effect'
+import { Effect, Option, Schema as S, Match } from 'effect'
 import * as RuntimeCommand from 'foldkit/command'
 import * as Mount from 'foldkit/mount'
 import * as Dom from 'foldkit/dom'
@@ -226,25 +226,35 @@ export const update = (
   model: Model,
   message: Message,
 ): Update.ReturnWithOutMessage<Model, Message, OutMessage> => {
-  switch (message._tag) {
-    case 'ChangedSearch':
-      return {
-        model: { ...model, search: message.search, value: Option.none() },
-        outMessage: OutMessage.SearchChanged({ search: message.search }),
-      }
-    case 'Activated':
-      return {
-        model: { ...model, value: Option.some(message.value) },
-        commands: message.scroll ? [ScrollActive({ id: model.id, value: message.value })] : [],
-        outMessage: OutMessage.ValueChanged({ value: message.value }),
-      }
-    case 'Selected':
-      return { model, outMessage: OutMessage.Selected({ value: message.value }) }
-    case 'CompletedScroll':
-    case 'Mounted':
-    case 'IgnoredKey':
-      return { model }
-  }
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      ChangedSearch: (message) => {
+        return {
+          model: { ...model, search: message.search, value: Option.none() },
+          outMessage: OutMessage.SearchChanged({ search: message.search }),
+        }
+      },
+      Activated: (message) => {
+        return {
+          model: { ...model, value: Option.some(message.value) },
+          commands: message.scroll ? [ScrollActive({ id: model.id, value: message.value })] : [],
+          outMessage: OutMessage.ValueChanged({ value: message.value }),
+        }
+      },
+      Selected: (message) => {
+        return { model, outMessage: OutMessage.Selected({ value: message.value }) }
+      },
+      CompletedScroll: () => {
+        return { model }
+      },
+      Mounted: () => {
+        return { model }
+      },
+      IgnoredKey: () => {
+        return { model }
+      },
+    }),
+  )
 }
 
 export type Item = Readonly<{
@@ -605,14 +615,30 @@ const dialogInit = (
 const foldDialogResult = (
   model: CommandDialogModel,
   result: ReturnType<typeof Dialog.update>,
-): DialogUpdate => {
-  const folded = {
-    model: { ...model, dialog: result.model },
-    commands: RuntimeCommand.mapMessages(result.commands ?? [], (message) =>
-      CommandDialogMessage.GotDialogMessage({ message }),
-    ),
-  }
-  return result.outMessage ? Update.withOutMessage(folded, result.outMessage) : folded
+): DialogUpdate =>
+  Update.foldChildStep({
+    update: () => result,
+    read: (parent: CommandDialogModel) => Option.some(parent.dialog),
+    write: (parent, dialog) => ({ ...parent, dialog }),
+    toParentMessage: (message) => CommandDialogMessage.GotDialogMessage({ message }),
+    toParentOutMessage: (outMessage) => outMessage,
+  })(model)
+
+/** Starts open with Dialog's focus, isolation, and cleanup Commands. */
+const dialogBoot = (config: Parameters<typeof dialogInit>[0]): DialogUpdate => {
+  const model = dialogInit(config)
+  return Update.foldChildInit(
+    Dialog.boot({
+      id: model.dialog.id,
+      focusSelector: `[id="${inputId(model.command.id)}"]`,
+      isAnimated: model.dialog.isAnimated,
+    }),
+    {
+      toParentModel: (dialog) => ({ ...model, dialog }),
+      toParentMessage: (message) => CommandDialogMessage.GotDialogMessage({ message }),
+      toParentOutMessage: (outMessage) => outMessage,
+    },
+  )
 }
 const dialogOpen = (model: CommandDialogModel): DialogUpdate =>
   foldDialogResult(
@@ -655,6 +681,7 @@ const dialogView = defineView<CommandDialogModel, CommandDialogMessage, CommandD
       view: Dialog.view,
       viewInputs: Dialog.styledViewInputs(
         {
+          hasDescription: true,
           panelClass: cn('cn-command-dialog', config.panelClass),
           content: (render, inner) => [
             Dialog.header(
@@ -697,6 +724,7 @@ export const CommandDialog = {
   Message: CommandDialogMessage,
   OutMessage: CommandDialogOutMessage,
   init: dialogInit,
+  boot: dialogBoot,
   open: dialogOpen,
   close: dialogClose,
   update: dialogUpdate,

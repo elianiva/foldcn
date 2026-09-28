@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as Questionnaire from '@/components/ui/questionnaire'`
  */
-import { Effect, Option, Schema as S, pipe } from 'effect'
+import { Effect, Option, Schema as S, pipe, Match } from 'effect'
 import * as Command from 'foldkit/command'
 import * as Dom from 'foldkit/dom'
 import { defineMessageUnion } from 'foldkit/message'
@@ -122,7 +122,7 @@ export const Model = S.Struct({
   items: S.Array(ItemDef),
   activeIndex: S.Number,
   answers: S.Array(Answer),
-  shortcuts: S.optional(S.Literals(['letters', 'numbers'])),
+  shortcuts: S.Option(S.Literals(['letters', 'numbers'])),
 })
 export type Model = typeof Model.Type
 
@@ -252,7 +252,7 @@ export const init = (config: InitConfig): Model => {
     items: config.items.map((item) => ({ ...item, choices: item.choices ?? [] })),
     activeIndex: defaultIndex,
     answers,
-    shortcuts: config.shortcuts,
+    shortcuts: Option.fromUndefinedOr(config.shortcuts),
   }
 }
 
@@ -340,60 +340,67 @@ const confirmCurrent = (model: Model): UpdateReturn => {
 /** Processes a questionnaire message and returns the next model, commands,
  *  and an optional out-message for the parent. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'ToggledChoice': {
-      const item = model.items[message.itemIndex]
-      const answer = model.answers[message.itemIndex]
-      const choice = (item?.choices ?? []).find((candidate) => candidate.value === message.value)
-      if (item === undefined || answer === undefined || choice === undefined) return { model }
-      if (choice.isDisabled === true) return { model }
-      const values =
-        item.isMultiple === true
-          ? message.isChecked
-            ? [...answer.values, message.value]
-            : answer.values.filter((value) => value !== message.value)
-          : message.isChecked
-            ? [message.value]
-            : answer.values
-      const answers = model.answers.map((current, answerIndex) =>
-        answerIndex === message.itemIndex
-          ? { ...current, values, isSkipped: false, isInvalid: false }
-          : current,
-      )
-      return { model: evo(model, { answers: () => answers }) }
-    }
-    case 'ChangedInput': {
-      const answers = model.answers.map((current, answerIndex) =>
-        answerIndex === message.itemIndex
-          ? { ...current, text: message.value, isSkipped: false, isInvalid: false }
-          : current,
-      )
-      return { model: evo(model, { answers: () => answers }) }
-    }
-    case 'ConfirmedAnswer':
-      return confirmCurrent(model)
-    case 'GonePrevious':
-      return model.activeIndex <= 0 ? { model } : goToItem(model, model.activeIndex - 1)
-    case 'GoneNext':
-      return confirmCurrent(model)
-    case 'SkippedCurrent': {
-      const item = model.items[model.activeIndex]
-      if (item === undefined || item.isRequired === true) return { model }
-      const answers = model.answers.map((current, answerIndex) =>
-        answerIndex === model.activeIndex
-          ? { values: [], text: '', isSkipped: true, isInvalid: false }
-          : current,
-      )
-      const skipped = evo(model, { answers: () => answers })
-      return model.activeIndex >= model.items.length - 1
-        ? submitAll(skipped)
-        : goToItem(skipped, model.activeIndex + 1)
-    }
-    case 'Submitted':
-      return submitAll(model)
-    case 'FocusedAnswer':
-      return { model }
-  }
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      ToggledChoice: (message) => {
+        const item = model.items[message.itemIndex]
+        const answer = model.answers[message.itemIndex]
+        const choice = (item?.choices ?? []).find((candidate) => candidate.value === message.value)
+        if (item === undefined || answer === undefined || choice === undefined) return { model }
+        if (choice.isDisabled === true) return { model }
+        const values =
+          item.isMultiple === true
+            ? message.isChecked
+              ? [...answer.values, message.value]
+              : answer.values.filter((value) => value !== message.value)
+            : message.isChecked
+              ? [message.value]
+              : answer.values
+        const answers = model.answers.map((current, answerIndex) =>
+          answerIndex === message.itemIndex
+            ? { ...current, values, isSkipped: false, isInvalid: false }
+            : current,
+        )
+        return { model: evo(model, { answers: () => answers }) }
+      },
+      ChangedInput: (message) => {
+        const answers = model.answers.map((current, answerIndex) =>
+          answerIndex === message.itemIndex
+            ? { ...current, text: message.value, isSkipped: false, isInvalid: false }
+            : current,
+        )
+        return { model: evo(model, { answers: () => answers }) }
+      },
+      ConfirmedAnswer: () => {
+        return confirmCurrent(model)
+      },
+      GonePrevious: () => {
+        return model.activeIndex <= 0 ? { model } : goToItem(model, model.activeIndex - 1)
+      },
+      GoneNext: () => {
+        return confirmCurrent(model)
+      },
+      SkippedCurrent: () => {
+        const item = model.items[model.activeIndex]
+        if (item === undefined || item.isRequired === true) return { model }
+        const answers = model.answers.map((current, answerIndex) =>
+          answerIndex === model.activeIndex
+            ? { values: [], text: '', isSkipped: true, isInvalid: false }
+            : current,
+        )
+        const skipped = evo(model, { answers: () => answers })
+        return model.activeIndex >= model.items.length - 1
+          ? submitAll(skipped)
+          : goToItem(skipped, model.activeIndex + 1)
+      },
+      Submitted: () => {
+        return submitAll(model)
+      },
+      FocusedAnswer: () => {
+        return { model }
+      },
+    }),
+  )
 }
 
 // VIEW
@@ -496,7 +503,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
       const isChecked =
         answer?.isSkipped !== true && (answer?.values.includes(choice.value) ?? false)
       const isDisabled = choice.isDisabled === true
-      const shortcut = shortcutForChoice(model.shortcuts, choiceIndex)
+      const shortcut = shortcutForChoice(Option.getOrUndefined(model.shortcuts), choiceIndex)
       return h.label(
         [
           h.Class(questionnaireChoiceClass),
@@ -669,9 +676,9 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
           [
             h.Class(questionnaireChoicesClass),
             h.DataAttribute('slot', 'questionnaire-choices'),
-            ...(model.shortcuts === undefined
+            ...(Option.isNone(model.shortcuts)
               ? []
-              : [h.DataAttribute('shortcuts', model.shortcuts)]),
+              : [h.DataAttribute('shortcuts', model.shortcuts.value)]),
           ],
           [...choiceNodes, ...(inputNode === undefined ? [] : [inputNode])],
         ),

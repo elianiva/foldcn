@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as Accordion from '@/components/ui/accordion'`
  */
-import { Function, Schema as S } from 'effect'
+import { Function, Schema as S, Match } from 'effect'
 import { Disclosure as FoldkitDisclosure } from '@foldkit/ui'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
@@ -116,15 +116,19 @@ type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 /** Processes an accordion message and returns the next model, commands, and
  *  an optional out-message for the parent. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'ToggledItem': {
-      const value = nextAccordionOpen(model.value, message.index, message.isOpen, model.type)
-      return {
-        model: evo(model, { value: () => [...value] }),
-        outMessage: OutMessage.ChangedValue({ value }),
-      }
-    }
-  }
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      ToggledItem: (message) => {
+        {
+          const value = nextAccordionOpen(model.value, message.index, message.isOpen, model.type)
+          return {
+            model: evo(model, { value: () => [...value] }),
+            outMessage: OutMessage.ChangedValue({ value }),
+          }
+        }
+      },
+    }),
+  )
 }
 
 // VIEW
@@ -133,6 +137,8 @@ export type AccordionItemViewInput = Readonly<{
   id: string
   title: Child
   content: Child
+  /** Collapsed visual preview height. Enables animated panel rendering. */
+  peek?: string
   isDisabled?: boolean
   ariaLabel?: string
   ariaLabelledBy?: string
@@ -211,7 +217,7 @@ const accordionItem = (
                 ),
               ],
             ),
-            config.isAnimated === true
+            config.isAnimated === true || config.peek !== undefined
               ? animatePanel(
                   h.div(
                     [
@@ -221,6 +227,7 @@ const accordionItem = (
                     ],
                     [h.div([h.Class(accordionContentInnerClass)], [config.content])],
                   ),
+                  { peek: config.peek },
                 )
               : config.isOpen
                 ? h.div(

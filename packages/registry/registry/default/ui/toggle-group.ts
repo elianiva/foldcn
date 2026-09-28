@@ -2,7 +2,7 @@
  *  Model/Message/init/update into your app:
  *  `import * as ToggleGroup from '@/components/ui/toggle-group'`
  */
-import { Function, Schema as S } from 'effect'
+import { Function, Schema as S, Match } from 'effect'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
@@ -111,15 +111,17 @@ type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 /** Processes a toggle group message and returns the next model, commands, and
  *  an optional out-message for the parent. */
 export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'ToggledItem': {
-      const value = nextValue(model.value, message.value, model.type)
-      return {
-        model: evo(model, { value: () => [...value] }),
-        outMessage: OutMessage.ChangedValue({ value }),
-      }
-    }
-  }
+  return Match.value(message).pipe(
+    Match.tagsExhaustive({
+      ToggledItem: (message) => {
+        const value = nextValue(model.value, message.value, model.type)
+        return {
+          model: evo(model, { value: () => [...value] }),
+          outMessage: OutMessage.ChangedValue({ value }),
+        }
+      },
+    }),
+  )
 }
 
 // VIEW

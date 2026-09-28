@@ -177,7 +177,7 @@ const drawerSubmodel = (
     slotId: model.id,
     model,
     view: Drawer.view,
-    viewInputs: Drawer.styledViewInputs({ content }, h),
+    viewInputs: Drawer.styledViewInputs({ hasDescription: true, content }, h),
     toParentMessage,
   })
 
