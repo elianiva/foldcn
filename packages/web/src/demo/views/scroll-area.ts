@@ -1,6 +1,6 @@
 import { Subscription, Update } from 'foldkit'
 import { Option, Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -130,14 +130,14 @@ export const scrollAreaView = (model: Model, h: HtmlBuilder<AppMessage>): Html =
 const foldScrollAreaVertical = Update.foldChild({
   update: ScrollArea.update,
   read: (model: State) => Option.some(model.scrollAreaVertical),
-  write: (model, next) => evo(model, { scrollAreaVertical: () => next }),
+  write: (model, next) => modifyFields(model, { scrollAreaVertical: () => next }),
   toParentMessage: (message) => Message.GotScrollAreaVerticalMessage({ message }),
 })
 
 const foldScrollAreaHorizontal = Update.foldChild({
   update: ScrollArea.update,
   read: (model: State) => Option.some(model.scrollAreaHorizontal),
-  write: (model, next) => evo(model, { scrollAreaHorizontal: () => next }),
+  write: (model, next) => modifyFields(model, { scrollAreaHorizontal: () => next }),
   toParentMessage: (message) => Message.GotScrollAreaHorizontalMessage({ message }),
 })
 

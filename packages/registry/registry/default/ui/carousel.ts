@@ -12,7 +12,7 @@ import EmblaCarousel, {
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 
 import { icon } from '@/lib/icons'
 import { ChevronLeft, ChevronRight } from 'lucide'
@@ -180,7 +180,7 @@ const selected = (
   if (index === model.index && canPrev === model.canScrollPrev && canNext === model.canScrollNext) {
     return { model }
   }
-  const next = evo(model, {
+  const next = modifyFields(model, {
     index: () => index,
     canScrollPrev: () => canPrev,
     canScrollNext: () => canNext,

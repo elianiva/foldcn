@@ -1,7 +1,7 @@
 import { Array, Match as M, Option, pipe } from 'effect'
 import { Subscription, Update } from 'foldkit'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -45,14 +45,14 @@ const reorderColumns = (
             ? Array.filter(column.cards, ({ id }) => id !== itemId)
             : column.cards
         if (column.id !== toContainerId) {
-          return evo(column, { cards: () => withRemoved })
+          return modifyFields(column, { cards: () => withRemoved })
         }
         const inserted = [
           ...Array.take(withRemoved, toIndex),
           card,
           ...Array.drop(withRemoved, toIndex),
         ]
-        return evo(column, { cards: () => inserted })
+        return modifyFields(column, { cards: () => inserted })
       }),
   })
 }
@@ -223,7 +223,7 @@ const foldDragAndDropOutMessage = M.type<DragAndDrop.OutMessage>().pipe(
     Reordered:
       ({ itemId, fromContainerId, toContainerId, toIndex }) =>
       (model) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           dragColumns: () =>
             reorderColumns(model.dragColumns, itemId, fromContainerId, toContainerId, toIndex),
         }),
@@ -235,7 +235,7 @@ const foldDragAndDropOutMessage = M.type<DragAndDrop.OutMessage>().pipe(
 const foldDragAndDrop = Update.foldChild({
   update: DragAndDrop.update,
   read: (model: State) => Option.some(model.dragAndDrop),
-  write: (model, next) => evo(model, { dragAndDrop: () => next }),
+  write: (model, next) => modifyFields(model, { dragAndDrop: () => next }),
   toParentMessage: (message) => Message.GotDragAndDropMessage({ message }),
   foldOutMessage: foldDragAndDropOutMessage,
 })

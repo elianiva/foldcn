@@ -184,7 +184,7 @@ export const subscriptions = Subscription.make<
               isEnabled,
               whileTyping: 'Allow',
               whenRepeated: 'Ignore',
-              toMessage: () => Message.ToggledCommandDialog(),
+              mapEvent: () => Message.ToggledCommandDialog(),
             },
           ],
         }),

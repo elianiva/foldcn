@@ -44,7 +44,7 @@ import { Toast as FoldkitToast } from '@foldkit/ui'
 import type { Attribute, ChildAttribute, Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import * as Render from 'foldkit/render'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineView } from 'foldkit/submodel'
 import * as Update from 'foldkit/update'
 
@@ -407,7 +407,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
   const foldToast = Update.foldChild({
     update: Bound.update,
     read: (model: Model) => Option.some(model.toast),
-    write: (model, nextToast) => evo(model, { toast: () => nextToast }),
+    write: (model, nextToast) => modifyFields(model, { toast: () => nextToast }),
     toParentMessage: toGotToastMessage,
     toParentOutMessage: (outMessage: BoundOutMessage): OutMessage =>
       OutMessage.DismissedToast({ payload: outMessage.payload }),
@@ -429,7 +429,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
         heights[id] = height
       }
     }
-    return evo(model, { heights: () => heights })
+    return modifyFields(model, { heights: () => heights })
   }
 
   /** Processes a toast message. Delegates to the bound toast update and
@@ -450,7 +450,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     const { model: nextToast, commands = [], outMessage: out } = Bound.show(model.toast, input)
     return Update.withOutMessage(
       {
-        model: evo(model, { toast: () => nextToast }),
+        model: modifyFields(model, { toast: () => nextToast }),
         commands: [
           ...Command.mapMessages(commands, toGotToastMessage),
           MeasureHeights({ containerId: nextToast.id }),
@@ -465,7 +465,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     const { model: nextToast, commands = [], outMessage: out } = Bound.dismiss(model.toast, entryId)
     return Update.withOutMessage(
       {
-        model: evo(model, { toast: () => nextToast }),
+        model: modifyFields(model, { toast: () => nextToast }),
         commands: Command.mapMessages(commands, toGotToastMessage),
       },
       out,
@@ -477,7 +477,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     const { model: nextToast, commands = [], outMessage: out } = Bound.dismissAll(model.toast)
     return Update.withOutMessage(
       {
-        model: evo(model, { toast: () => nextToast }),
+        model: modifyFields(model, { toast: () => nextToast }),
         commands: Command.mapMessages(commands, toGotToastMessage),
       },
       out,

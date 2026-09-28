@@ -1,6 +1,6 @@
 import { Update } from 'foldkit'
 import { Match as M, Option, Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { Subscription } from 'foldkit'
@@ -209,14 +209,14 @@ const foldControlledOutMessage = M.type<resizable.OutMessage>().pipe(
   M.tagsExhaustive({
     LayoutChanged:
       ({ layout }) =>
-      (model) => ({ model: evo(model, { resizableControlledLayout: () => layout }) }),
+      (model) => ({ model: modifyFields(model, { resizableControlledLayout: () => layout }) }),
   }),
 )
 
 const foldResizableHorizontal = Update.foldChild({
   update: resizable.update,
   read: (model: State) => Option.some(model.resizableHorizontal),
-  write: (model, next) => evo(model, { resizableHorizontal: () => next }),
+  write: (model, next) => modifyFields(model, { resizableHorizontal: () => next }),
   toParentMessage: (message) => Message.GotResizableHorizontalMessage({ message }),
   foldOutMessage: foldOtherOutMessage,
 })
@@ -224,7 +224,7 @@ const foldResizableHorizontal = Update.foldChild({
 const foldResizableVertical = Update.foldChild({
   update: resizable.update,
   read: (model: State) => Option.some(model.resizableVertical),
-  write: (model, next) => evo(model, { resizableVertical: () => next }),
+  write: (model, next) => modifyFields(model, { resizableVertical: () => next }),
   toParentMessage: (message) => Message.GotResizableVerticalMessage({ message }),
   foldOutMessage: foldOtherOutMessage,
 })
@@ -232,7 +232,7 @@ const foldResizableVertical = Update.foldChild({
 const foldResizableWithHandle = Update.foldChild({
   update: resizable.update,
   read: (model: State) => Option.some(model.resizableWithHandle),
-  write: (model, next) => evo(model, { resizableWithHandle: () => next }),
+  write: (model, next) => modifyFields(model, { resizableWithHandle: () => next }),
   toParentMessage: (message) => Message.GotResizableWithHandleMessage({ message }),
   foldOutMessage: foldOtherOutMessage,
 })
@@ -240,7 +240,7 @@ const foldResizableWithHandle = Update.foldChild({
 const foldResizableNestedOuter = Update.foldChild({
   update: resizable.update,
   read: (model: State) => Option.some(model.resizableNestedOuter),
-  write: (model, next) => evo(model, { resizableNestedOuter: () => next }),
+  write: (model, next) => modifyFields(model, { resizableNestedOuter: () => next }),
   toParentMessage: (message) => Message.GotResizableNestedOuterMessage({ message }),
   foldOutMessage: foldOtherOutMessage,
 })
@@ -248,7 +248,7 @@ const foldResizableNestedOuter = Update.foldChild({
 const foldResizableNestedInner = Update.foldChild({
   update: resizable.update,
   read: (model: State) => Option.some(model.resizableNestedInner),
-  write: (model, next) => evo(model, { resizableNestedInner: () => next }),
+  write: (model, next) => modifyFields(model, { resizableNestedInner: () => next }),
   toParentMessage: (message) => Message.GotResizableNestedInnerMessage({ message }),
   foldOutMessage: foldOtherOutMessage,
 })
@@ -256,7 +256,7 @@ const foldResizableNestedInner = Update.foldChild({
 const foldResizableControlled = Update.foldChild({
   update: resizable.update,
   read: (model: State) => Option.some(model.resizableControlled),
-  write: (model, next) => evo(model, { resizableControlled: () => next }),
+  write: (model, next) => modifyFields(model, { resizableControlled: () => next }),
   toParentMessage: (message) => Message.GotResizableControlledMessage({ message }),
   foldOutMessage: foldControlledOutMessage,
 })
@@ -264,7 +264,7 @@ const foldResizableControlled = Update.foldChild({
 const foldResizableCollapsible = Update.foldChild({
   update: resizable.update,
   read: (model: State) => Option.some(model.resizableCollapsible),
-  write: (model, next) => evo(model, { resizableCollapsible: () => next }),
+  write: (model, next) => modifyFields(model, { resizableCollapsible: () => next }),
   toParentMessage: (message) => Message.GotResizableCollapsibleMessage({ message }),
   foldOutMessage: foldOtherOutMessage,
 })

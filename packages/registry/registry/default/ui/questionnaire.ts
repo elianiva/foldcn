@@ -8,7 +8,7 @@ import * as Dom from 'foldkit/dom'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import * as Update from 'foldkit/update'
 
 import { buttonVariants } from './button'
@@ -299,13 +299,13 @@ const rejectCurrent = (model: Model, index: number): UpdateReturn => {
   )
   const selector = focusTargetId(model, index)
   return {
-    model: evo(model, { answers: () => answers }),
+    model: modifyFields(model, { answers: () => answers }),
     commands: selector === undefined ? [] : [FocusAnswer({ selector })],
   }
 }
 
 const goToItem = (model: Model, index: number): UpdateReturn => ({
-  model: evo(model, { activeIndex: () => index }),
+  model: modifyFields(model, { activeIndex: () => index }),
   outMessage: OutMessage.ChangedActiveItem({ name: model.items[index]?.name ?? '', index }),
 })
 
@@ -361,7 +361,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
             ? { ...current, values, isSkipped: false, isInvalid: false }
             : current,
         )
-        return { model: evo(model, { answers: () => answers }) }
+        return { model: modifyFields(model, { answers: () => answers }) }
       },
       ChangedInput: (message) => {
         const answers = model.answers.map((current, answerIndex) =>
@@ -369,7 +369,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
             ? { ...current, text: message.value, isSkipped: false, isInvalid: false }
             : current,
         )
-        return { model: evo(model, { answers: () => answers }) }
+        return { model: modifyFields(model, { answers: () => answers }) }
       },
       ConfirmedAnswer: () => {
         return confirmCurrent(model)
@@ -388,7 +388,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
             ? { values: [], text: '', isSkipped: true, isInvalid: false }
             : current,
         )
-        const skipped = evo(model, { answers: () => answers })
+        const skipped = modifyFields(model, { answers: () => answers })
         return model.activeIndex >= model.items.length - 1
           ? submitAll(skipped)
           : goToItem(skipped, model.activeIndex + 1)

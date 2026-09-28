@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -124,7 +124,7 @@ const foldTooltipOutMessage = M.type<tooltip.OutMessage>().pipe(
 const foldTooltip = Update.foldChild({
   update: tooltip.update,
   read: (model: State) => Option.some(model.tooltip),
-  write: (model, next) => evo(model, { tooltip: () => next }),
+  write: (model, next) => modifyFields(model, { tooltip: () => next }),
   toParentMessage: (message) => Message.GotTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
@@ -132,7 +132,7 @@ const foldTooltip = Update.foldChild({
 const foldTopTooltip = Update.foldChild({
   update: tooltip.update,
   read: (model: State) => Option.some(model.topTooltip),
-  write: (model, next) => evo(model, { topTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { topTooltip: () => next }),
   toParentMessage: (message) => Message.GotTopTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
@@ -140,7 +140,7 @@ const foldTopTooltip = Update.foldChild({
 const foldRightTooltip = Update.foldChild({
   update: tooltip.update,
   read: (model: State) => Option.some(model.rightTooltip),
-  write: (model, next) => evo(model, { rightTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { rightTooltip: () => next }),
   toParentMessage: (message) => Message.GotRightTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
@@ -148,7 +148,7 @@ const foldRightTooltip = Update.foldChild({
 const foldBottomTooltip = Update.foldChild({
   update: tooltip.update,
   read: (model: State) => Option.some(model.bottomTooltip),
-  write: (model, next) => evo(model, { bottomTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { bottomTooltip: () => next }),
   toParentMessage: (message) => Message.GotBottomTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
@@ -156,7 +156,7 @@ const foldBottomTooltip = Update.foldChild({
 const foldLeftTooltip = Update.foldChild({
   update: tooltip.update,
   read: (model: State) => Option.some(model.leftTooltip),
-  write: (model, next) => evo(model, { leftTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { leftTooltip: () => next }),
   toParentMessage: (message) => Message.GotLeftTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })

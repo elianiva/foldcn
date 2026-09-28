@@ -2,7 +2,7 @@ import { Update } from 'foldkit'
 import { Bold, Italic, Underline, Star, Heart, Bookmark } from 'lucide'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -250,7 +250,7 @@ const foldToggleGroupOutMessage = M.type<toggleGroup.OutMessage>().pipe(
 const foldToggleGroup = Update.foldChild({
   update: toggleGroup.update,
   read: (model: State) => Option.some(model.toggleGroup),
-  write: (model, next) => evo(model, { toggleGroup: () => next }),
+  write: (model, next) => modifyFields(model, { toggleGroup: () => next }),
   toParentMessage: (message) => Message.GotToggleGroupMessage({ message }),
   foldOutMessage: foldToggleGroupOutMessage,
 })

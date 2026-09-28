@@ -1,5 +1,5 @@
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -91,28 +91,30 @@ export const slice = defineSlice({
   ],
   handlers: (model: State) => ({
     UpdatedSettingsName: ({ value }: typeof Message.UpdatedSettingsName.Type): UpdateReturn => ({
-      model: evo(model, { settingsName: () => value }),
+      model: modifyFields(model, { settingsName: () => value }),
     }),
     UpdatedSettingsEmail: ({ value }: typeof Message.UpdatedSettingsEmail.Type): UpdateReturn => ({
-      model: evo(model, { settingsEmail: () => value }),
+      model: modifyFields(model, { settingsEmail: () => value }),
     }),
     UpdatedSettingsBio: ({ value }: typeof Message.UpdatedSettingsBio.Type): UpdateReturn => ({
-      model: evo(model, { settingsBio: () => value }),
+      model: modifyFields(model, { settingsBio: () => value }),
     }),
     UpdatedSettingsLanguage: ({
       value,
     }: typeof Message.UpdatedSettingsLanguage.Type): UpdateReturn => ({
-      model: evo(model, { settingsLanguage: () => value }),
+      model: modifyFields(model, { settingsLanguage: () => value }),
     }),
     ToggledSettingsEmailNotifs: ({
       isChecked,
     }: typeof Message.ToggledSettingsEmailNotifs.Type): UpdateReturn => ({
-      model: evo(model, { settingsEmailNotifs: () => isChecked }),
+      model: modifyFields(model, { settingsEmailNotifs: () => isChecked }),
     }),
     ToggledSettingsTfa: ({ isChecked }: typeof Message.ToggledSettingsTfa.Type): UpdateReturn => ({
-      model: evo(model, { settingsTfa: () => isChecked }),
+      model: modifyFields(model, { settingsTfa: () => isChecked }),
     }),
-    ClickedSaveSettings: (): UpdateReturn => ({ model: evo(model, { settingsSaved: () => true }) }),
+    ClickedSaveSettings: (): UpdateReturn => ({
+      model: modifyFields(model, { settingsSaved: () => true }),
+    }),
   }),
   samples: [
     Message.UpdatedSettingsName({ value: 'Ada' }),

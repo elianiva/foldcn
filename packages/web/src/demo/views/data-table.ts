@@ -1,5 +1,5 @@
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -78,7 +78,7 @@ export const slice = defineSlice({
   messages: [Message.UpdatedTableSearch],
   handlers: (model: State) => ({
     UpdatedTableSearch: ({ value }: typeof Message.UpdatedTableSearch.Type): UpdateReturn => ({
-      model: evo(model, { tableSearch: () => value }),
+      model: modifyFields(model, { tableSearch: () => value }),
     }),
   }),
   samples: [Message.UpdatedTableSearch({ value: 'ada' })],

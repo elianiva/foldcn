@@ -1,6 +1,6 @@
 import { Match as M, Option, Schema as S } from 'effect'
 import { Command, Subscription, Update } from 'foldkit'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -389,52 +389,52 @@ export const slice = defineSlice({
     GotDrawerBasicMessage: (payload: typeof Message.GotDrawerBasicMessage.Type): UpdateReturn =>
       foldDrawer(
         (state) => state.drawerBasic,
-        (state, next) => evo(state, { drawerBasic: () => next }),
+        (state, next) => modifyFields(state, { drawerBasic: () => next }),
         (message) => Message.GotDrawerBasicMessage({ message }),
       )(model, payload.message),
     GotDrawerLeftMessage: (payload: typeof Message.GotDrawerLeftMessage.Type): UpdateReturn =>
       foldDrawer(
         (state) => state.drawerLeft,
-        (state, next) => evo(state, { drawerLeft: () => next }),
+        (state, next) => modifyFields(state, { drawerLeft: () => next }),
         (message) => Message.GotDrawerLeftMessage({ message }),
       )(model, payload.message),
     GotDrawerRightMessage: (payload: typeof Message.GotDrawerRightMessage.Type): UpdateReturn =>
       foldDrawer(
         (state) => state.drawerRight,
-        (state, next) => evo(state, { drawerRight: () => next }),
+        (state, next) => modifyFields(state, { drawerRight: () => next }),
         (message) => Message.GotDrawerRightMessage({ message }),
       )(model, payload.message),
     GotDrawerUpMessage: (payload: typeof Message.GotDrawerUpMessage.Type): UpdateReturn =>
       foldDrawer(
         (state) => state.drawerUp,
-        (state, next) => evo(state, { drawerUp: () => next }),
+        (state, next) => modifyFields(state, { drawerUp: () => next }),
         (message) => Message.GotDrawerUpMessage({ message }),
       )(model, payload.message),
     ClickedOpenBasicDrawer: (): UpdateReturn =>
       openDrawer(
         (state) => state.drawerBasic,
-        (state, next) => evo(state, { drawerBasic: () => next }),
+        (state, next) => modifyFields(state, { drawerBasic: () => next }),
         (message) => Message.GotDrawerBasicMessage({ message }),
         model,
       ),
     ClickedOpenLeftDrawer: (): UpdateReturn =>
       openDrawer(
         (state) => state.drawerLeft,
-        (state, next) => evo(state, { drawerLeft: () => next }),
+        (state, next) => modifyFields(state, { drawerLeft: () => next }),
         (message) => Message.GotDrawerLeftMessage({ message }),
         model,
       ),
     ClickedOpenRightDrawer: (): UpdateReturn =>
       openDrawer(
         (state) => state.drawerRight,
-        (state, next) => evo(state, { drawerRight: () => next }),
+        (state, next) => modifyFields(state, { drawerRight: () => next }),
         (message) => Message.GotDrawerRightMessage({ message }),
         model,
       ),
     ClickedOpenUpDrawer: (): UpdateReturn =>
       openDrawer(
         (state) => state.drawerUp,
-        (state, next) => evo(state, { drawerUp: () => next }),
+        (state, next) => modifyFields(state, { drawerUp: () => next }),
         (message) => Message.GotDrawerUpMessage({ message }),
         model,
       ),

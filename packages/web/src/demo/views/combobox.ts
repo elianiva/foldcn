@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import { childAttributes, type Html, type HtmlBuilder } from 'foldkit/html'
 
@@ -171,7 +171,7 @@ const foldComboboxOutMessage = M.type<FoldkitCombobox.OutMessage<Framework>>().p
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => ({ model: evo(model, { maybeComboboxValue: () => Option.some(value) }) }),
+      (model) => ({ model: modifyFields(model, { maybeComboboxValue: () => Option.some(value) }) }),
     ClearedSelection: () => (model) => ({ model }),
   }),
 )
@@ -182,7 +182,7 @@ const foldMultiComboboxOutMessage = M.type<FoldkitCombobox.OutMessage<Framework>
     Selected:
       ({ value }) =>
       (model) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           multiComboboxValues: (values) =>
             values.includes(value) ? values.filter((item) => item !== value) : [...values, value],
         }),
@@ -194,7 +194,7 @@ const foldMultiComboboxOutMessage = M.type<FoldkitCombobox.OutMessage<Framework>
 const foldCombobox = Update.foldChild({
   update: FrameworkCombobox.update,
   read: (model: State) => Option.some(model.combobox),
-  write: (model, next) => evo(model, { combobox: () => next }),
+  write: (model, next) => modifyFields(model, { combobox: () => next }),
   toParentMessage: (message) => Message.GotComboboxMessage({ message }),
   foldOutMessage: foldComboboxOutMessage,
 })
@@ -202,7 +202,7 @@ const foldCombobox = Update.foldChild({
 const foldMultiCombobox = Update.foldChild({
   update: FrameworkMultiCombobox.update,
   read: (model: State) => Option.some(model.multiCombobox),
-  write: (model, next) => evo(model, { multiCombobox: () => next }),
+  write: (model, next) => modifyFields(model, { multiCombobox: () => next }),
   toParentMessage: (message) => Message.GotMultiComboboxMessage({ message }),
   foldOutMessage: foldMultiComboboxOutMessage,
 })

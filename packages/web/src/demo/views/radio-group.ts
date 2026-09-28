@@ -1,6 +1,6 @@
 import { Update } from 'foldkit'
 import { Option, Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -285,70 +285,70 @@ export const radioGroupView = (model: Model, h: HtmlBuilder<AppMessage>): Html =
 const foldRadioGroup = Update.foldChild({
   update: DensityGroup.update,
   read: (model: State) => Option.some(model.radioGroup),
-  write: (model, next) => evo(model, { radioGroup: () => next }),
+  write: (model, next) => modifyFields(model, { radioGroup: () => next }),
   toParentMessage: (message) => Message.GotRadioGroupMessage({ message }),
   foldOutMessage: (outMessage) => (model: State) => ({
-    model: evo(model, { maybeRadioValue: () => Option.some(outMessage.value) }),
+    model: modifyFields(model, { maybeRadioValue: () => Option.some(outMessage.value) }),
   }),
 })
 
 const foldRadioDescription = Update.foldChild({
   update: DensityGroup.update,
   read: (model: State) => Option.some(model.radioDescription),
-  write: (model, next) => evo(model, { radioDescription: () => next }),
+  write: (model, next) => modifyFields(model, { radioDescription: () => next }),
   toParentMessage: (message) => Message.GotRadioDescriptionMessage({ message }),
   foldOutMessage: (outMessage) => (model: State) => ({
-    model: evo(model, { maybeRadioDescription: () => Option.some(outMessage.value) }),
+    model: modifyFields(model, { maybeRadioDescription: () => Option.some(outMessage.value) }),
   }),
 })
 
 const foldRadioChoiceCard = Update.foldChild({
   update: PlanGroup.update,
   read: (model: State) => Option.some(model.radioChoiceCard),
-  write: (model, next) => evo(model, { radioChoiceCard: () => next }),
+  write: (model, next) => modifyFields(model, { radioChoiceCard: () => next }),
   toParentMessage: (message) => Message.GotRadioChoiceCardMessage({ message }),
   foldOutMessage: (outMessage) => (model: State) => ({
-    model: evo(model, { maybeRadioPlan: () => Option.some(outMessage.value) }),
+    model: modifyFields(model, { maybeRadioPlan: () => Option.some(outMessage.value) }),
   }),
 })
 
 const foldRadioFieldset = Update.foldChild({
   update: SubscriptionGroup.update,
   read: (model: State) => Option.some(model.radioFieldset),
-  write: (model, next) => evo(model, { radioFieldset: () => next }),
+  write: (model, next) => modifyFields(model, { radioFieldset: () => next }),
   toParentMessage: (message) => Message.GotRadioFieldsetMessage({ message }),
   foldOutMessage: (outMessage) => (model: State) => ({
-    model: evo(model, { maybeRadioSubscription: () => Option.some(outMessage.value) }),
+    model: modifyFields(model, { maybeRadioSubscription: () => Option.some(outMessage.value) }),
   }),
 })
 
 const foldRadioDisabled = Update.foldChild({
   update: DisabledGroup.update,
   read: (model: State) => Option.some(model.radioDisabled),
-  write: (model, next) => evo(model, { radioDisabled: () => next }),
+  write: (model, next) => modifyFields(model, { radioDisabled: () => next }),
   toParentMessage: (message) => Message.GotRadioDisabledMessage({ message }),
   foldOutMessage: (outMessage) => (model: State) => ({
-    model: evo(model, { maybeRadioDisabled: () => Option.some(outMessage.value) }),
+    model: modifyFields(model, { maybeRadioDisabled: () => Option.some(outMessage.value) }),
   }),
 })
 
 const foldRadioInvalid = Update.foldChild({
   update: NotificationGroup.update,
   read: (model: State) => Option.some(model.radioInvalid),
-  write: (model, next) => evo(model, { radioInvalid: () => next }),
+  write: (model, next) => modifyFields(model, { radioInvalid: () => next }),
   toParentMessage: (message) => Message.GotRadioInvalidMessage({ message }),
   foldOutMessage: (outMessage) => (model: State) => ({
-    model: evo(model, { maybeRadioNotification: () => Option.some(outMessage.value) }),
+    model: modifyFields(model, { maybeRadioNotification: () => Option.some(outMessage.value) }),
   }),
 })
 
 const foldRadioRtl = Update.foldChild({
   update: DensityGroup.update,
   read: (model: State) => Option.some(model.radioRtl),
-  write: (model, next) => evo(model, { radioRtl: () => next }),
+  write: (model, next) => modifyFields(model, { radioRtl: () => next }),
   toParentMessage: (message) => Message.GotRadioRtlMessage({ message }),
   foldOutMessage: (outMessage) => (model: State) => ({
-    model: evo(model, { maybeRadioRtl: () => Option.some(outMessage.value) }),
+    model: modifyFields(model, { maybeRadioRtl: () => Option.some(outMessage.value) }),
   }),
 })
 

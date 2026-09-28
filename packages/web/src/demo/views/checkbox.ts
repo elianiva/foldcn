@@ -1,5 +1,5 @@
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -264,17 +264,17 @@ export const slice = defineSlice({
   ],
   handlers: (model: State) => ({
     ToggledCheckbox: ({ isChecked }: typeof Message.ToggledCheckbox.Type): UpdateReturn => ({
-      model: evo(model, { isCheckboxChecked: () => isChecked }),
+      model: modifyFields(model, { isCheckboxChecked: () => isChecked }),
     }),
     ToggledCheckboxWithDescription: ({
       isChecked,
     }: typeof Message.ToggledCheckboxWithDescription.Type): UpdateReturn => ({
-      model: evo(model, { isCheckboxWithDescriptionChecked: () => isChecked }),
+      model: modifyFields(model, { isCheckboxWithDescriptionChecked: () => isChecked }),
     }),
     ToggledCheckboxNotifications: ({
       isChecked,
     }: typeof Message.ToggledCheckboxNotifications.Type): UpdateReturn => ({
-      model: evo(model, { isCheckboxNotificationsChecked: () => isChecked }),
+      model: modifyFields(model, { isCheckboxNotificationsChecked: () => isChecked }),
     }),
   }),
   samples: [Message.ToggledCheckbox({ isChecked: true })],

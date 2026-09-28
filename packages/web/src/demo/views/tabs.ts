@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -267,14 +267,14 @@ const foldTabsOutMessage = M.type<FoldkitTabs.OutMessage<DemoTab>>().pipe(
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => ({ model: evo(model, { activeTab: () => value }) }),
+      (model) => ({ model: modifyFields(model, { activeTab: () => value }) }),
   }),
 )
 
 const foldTabs = Update.foldChild({
   update: DemoTabs.update,
   read: (model: State) => Option.some(model.tabs),
-  write: (model, next) => evo(model, { tabs: () => next }),
+  write: (model, next) => modifyFields(model, { tabs: () => next }),
   toParentMessage: (message) => Message.GotTabsMessage({ message }),
   foldOutMessage: foldTabsOutMessage,
 })

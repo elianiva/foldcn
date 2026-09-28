@@ -7,10 +7,10 @@
       "title": "foldcn base style",
       "description": "The foldcn design system base: CSS variables, Tailwind v4 theme mapping, base CSS and core dependencies. Install this first.",
       "dependencies": [
-        "foldkit@^0.162.0",
-        "effect@4.0.0-rc.115",
-        "@effect/platform-browser@4.0.0-rc.115",
-        "@foldkit/ui@^0.162.0",
+        "foldkit@^0.163.0",
+        "effect@4.0.0-rc.116",
+        "@effect/platform-browser@4.0.0-rc.116",
+        "@foldkit/ui@^0.163.0",
         "cn",
         "lucide"
       ],

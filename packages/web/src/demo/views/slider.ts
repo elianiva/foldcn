@@ -1,6 +1,6 @@
 import { Subscription, Update } from 'foldkit'
 import { Match as M, Option, Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -173,7 +173,7 @@ const foldOutBasic = M.type<Slider.OutMessage>().pipe(
   M.tagsExhaustive({
     ChangedValue:
       ({ value }) =>
-      (model) => ({ model: evo(model, { basicValue: () => value }) }),
+      (model) => ({ model: modifyFields(model, { basicValue: () => value }) }),
   }),
 )
 
@@ -182,7 +182,7 @@ const foldOutRange = M.type<Slider.OutMessage>().pipe(
   M.tagsExhaustive({
     ChangedValue:
       ({ value }) =>
-      (model) => ({ model: evo(model, { rangeValue: () => value }) }),
+      (model) => ({ model: modifyFields(model, { rangeValue: () => value }) }),
   }),
 )
 
@@ -191,7 +191,7 @@ const foldOutVerticalA = M.type<Slider.OutMessage>().pipe(
   M.tagsExhaustive({
     ChangedValue:
       ({ value }) =>
-      (model) => ({ model: evo(model, { verticalAValue: () => value }) }),
+      (model) => ({ model: modifyFields(model, { verticalAValue: () => value }) }),
   }),
 )
 
@@ -200,7 +200,7 @@ const foldOutVerticalB = M.type<Slider.OutMessage>().pipe(
   M.tagsExhaustive({
     ChangedValue:
       ({ value }) =>
-      (model) => ({ model: evo(model, { verticalBValue: () => value }) }),
+      (model) => ({ model: modifyFields(model, { verticalBValue: () => value }) }),
   }),
 )
 
@@ -209,7 +209,7 @@ const foldOutControlled = M.type<Slider.OutMessage>().pipe(
   M.tagsExhaustive({
     ChangedValue:
       ({ value }) =>
-      (model) => ({ model: evo(model, { controlledValue: () => value }) }),
+      (model) => ({ model: modifyFields(model, { controlledValue: () => value }) }),
   }),
 )
 
@@ -230,31 +230,31 @@ const makeFold = (
 const folds = {
   basic: makeFold(
     (model) => Option.some(model.sliderBasic),
-    (model, next) => evo(model, { sliderBasic: () => next }),
+    (model, next) => modifyFields(model, { sliderBasic: () => next }),
     (message) => Message.GotSliderBasicMessage({ message }),
     foldOutBasic,
   ),
   range: makeFold(
     (model) => Option.some(model.sliderRange),
-    (model, next) => evo(model, { sliderRange: () => next }),
+    (model, next) => modifyFields(model, { sliderRange: () => next }),
     (message) => Message.GotSliderRangeMessage({ message }),
     foldOutRange,
   ),
   verticalA: makeFold(
     (model) => Option.some(model.sliderVerticalA),
-    (model, next) => evo(model, { sliderVerticalA: () => next }),
+    (model, next) => modifyFields(model, { sliderVerticalA: () => next }),
     (message) => Message.GotSliderVerticalAMessage({ message }),
     foldOutVerticalA,
   ),
   verticalB: makeFold(
     (model) => Option.some(model.sliderVerticalB),
-    (model, next) => evo(model, { sliderVerticalB: () => next }),
+    (model, next) => modifyFields(model, { sliderVerticalB: () => next }),
     (message) => Message.GotSliderVerticalBMessage({ message }),
     foldOutVerticalB,
   ),
   controlled: makeFold(
     (model) => Option.some(model.sliderControlled),
-    (model, next) => evo(model, { sliderControlled: () => next }),
+    (model, next) => modifyFields(model, { sliderControlled: () => next }),
     (message) => Message.GotSliderControlledMessage({ message }),
     foldOutControlled,
   ),

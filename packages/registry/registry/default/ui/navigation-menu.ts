@@ -4,7 +4,7 @@ import { Option, Schema as S } from 'effect'
 import * as Command from 'foldkit/command'
 import { childAttributes, type ChildAttribute, type Html, type HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineView } from 'foldkit/submodel'
 import * as Update from 'foldkit/update'
 import { ChevronDown } from 'lucide'
@@ -135,7 +135,7 @@ const syncPopover = (
 }
 
 const releaseTriggerFocus = (hoverIntent: HoverIntent.Model): HoverIntent.Model =>
-  evo(hoverIntent, {
+  modifyFields(hoverIntent, {
     maybeFocusLocation: () =>
       Option.filter(hoverIntent.maybeFocusLocation, (location) => location !== 'Trigger'),
   })

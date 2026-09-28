@@ -1,7 +1,7 @@
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
 import { Command, Update } from 'foldkit'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -136,7 +136,7 @@ const foldToastOutMessage = M.type<typeof Toast.OutMessage.Type>().pipe(
 const foldToast = Update.foldChild({
   update: Toast.update,
   read: (model: State) => Option.some(model.toast),
-  write: (model, next) => evo(model, { toast: () => next }),
+  write: (model, next) => modifyFields(model, { toast: () => next }),
   toParentMessage: (message) => Message.GotToastMessage({ message }),
   foldOutMessage: foldToastOutMessage,
 })
@@ -152,7 +152,7 @@ const showToast = (
     payload: { title, description },
   })
   return {
-    model: evo(model, { toast: () => next }),
+    model: modifyFields(model, { toast: () => next }),
     commands: Command.mapMessages(commands, (message) => Message.GotToastMessage({ message })),
   }
 }
@@ -202,7 +202,7 @@ export const slice = defineSlice({
     ClickedDismissAllToasts: (): UpdateReturn => {
       const { model: next, commands = [] } = Toast.dismissAll(model.toast)
       return {
-        model: evo(model, { toast: () => next }),
+        model: modifyFields(model, { toast: () => next }),
         commands: Command.mapMessages(commands, (message) => Message.GotToastMessage({ message })),
       }
     },

@@ -11,7 +11,7 @@ import {
   type HtmlBuilder,
 } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineView } from 'foldkit/submodel'
 import type { View as SubmodelView } from 'foldkit/submodel'
 import * as Command from 'foldkit/command'
@@ -104,7 +104,7 @@ export const state = (model: Model): 'expanded' | 'collapsed' =>
   model.isOpen ? 'expanded' : 'collapsed'
 
 export const setOpen = (model: Model, isOpen: boolean): Model =>
-  evo(model, { isOpen: () => isOpen })
+  modifyFields(model, { isOpen: () => isOpen })
 
 const mapSheet = (
   model: Model,
@@ -113,7 +113,7 @@ const mapSheet = (
     commands = [],
   }: Update.ReturnWithOutMessage<Sheet.Model, Sheet.Message, Sheet.OutMessage>,
 ): Update.Return<Model, Message> => ({
-  model: evo(model, { sheet: () => next }),
+  model: modifyFields(model, { sheet: () => next }),
   commands: Command.mapMessages(commands, (message) => Message.GotSheetMessage({ message })),
 })
 
@@ -147,7 +147,7 @@ const foldSheetOutMessage = Match.type<Sheet.OutMessage>().pipe(
 const foldSheet = Update.foldChild({
   update: Sheet.update,
   read: (model: Model) => Option.some(model.sheet),
-  write: (model, next) => evo(model, { sheet: () => next }),
+  write: (model, next) => modifyFields(model, { sheet: () => next }),
   toParentMessage: (message) => Message.GotSheetMessage({ message }),
   foldOutMessage: foldSheetOutMessage,
 })
@@ -158,7 +158,7 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     Match.tagsExhaustive({
       Toggled: () => toggle(model),
       SetIsOpen: ({ isOpen }) => ({ model: setOpen(model, isOpen) }),
-      SetIsMobile: ({ isMobile }) => ({ model: evo(model, { isMobile: () => isMobile }) }),
+      SetIsMobile: ({ isMobile }) => ({ model: modifyFields(model, { isMobile: () => isMobile }) }),
       GotSheetMessage: ({ message }) => foldSheet(model, message),
     }),
   )
@@ -249,7 +249,7 @@ export const subscriptions = Subscription.make<Model, Message>()((entry) => {
                   keys: `Mod+${SIDEBAR_KEYBOARD_SHORTCUT}`,
                   whileTyping: 'Allow',
                   whenRepeated: 'Ignore',
-                  toMessage: () => Message.Toggled(),
+                  mapEvent: () => Message.Toggled(),
                 },
               ],
             }),

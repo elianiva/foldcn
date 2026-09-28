@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { Check, Clipboard, Copy, Scissors, Trash2 } from 'lucide'
@@ -275,7 +275,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
   )
 
 const recordAction = (action: string) => (model: State) => ({
-  model: evo(model, { lastContextAction: () => action }),
+  model: modifyFields(model, { lastContextAction: () => action }),
 })
 
 const foldBasicOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
@@ -284,7 +284,7 @@ const foldBasicOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
     Selected:
       ({ value }) =>
       (model) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           showBookmarks: () =>
             value === 'Show Bookmarks' ? !model.showBookmarks : model.showBookmarks,
           showFullUrls: () =>
@@ -305,7 +305,7 @@ const foldActionOutMessage = (prefix: string) =>
 const foldCtxBasic = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.ctxBasicMenu),
-  write: (model, next) => evo(model, { ctxBasicMenu: () => next }),
+  write: (model, next) => modifyFields(model, { ctxBasicMenu: () => next }),
   toParentMessage: (message) => Message.GotCtxBasicMenuMessage({ message }),
   foldOutMessage: foldBasicOutMessage,
 })
@@ -313,7 +313,7 @@ const foldCtxBasic = Update.foldChild({
 const foldCtxIcons = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.ctxIconsMenu),
-  write: (model, next) => evo(model, { ctxIconsMenu: () => next }),
+  write: (model, next) => modifyFields(model, { ctxIconsMenu: () => next }),
   toParentMessage: (message) => Message.GotCtxIconsMenuMessage({ message }),
   foldOutMessage: foldActionOutMessage('Icons'),
 })
@@ -321,7 +321,7 @@ const foldCtxIcons = Update.foldChild({
 const foldCtxTop = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.ctxTopMenu),
-  write: (model, next) => evo(model, { ctxTopMenu: () => next }),
+  write: (model, next) => modifyFields(model, { ctxTopMenu: () => next }),
   toParentMessage: (message) => Message.GotCtxTopMenuMessage({ message }),
   foldOutMessage: foldActionOutMessage('Above'),
 })

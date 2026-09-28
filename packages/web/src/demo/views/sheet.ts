@@ -1,6 +1,6 @@
 import { Match as M, Option, Schema as S } from 'effect'
 import { Command, Update } from 'foldkit'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -200,7 +200,7 @@ const foldSheetOutMessage = M.type<Sheet.OutMessage>().pipe(
 const foldSheet = Update.foldChild({
   update: Sheet.update,
   read: (model: State) => Option.some(model.dialog),
-  write: (model, next) => evo(model, { dialog: () => next }),
+  write: (model, next) => modifyFields(model, { dialog: () => next }),
   toParentMessage: (message) => Message.GotDialogMessage({ message }),
   foldOutMessage: foldSheetOutMessage,
 })
@@ -220,15 +220,15 @@ export const slice = defineSlice({
     ClickedOpenDialog: (): UpdateReturn => {
       const { model: next, commands = [] } = Sheet.open(model.dialog)
       return {
-        model: evo(model, { dialog: () => next }),
+        model: modifyFields(model, { dialog: () => next }),
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },
     ClickedOpenSidedSheet: ({ side }: typeof Message.ClickedOpenSidedSheet.Type): UpdateReturn => {
-      const sided = evo(model, { sheetSide: () => side })
+      const sided = modifyFields(model, { sheetSide: () => side })
       const { model: next, commands = [] } = Sheet.open(sided.dialog)
       return {
-        model: evo(sided, { dialog: () => next }),
+        model: modifyFields(sided, { dialog: () => next }),
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },

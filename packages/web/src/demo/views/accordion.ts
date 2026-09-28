@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -288,27 +288,27 @@ const makeFold = (
 const folds = {
   basic: makeFold(
     (m) => Option.some(m.accordionBasic),
-    (m, n) => evo(m, { accordionBasic: () => n }),
+    (m, n) => modifyFields(m, { accordionBasic: () => n }),
     (msg) => Message.GotAccordionBasicMessage({ message: msg }),
   ),
   multiple: makeFold(
     (m) => Option.some(m.accordionMultiple),
-    (m, n) => evo(m, { accordionMultiple: () => n }),
+    (m, n) => modifyFields(m, { accordionMultiple: () => n }),
     (msg) => Message.GotAccordionMultipleMessage({ message: msg }),
   ),
   borders: makeFold(
     (m) => Option.some(m.accordionBorders),
-    (m, n) => evo(m, { accordionBorders: () => n }),
+    (m, n) => modifyFields(m, { accordionBorders: () => n }),
     (msg) => Message.GotAccordionBordersMessage({ message: msg }),
   ),
   inCard: makeFold(
     (m) => Option.some(m.accordionInCard),
-    (m, n) => evo(m, { accordionInCard: () => n }),
+    (m, n) => modifyFields(m, { accordionInCard: () => n }),
     (msg) => Message.GotAccordionInCardMessage({ message: msg }),
   ),
   disabled: makeFold(
     (m) => Option.some(m.accordionDisabled),
-    (m, n) => evo(m, { accordionDisabled: () => n }),
+    (m, n) => modifyFields(m, { accordionDisabled: () => n }),
     (msg) => Message.GotAccordionDisabledMessage({ message: msg }),
   ),
 }
@@ -316,7 +316,7 @@ const folds = {
 const foldPeek = Update.foldChild({
   update: accordion.update,
   read: (model: State) => Option.some(model.accordionPeek),
-  write: (model, next) => evo(model, { accordionPeek: () => next }),
+  write: (model, next) => modifyFields(model, { accordionPeek: () => next }),
   toParentMessage: (message) => Message.GotAccordionPeekMessage({ message }),
   foldOutMessage: () => (model: State) => ({ model }),
 })

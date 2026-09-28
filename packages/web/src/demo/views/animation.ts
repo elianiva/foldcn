@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -70,7 +70,7 @@ const foldAnimationOutMessage: (
 const foldAnimation = Update.foldChild({
   update: animation.update,
   read: (model: State) => Option.some(model.animation),
-  write: (model, next) => evo(model, { animation: () => next }),
+  write: (model, next) => modifyFields(model, { animation: () => next }),
   toParentMessage: (message) => Message.GotAnimationMessage({ message }),
   foldOutMessage: foldAnimationOutMessage,
 })
@@ -96,7 +96,7 @@ export const slice = defineSlice({
     ToggledAnimation: (): UpdateReturn => {
       const nextShowing = !model.isAnimationShowing
       return foldAnimation(
-        evo(model, { isAnimationShowing: () => nextShowing }),
+        modifyFields(model, { isAnimationShowing: () => nextShowing }),
         nextShowing ? FoldkitAnimation.Message.Showed() : FoldkitAnimation.Message.Hid(),
       )
     },

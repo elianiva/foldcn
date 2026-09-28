@@ -8,7 +8,7 @@ import { Dialog as FoldkitDialog } from '@foldkit/ui'
 import type { Attribute, ChildAttribute, Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import * as Subscription from 'foldkit/subscription'
 
 import { cn } from '@/lib/utils'
@@ -126,7 +126,7 @@ const liftDialogReturn = (
   >,
 ): UpdateReturn => {
   const next = {
-    model: evo(model, { dialog: () => result.model }),
+    model: modifyFields(model, { dialog: () => result.model }),
     commands: Command.mapMessages(result.commands ?? [], (message) =>
       Message.GotDialogMessage({ message }),
     ),
@@ -143,13 +143,13 @@ export const update = (model: Model, message: Message): UpdateReturn => {
       GotDialogMessage: (message) => {
         const result = liftDialogReturn(model, FoldkitDialog.update(model.dialog, message.message))
         return result.outMessage?._tag === 'Closed'
-          ? { ...result, model: evo(result.model, { drag: () => idleDrag() }) }
+          ? { ...result, model: modifyFields(result.model, { drag: () => idleDrag() }) }
           : result
       },
       PressedHandle: (message) => {
         if (!model.dialog.isOpen) return { model }
         return {
-          model: evo(model, {
+          model: modifyFields(model, {
             drag: () => ({
               activity: 'Dragging' as const,
               originX: message.clientX,
@@ -166,7 +166,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
             ? message.clientY - model.drag.originY
             : message.clientX - model.drag.originX
         return {
-          model: evo(model, {
+          model: modifyFields(model, {
             drag: () => ({
               ...model.drag,
               offset: Math.max(0, dismissSign(model.swipeDirection) * delta),
@@ -177,13 +177,13 @@ export const update = (model: Model, message: Message): UpdateReturn => {
       ReleasedPointer: () => {
         if (model.drag.activity !== 'Dragging') return { model }
         if (model.drag.offset < DISMISS_THRESHOLD_PX) {
-          return { model: evo(model, { drag: () => idleDrag() }) }
+          return { model: modifyFields(model, { drag: () => idleDrag() }) }
         }
-        const parked = evo(model, { drag: () => idleDrag() })
+        const parked = modifyFields(model, { drag: () => idleDrag() })
         return liftDialogReturn(parked, FoldkitDialog.close(parked.dialog))
       },
       CancelledDrag: () => {
-        return { model: evo(model, { drag: () => idleDrag() }) }
+        return { model: modifyFields(model, { drag: () => idleDrag() }) }
       },
     }),
   )

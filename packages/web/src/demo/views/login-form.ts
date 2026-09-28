@@ -1,5 +1,5 @@
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -58,12 +58,14 @@ export const slice = defineSlice({
   messages: [Message.UpdatedLoginEmail, Message.UpdatedLoginPassword, Message.SubmittedLogin],
   handlers: (model: State) => ({
     UpdatedLoginEmail: ({ value }: typeof Message.UpdatedLoginEmail.Type): UpdateReturn => ({
-      model: evo(model, { loginEmail: () => value }),
+      model: modifyFields(model, { loginEmail: () => value }),
     }),
     UpdatedLoginPassword: ({ value }: typeof Message.UpdatedLoginPassword.Type): UpdateReturn => ({
-      model: evo(model, { loginPassword: () => value }),
+      model: modifyFields(model, { loginPassword: () => value }),
     }),
-    SubmittedLogin: (): UpdateReturn => ({ model: evo(model, { loginSubmitted: () => true }) }),
+    SubmittedLogin: (): UpdateReturn => ({
+      model: modifyFields(model, { loginSubmitted: () => true }),
+    }),
   }),
   samples: [Message.UpdatedLoginEmail({ value: 'ada@example.com' }), Message.SubmittedLogin()],
 })

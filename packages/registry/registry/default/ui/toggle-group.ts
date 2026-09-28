@@ -6,7 +6,7 @@ import { Function, Schema as S, Match } from 'effect'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import * as Update from 'foldkit/update'
 
 import { cn } from '@/lib/utils'
@@ -103,7 +103,8 @@ export const init = (config: InitConfig): Model => ({
  *  OutMessage (the world is the source of truth). */
 export const reflect: Reflect<Model, ReadonlyArray<string>> = Function.dual(
   2,
-  (model: Model, value: ReadonlyArray<string>): Model => evo(model, { value: () => [...value] }),
+  (model: Model, value: ReadonlyArray<string>): Model =>
+    modifyFields(model, { value: () => [...value] }),
 )
 
 type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
@@ -116,7 +117,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
       ToggledItem: (message) => {
         const value = nextValue(model.value, message.value, model.type)
         return {
-          model: evo(model, { value: () => [...value] }),
+          model: modifyFields(model, { value: () => [...value] }),
           outMessage: OutMessage.ChangedValue({ value }),
         }
       },

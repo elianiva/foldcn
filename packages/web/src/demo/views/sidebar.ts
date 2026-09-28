@@ -1,7 +1,7 @@
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
 import { Subscription, Update } from 'foldkit'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -544,7 +544,7 @@ type State = typeof stateSchema.Type
 const foldSidebar = Update.foldChild({
   update: Sidebar.update,
   read: (model: State) => Option.some(model.sidebar),
-  write: (model, next) => evo(model, { sidebar: () => next }),
+  write: (model, next) => modifyFields(model, { sidebar: () => next }),
   toParentMessage: (message) => Message.GotSidebarMessage({ message }),
 })
 
@@ -558,7 +558,7 @@ const foldMenuOutMessage = M.type<Menu.OutMessage>().pipe(
 const foldHeaderMenu = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.headerMenu),
-  write: (model, next) => evo(model, { headerMenu: () => next }),
+  write: (model, next) => modifyFields(model, { headerMenu: () => next }),
   toParentMessage: (message) => Message.GotHeaderMenuMessage({ message }),
   foldOutMessage: foldMenuOutMessage,
 })
@@ -566,7 +566,7 @@ const foldHeaderMenu = Update.foldChild({
 const foldFooterMenu = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.footerMenu),
-  write: (model, next) => evo(model, { footerMenu: () => next }),
+  write: (model, next) => modifyFields(model, { footerMenu: () => next }),
   toParentMessage: (message) => Message.GotFooterMenuMessage({ message }),
   foldOutMessage: foldMenuOutMessage,
 })
@@ -582,7 +582,7 @@ const foldTooltipOutMessage = M.type<Tooltip.OutMessage>().pipe(
 const foldPlaygroundTooltip = Update.foldChild({
   update: Tooltip.update,
   read: (model: State) => Option.some(model.playgroundTooltip),
-  write: (model, next) => evo(model, { playgroundTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { playgroundTooltip: () => next }),
   toParentMessage: (message) => Message.GotPlaygroundTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
@@ -590,7 +590,7 @@ const foldPlaygroundTooltip = Update.foldChild({
 const foldModelsTooltip = Update.foldChild({
   update: Tooltip.update,
   read: (model: State) => Option.some(model.modelsTooltip),
-  write: (model, next) => evo(model, { modelsTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { modelsTooltip: () => next }),
   toParentMessage: (message) => Message.GotModelsTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
@@ -598,7 +598,7 @@ const foldModelsTooltip = Update.foldChild({
 const foldDocumentationTooltip = Update.foldChild({
   update: Tooltip.update,
   read: (model: State) => Option.some(model.documentationTooltip),
-  write: (model, next) => evo(model, { documentationTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { documentationTooltip: () => next }),
   toParentMessage: (message) => Message.GotDocumentationTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
@@ -606,13 +606,13 @@ const foldDocumentationTooltip = Update.foldChild({
 const foldSettingsTooltip = Update.foldChild({
   update: Tooltip.update,
   read: (model: State) => Option.some(model.settingsTooltip),
-  write: (model, next) => evo(model, { settingsTooltip: () => next }),
+  write: (model, next) => modifyFields(model, { settingsTooltip: () => next }),
   toParentMessage: (message) => Message.GotSettingsTooltipMessage({ message }),
   foldOutMessage: foldTooltipOutMessage,
 })
 
 const resetTooltips = (model: State): State =>
-  evo(model, {
+  modifyFields(model, {
     playgroundTooltip: () => Tooltip.init({ id: 'sidebar-playground-tooltip' }),
     modelsTooltip: () => Tooltip.init({ id: 'sidebar-models-tooltip' }),
     documentationTooltip: () => Tooltip.init({ id: 'sidebar-documentation-tooltip' }),
@@ -675,7 +675,7 @@ export const slice = defineSlice({
       payload: typeof Message.GotSettingsTooltipMessage.Type,
     ): UpdateReturn => foldSettingsTooltip(model, payload.message),
     ToggledPlayground: (): UpdateReturn => ({
-      model: evo(model, { playgroundOpen: () => !model.playgroundOpen }),
+      model: modifyFields(model, { playgroundOpen: () => !model.playgroundOpen }),
     }),
   }),
   samples: [Message.GotSidebarMessage({ message: Sidebar.Message.Toggled() })],

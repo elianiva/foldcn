@@ -8,7 +8,7 @@ import type { Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import * as Update from 'foldkit/update'
 
 type Child = Html | string
@@ -108,7 +108,8 @@ export const init = (config: InitConfig): Model => ({
  *  emitting an OutMessage (the world is the source of truth). */
 export const reflect: Reflect<Model, ReadonlyArray<boolean>> = Function.dual(
   2,
-  (model: Model, value: ReadonlyArray<boolean>): Model => evo(model, { value: () => [...value] }),
+  (model: Model, value: ReadonlyArray<boolean>): Model =>
+    modifyFields(model, { value: () => [...value] }),
 )
 
 type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
@@ -122,7 +123,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
         {
           const value = nextAccordionOpen(model.value, message.index, message.isOpen, model.type)
           return {
-            model: evo(model, { value: () => [...value] }),
+            model: modifyFields(model, { value: () => [...value] }),
             outMessage: OutMessage.ChangedValue({ value }),
           }
         }

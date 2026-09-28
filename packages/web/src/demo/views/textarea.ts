@@ -1,5 +1,5 @@
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -155,7 +155,7 @@ export const slice = defineSlice({
   messages: [Message.UpdatedTextareaValue],
   handlers: (model: State) => ({
     UpdatedTextareaValue: ({ value }: typeof Message.UpdatedTextareaValue.Type): UpdateReturn => ({
-      model: evo(model, { textareaValue: () => value }),
+      model: modifyFields(model, { textareaValue: () => value }),
     }),
   }),
   samples: [Message.UpdatedTextareaValue({ value: 'Hello, world!' })],

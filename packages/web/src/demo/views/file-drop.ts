@@ -3,7 +3,7 @@ import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
 import { File } from 'foldkit'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -72,7 +72,7 @@ const foldFileDropOutMessage = M.type<fileDrop.OutMessage>().pipe(
     ReceivedFiles:
       ({ files }) =>
       (model) => ({
-        model: evo(model, { fileDropFiles: () => [...model.fileDropFiles, ...files] }),
+        model: modifyFields(model, { fileDropFiles: () => [...model.fileDropFiles, ...files] }),
       }),
     RejectedNonFiles: foldNoOp(),
   }),
@@ -81,7 +81,7 @@ const foldFileDropOutMessage = M.type<fileDrop.OutMessage>().pipe(
 const foldFileDrop = Update.foldChild({
   update: fileDrop.update,
   read: (model: State) => Option.some(model.fileDrop),
-  write: (model, next) => evo(model, { fileDrop: () => next }),
+  write: (model, next) => modifyFields(model, { fileDrop: () => next }),
   toParentMessage: (message) => Message.GotFileDropMessage({ message }),
   foldOutMessage: foldFileDropOutMessage,
 })
@@ -105,7 +105,7 @@ export const slice = defineSlice({
     GotFileDropMessage: (payload: typeof Message.GotFileDropMessage.Type): UpdateReturn =>
       foldFileDrop(model, payload.message),
     ClickedRemoveFile: ({ fileIndex }: typeof Message.ClickedRemoveFile.Type): UpdateReturn => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         fileDropFiles: () => Array.remove(model.fileDropFiles, fileIndex),
       }),
     }),

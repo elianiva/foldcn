@@ -8,7 +8,7 @@ import * as Update from 'foldkit/update'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 
 import { cn } from '@/lib/utils'
 
@@ -78,7 +78,7 @@ export const init = (config: InitConfig): Model => ({
  *  emitting an OutMessage (the world is the source of truth). */
 export const reflect: Reflect<Model, boolean> = Function.dual(
   2,
-  (model: Model, isPressed: boolean): Model => evo(model, { isPressed: () => isPressed }),
+  (model: Model, isPressed: boolean): Model => modifyFields(model, { isPressed: () => isPressed }),
 )
 
 type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
@@ -91,7 +91,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
       Toggled: () => {
         const isPressed = !model.isPressed
         return {
-          model: evo(model, { isPressed: () => isPressed }),
+          model: modifyFields(model, { isPressed: () => isPressed }),
           outMessage: OutMessage.ChangedPressed({ isPressed }),
         }
       },
