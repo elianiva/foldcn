@@ -18,14 +18,14 @@ importers:
         specifier: 4.0.0-rc.116
         version: 4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1)
       '@foldkit/oxlint-plugin':
-        specifier: 0.14.0
-        version: 0.14.0(effect@4.0.0-rc.116)
+        specifier: 0.15.0
+        version: 0.15.0(effect@4.0.0-rc.116)
       '@oxlint/plugins':
         specifier: 1.77.0
         version: 1.77.0
       alchemy:
         specifier: 2.0.0-beta.79
-        version: 2.0.0-beta.79(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@26.4.0)(effect@4.0.0-rc.116)(typescript@7.0.2)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))(vitest@5.0.2(@types/node@26.4.0)(@vitest/browser-preview@4.1.11)(happy-dom@20.12.0)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)))(ws@8.21.3)
+        version: 2.0.0-beta.79(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@26.4.0)(effect@4.0.0-rc.116)(typescript@7.0.2)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))(ws@8.21.3)
       effect:
         specifier: 4.0.0-rc.116
         version: 4.0.0-rc.116
@@ -618,8 +618,8 @@ packages:
       effect: 4.0.0-rc.116
       foldkit: '>=0.163.0'
 
-  '@foldkit/oxlint-plugin@0.14.0':
-    resolution: {integrity: sha512-Yu89eRVMp9yEwg0jtgvJveB15J2OE+Mfsd/6ILqnQakfiw3Imf7qN1zrhvOUXbwRhkQMaIyk9gYSh+rEMvSHEw==}
+  '@foldkit/oxlint-plugin@0.15.0':
+    resolution: {integrity: sha512-/D17HqZuUiA0HtdbbSsbC8gnkUyQM5ovR570pJ4+GDG6EPlXU9/GYbgRf83eAJp3P5ExSTiGRW3sg8zpdjKzeQ==}
     engines: {node: '>=20.19.0 || >=22.12.0'}
 
   '@foldkit/ui@0.163.0':
@@ -3787,7 +3787,7 @@ snapshots:
       effect: 4.0.0-rc.116
       foldkit: 0.163.0(@effect/platform-browser@4.0.0-rc.116(effect@4.0.0-rc.116))(effect@4.0.0-rc.116)
 
-  '@foldkit/oxlint-plugin@0.14.0(effect@4.0.0-rc.116)':
+  '@foldkit/oxlint-plugin@0.15.0(effect@4.0.0-rc.116)':
     dependencies:
       effect-oxlint: 0.3.4(effect@4.0.0-rc.116)
     transitivePeerDependencies:
@@ -4876,7 +4876,7 @@ snapshots:
 
   '@yuku-toolchain/types@0.5.43': {}
 
-  alchemy@2.0.0-beta.79(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@26.4.0)(effect@4.0.0-rc.116)(typescript@7.0.2)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))(vitest@5.0.2(@types/node@26.4.0)(@vitest/browser-preview@4.1.11)(happy-dom@20.12.0)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)))(ws@8.21.3):
+  alchemy@2.0.0-beta.79(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@26.4.0)(effect@4.0.0-rc.116)(typescript@7.0.2)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))(ws@8.21.3):
     dependencies:
       '@alchemy.run/cloudflare-runtime': 2.0.0-beta.79(@distilled.cloud/cloudflare@1.0.0-rc.12(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@26.4.0)(effect@4.0.0-rc.116)(rolldown@1.2.5)(typescript@7.0.2)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
       '@alchemy.run/floci': 2.0.0-beta.79(effect@4.0.0-rc.116)
@@ -4924,7 +4924,6 @@ snapshots:
       - react-devtools-core
       - typescript
       - utf-8-validate
-      - vitest
 
   ansi-regex@5.0.1: {}
 
