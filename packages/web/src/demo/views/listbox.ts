@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -59,14 +59,14 @@ const foldListboxOutMessage = M.type<FoldkitListbox.OutMessage<ListboxItem>>().p
   M.tagsExhaustive({
     Selected:
       ({ value }) =>
-      (model) => ({ model: evo(model, { maybeListboxValue: () => Option.some(value) }) }),
+      (model) => ({ model: modifyFields(model, { maybeListboxValue: () => Option.some(value) }) }),
   }),
 )
 
 const foldListbox = Update.foldChild({
   update: ItemListbox.update,
   read: (model: State) => Option.some(model.listbox),
-  write: (model, next) => evo(model, { listbox: () => next }),
+  write: (model, next) => modifyFields(model, { listbox: () => next }),
   toParentMessage: (message) => Message.GotListboxMessage({ message }),
   foldOutMessage: foldListboxOutMessage,
 })

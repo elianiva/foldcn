@@ -30,6 +30,22 @@
 > upstream: panel/separator `disabled`, separator `disableDoubleClick`,
 > `resizeTargetMinimumSize`, and F6 separator focus cycling.
 >
+> **Toast update (2026-09-29):** `toast` gains swipe-to-dismiss on
+> `@foldkit/ui` 0.163.0. `init({ swipeToDismiss: { threshold, direction } })`
+> opts in — default 40px, rightward — and `Toast.subscriptions` must be lifted
+> once at the app root because the pointer listeners are document-level.
+> Foldkit drives the gesture on the entry wrapper it renders, so the wrapper,
+> not the card, now owns the viewport corner anchor and the `translate`
+> transitions (`toastEntryWrapperClass`); the stack math on the card is
+> unchanged. Verified against Chrome: a 120px drag moves the card exactly with
+> the pointer, a release past the threshold holds the offset behind
+> `data-swipe="end"` and runs the wrapper's 240ms `translate` to `100vw` before
+> the entry unmounts, a below-threshold release returns to rest at the exact
+> starting pixel, an opposite-direction drag clamps to zero, and a drag that
+> starts on the close button never enters the gesture. The remaining difference
+> is recorded in `packages/web/src/catalog/gaps.ts`: dismissals that are not
+> swipes still unmount after roughly 60ms.
+>
 > **Status (post-migration):** every file in `packages/registry/registry/default/ui/*.ts`
 > now derives from `bases/base/ui` per `docs/deriving-from-base.md` — class strings are
 > the upstream `cn-*` token compositions, resolved at build time from the vendored
@@ -129,7 +145,7 @@ resumes once the reply reaches the live edge).
 6. **context-menu — not a context menu.** Opens on activation at a fixed anchor; no right-click/pointer-position anchoring.
 7. **menubar — no menubar behavior.** Each trigger is an independent Menu bundle; no ArrowLeft/Right traversal, no open-on-hover-of-next-trigger.
 8. **command — implemented in the current review branch (2026-09-05).** Stateful Command provides fuzzy ranking, keyword aliases, groups, disabled items, and keyboard/pointer selection. CommandDialog composes Foldkit Dialog with configurable close/reset behavior. The view emits `cmdk-group-heading`, and the resolver preserves its selectors. See the [Command and CommandDialog guide](command-composition.md). Publication and full browser/visual parity verification remain pending.
-9. **toast/sonner — no swipe-to-dismiss, no stack expansion** (index-based scale/peek choreography absent); hover-pause restarts the _full_ duration on resume. foldcn emits literal `cn-toast` but defines no such rule in its CSS (inert class).
+9. **toast/sonner — swipe-to-dismiss implemented (2026-09-29).** Swipe, auto-dismiss, hover-pause, hover-to-expand (the index-based scale/peek choreography, computed from measured entry heights), manual close, and the Action helper are in place. Remaining: only a swipe plays a full leave animation — close, the timer, and Dismiss all unmount after roughly 60ms and cut off the card's own slide-out, because foldkit settles leave animations on the entry wrapper rather than the card. Hover-pause restarts the _full_ duration on resume. foldcn emits literal `cn-toast` but defines no such rule in its CSS (inert class).
 10. **sidebar — interactive shell with one remaining gap.** Collapse modes (`offcanvas|icon|none`), side/variant props, mobile Sheet path, ⌘/Ctrl+B shortcut, rail, all 20+ parts (`groupAction/groupContent/menuAction/menuBadge/menuSkeleton/menuSub*`, `input`, RTL flip), and shared collapsed-mode menu-button tooltip composition are now ported. Remaining: desktop cookie hydration still needs its wrapper marker when the initial DOM must be corrected before model hydration.
 11. **avatar — no image loading/error fallback chain** (stateless `<img>`; base swaps to Fallback automatically).
 12. **Inert/dead classes:** `peer-disabled:*` on input/textarea labels (no `.peer` sibling exists). Command now emits its cmdk attributes and preserves their selectors.
@@ -221,7 +237,7 @@ resumes once the reply reaches the live edge).
   init. See the Resizable update blockquote above.
 - **sidebar — MINOR (was MAJOR — fixed 2026-08-26).** Interactive shell (provider submodel, mobile sheet, keyboard shortcut, rail, all parts) now matches upstream. Remaining behavioral gaps are the two items noted in bug #10; class diffs reduced to separator and menu refinements that the style tokens already absorb.
 - **sonner — MAJOR.** Foldkit toast engine restyled; no theme sync, no `--normal-*`/`--radius` wiring, `bg-background rounded-lg` vs popover/`rounded-2xl`; inert `cn-toast` class.
-- **toast — MAJOR.** Single entry is a close visual copy (colors/focus/icon/close hit-area match); missing swipe, stack expansion, Action part, portal/viewport composition; exit fade 200ms vs 500ms cubic-bezier choreography.
+- **toast — MAJOR.** Single entry is a close visual copy (colors/focus/icon/close hit-area match); swipe-to-dismiss, stack expansion (hover spread), and the Action helper are in place. The stack anchors to the viewport corner off the entry wrapper instead of a portal, and only a swipe plays a full leave animation (functional gap 9); exit fade 200ms vs 500ms cubic-bezier choreography.
 - **direction — MINOR.** Wrapper div with `dir` vs React context provider; extra `w-full` div; no data-slot.
 - **marker — MINOR.** Identical except content drops `*:[a]:underline-offset-3`.
 - **aspect-ratio — MINOR.** Inline `aspect-ratio` style vs `--ratio` var; ratio optional (base requires it); adds `w-full`.

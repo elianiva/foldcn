@@ -1,6 +1,6 @@
 import { Match as M, Option } from 'effect'
 import { Command, Update } from 'foldkit'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -102,7 +102,7 @@ const foldAlertDialogOutMessage = M.type<AlertDialog.OutMessage>().pipe(
 const foldAlertDialog = Update.foldChild({
   update: AlertDialog.update,
   read: (model: State) => Option.some(model.dialog),
-  write: (model, next) => evo(model, { dialog: () => next }),
+  write: (model, next) => modifyFields(model, { dialog: () => next }),
   toParentMessage: (message) => Message.GotDialogMessage({ message }),
   foldOutMessage: foldAlertDialogOutMessage,
 })
@@ -117,7 +117,7 @@ export const slice = defineSlice({
     ClickedOpenDialog: (): UpdateReturn => {
       const { model: next, commands = [] } = AlertDialog.open(model.dialog)
       return {
-        model: evo(model, { dialog: () => next }),
+        model: modifyFields(model, { dialog: () => next }),
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },

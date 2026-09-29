@@ -1,5 +1,5 @@
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -171,7 +171,7 @@ export const slice = defineSlice({
   messages: [Message.ChangedFruit],
   handlers: (model: State) => ({
     ChangedFruit: ({ value }: typeof Message.ChangedFruit.Type): UpdateReturn => ({
-      model: evo(model, { fruit: () => value }),
+      model: modifyFields(model, { fruit: () => value }),
     }),
   }),
   samples: [Message.ChangedFruit({ value: 'Blueberry' })],

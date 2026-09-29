@@ -1,7 +1,7 @@
 import { Command, Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -329,7 +329,7 @@ const foldDialogOutMessage = M.type<Dialog.OutMessage>().pipe(
 const foldDialog = Update.foldChild({
   update: Dialog.update,
   read: (model: State) => Option.some(model.dialog),
-  write: (model, next) => evo(model, { dialog: () => next }),
+  write: (model, next) => modifyFields(model, { dialog: () => next }),
   toParentMessage: (message) => Message.GotDialogMessage({ message }),
   foldOutMessage: foldDialogOutMessage,
 })
@@ -356,31 +356,34 @@ export const slice = defineSlice({
     GotDialogMessage: (payload: typeof Message.GotDialogMessage.Type): UpdateReturn =>
       foldDialog(model, payload.message),
     ClickedOpenBasicDialog: (): UpdateReturn => {
-      const formed = evo(model, { dialogContent: () => 'form' as const })
+      const formed = modifyFields(model, { dialogContent: () => 'form' as const })
       const { model: next, commands = [] } = Dialog.open(formed.dialog)
       return {
-        model: evo(formed, { dialog: () => next }),
+        model: modifyFields(formed, { dialog: () => next }),
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },
     ClickedOpenSizedDialog: ({
       size,
     }: typeof Message.ClickedOpenSizedDialog.Type): UpdateReturn => {
-      const sized = evo(model, { dialogSize: () => size, dialogContent: () => 'form' as const })
+      const sized = modifyFields(model, {
+        dialogSize: () => size,
+        dialogContent: () => 'form' as const,
+      })
       const { model: next, commands = [] } = Dialog.open(sized.dialog)
       return {
-        model: evo(sized, { dialog: () => next }),
+        model: modifyFields(sized, { dialog: () => next }),
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },
     ClickedOpenScrollableDialog: (): UpdateReturn => {
-      const scrolled = evo(model, {
+      const scrolled = modifyFields(model, {
         dialogContent: () => 'scroll' as const,
         dialogSize: () => 'default' as const,
       })
       const { model: next, commands = [] } = Dialog.open(scrolled.dialog)
       return {
-        model: evo(scrolled, { dialog: () => next }),
+        model: modifyFields(scrolled, { dialog: () => next }),
         commands: Command.mapMessages(commands, (message) => Message.GotDialogMessage({ message })),
       }
     },

@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -217,22 +217,22 @@ const makeFold = (
 const folds = {
   main: makeFold(
     (m) => Option.some(m.collapsible),
-    (m, n) => evo(m, { collapsible: () => n }),
+    (m, n) => modifyFields(m, { collapsible: () => n }),
     (msg) => Message.GotCollapsibleMessage({ message: msg }),
   ),
   components: makeFold(
     (m) => Option.some(m.collapsibleComponents),
-    (m, n) => evo(m, { collapsibleComponents: () => n }),
+    (m, n) => modifyFields(m, { collapsibleComponents: () => n }),
     (msg) => Message.GotCollapsibleComponentsMessage({ message: msg }),
   ),
   lib: makeFold(
     (m) => Option.some(m.collapsibleLib),
-    (m, n) => evo(m, { collapsibleLib: () => n }),
+    (m, n) => modifyFields(m, { collapsibleLib: () => n }),
     (msg) => Message.GotCollapsibleLibMessage({ message: msg }),
   ),
   settings: makeFold(
     (m) => Option.some(m.collapsibleSettings),
-    (m, n) => evo(m, { collapsibleSettings: () => n }),
+    (m, n) => modifyFields(m, { collapsibleSettings: () => n }),
     (msg) => Message.GotCollapsibleSettingsMessage({ message: msg }),
   ),
 }
@@ -240,7 +240,7 @@ const folds = {
 const foldPeek = Update.foldChild({
   update: collapsible.update,
   read: (model: State) => Option.some(model.collapsiblePeek),
-  write: (model, next) => evo(model, { collapsiblePeek: () => next }),
+  write: (model, next) => modifyFields(model, { collapsiblePeek: () => next }),
   toParentMessage: (message) => Message.GotCollapsiblePeekMessage({ message }),
   foldOutMessage: () => (model: State) => ({ model }),
 })

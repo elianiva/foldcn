@@ -20,7 +20,7 @@ export const gapsByItem = {
     'Right-click opens the menu anchored to the trigger region — foldkit has no pointer-position anchoring primitive yet.',
   ],
   toast: [
-    'No swipe-to-dismiss — foldkit has no pointer-move gesture primitive yet. Auto-dismiss, hover-pause, hover-to-expand and manual close work as expected.',
+    'Only a swipe plays the full leave animation. Closing, the auto-dismiss timer, and Dismiss all unmount the entry after roughly 60ms and cut off the card’s own slide-out — foldkit settles leave animations on the entry wrapper, which is where the swipe exit runs.',
   ],
   drawer: [
     'No snap points, nested stacks, or non-modal drawers — handle drag-to-dismiss and all four directions work.',

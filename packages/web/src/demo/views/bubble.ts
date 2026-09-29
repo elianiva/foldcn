@@ -1,7 +1,7 @@
 import { Schema as S } from 'effect'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 
 import { Bubble } from '../../generated/registry/ui/bubble'
 import { button } from '../../generated/registry/ui/button'
@@ -496,10 +496,10 @@ export const slice = defineSlice({
   messages: [Message.PickedReply, Message.ToggledReaction],
   handlers: (model: State) => ({
     PickedReply: (payload: typeof Message.PickedReply.Type): UpdateReturn => ({
-      model: evo(model, { bubbleReplies: () => [...model.bubbleReplies, payload.text] }),
+      model: modifyFields(model, { bubbleReplies: () => [...model.bubbleReplies, payload.text] }),
     }),
     ToggledReaction: (): UpdateReturn => ({
-      model: evo(model, { bubbleReacted: () => !model.bubbleReacted }),
+      model: modifyFields(model, { bubbleReacted: () => !model.bubbleReacted }),
     }),
   }),
   samples: [Message.ToggledReaction()],

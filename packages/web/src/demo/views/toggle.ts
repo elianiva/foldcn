@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -217,7 +217,7 @@ const foldToggleOutMessage = M.type<toggle.OutMessage>().pipe(
 const foldToggle = Update.foldChild({
   update: toggle.update,
   read: (model: State) => Option.some(model.toggle),
-  write: (model, next) => evo(model, { toggle: () => next }),
+  write: (model, next) => modifyFields(model, { toggle: () => next }),
   toParentMessage: (message) => Message.GotToggleMessage({ message }),
   foldOutMessage: foldToggleOutMessage,
 })

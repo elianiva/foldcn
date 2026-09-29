@@ -9,4 +9,4 @@ allowBuilds:
   workerd: true
 # Keep the platform-node transitive peer on the same exact Effect RC.
 overrides:
-  '@effect/platform-node@4.0.0-rc.115>@effect/platform-node-shared': 4.0.0-rc.115
+  '@effect/platform-node@4.0.0-rc.116>@effect/platform-node-shared': 4.0.0-rc.116

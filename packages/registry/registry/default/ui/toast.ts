@@ -32,19 +32,25 @@
  *  re-measure on window resize. Before a measurement lands, cards render at
  *  natural height with an approximate %-based stack, then settle exactly.
  *
- *  ⚠ BEHAVIOR GAP vs upstream: no swipe-to-dismiss — foldkit has no
- *  pointer-move gesture primitive yet. Auto-dismiss, hover-pause,
- *  hover-to-expand, the stacked/expanded choreography, and manual close all
- *  work as expected.
+ *  Swipe-to-dismiss is opt-in: pass `swipeToDismiss: {}` to `init` and lift
+ *  `Toast.subscriptions` once at the app root, because the pointermove /
+ *  pointerup / pointercancel listeners are document-level. Foldkit attaches
+ *  the pointerdown handler, the inline `translate` offset, and the
+ *  `data-swipe` phase to the entry wrapper rather than the card, so the
+ *  wrapper carries the corner anchor and the translate transitions
+ *  (`toastEntryWrapperClass`) — a running drag never disturbs the card's own
+ *  absolute placement. Auto-dismiss, hover-pause, hover-to-expand, the
+ *  stacked/expanded choreography, and manual close all work as expected.
  */
 
 import { Effect, Option, Schema as S, pipe } from 'effect'
+import { Subscription } from 'foldkit'
 import * as Command from 'foldkit/command'
 import { Toast as FoldkitToast } from '@foldkit/ui'
 import type { Attribute, ChildAttribute, Html, HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import * as Render from 'foldkit/render'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineView } from 'foldkit/submodel'
 import * as Update from 'foldkit/update'
 
@@ -84,13 +90,23 @@ const isLeavingState = (
 export const toastVariantClass = (variant: Variant): string =>
   variant === 'Error' ? 'text-destructive' : ''
 
-/** Entry card. Geometry (transform/height) is applied inline per render;
- *  the `after:` bridge extends the hover zone `--gap` + 1px below the card
- *  so the pointer can cross between stacked layers without a dead zone,
- *  exactly like the reference root class. Entries beyond `LIMIT` render with
- *  `data-limited` and are fully hidden until a slot frees up. */
+/** Entry card. `transform`/`height` are applied inline per render; the card
+ *  docks into the entry wrapper (`right-0 bottom-0`), which owns the viewport
+ *  corner anchor. The `after:` bridge extends the hover zone `--gap` + 1px
+ *  below the card so the pointer can cross between stacked layers without a
+ *  dead zone, exactly like the reference root class. Entries beyond `LIMIT`
+ *  render with `data-limited` and are fully hidden until a slot frees up. */
 export const toastEntryClass =
   'cn-toast pointer-events-auto absolute right-0 bottom-0 w-80 origin-bottom rounded-lg border bg-popover text-popover-foreground shadow-lg [transform:translateZ(0)] [contain:layout] [backface-visibility:hidden] outline-none select-none after:absolute after:top-full after:left-0 after:h-[calc(0.75rem+1px)] after:w-full after:content-[""] [transition:transform_350ms_cubic-bezier(0.22,1,0.36,1),opacity_350ms] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[limited]:pointer-events-none data-[limited]:opacity-0'
+
+/** Entry wrapper — the element foldkit drives the swipe gesture on. The corner
+ *  anchor lives here because a non-`none` `translate` makes this wrapper the
+ *  containing block for the absolutely positioned card, and the settle/exit
+ *  transitions live here because the leave lifecycle only waits on animations
+ *  attached to this element. There is deliberately no transition for
+ *  `data-swipe=move`: the card tracks the pointer without lag. */
+export const toastEntryWrapperClass =
+  'absolute right-4 bottom-4 data-[swipe=settling]:transition-[translate] data-[swipe=settling]:duration-150 data-[swipe=settling]:ease-out data-[swipe=end]:transition-[translate] data-[swipe=end]:duration-[240ms] data-[swipe=end]:ease-in'
 
 /** Content row — the reference `ToastContent`: full card height, clipped,
  *  fading out while hidden behind the frontmost layer (`data-behind`) and
@@ -407,7 +423,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
   const foldToast = Update.foldChild({
     update: Bound.update,
     read: (model: Model) => Option.some(model.toast),
-    write: (model, nextToast) => evo(model, { toast: () => nextToast }),
+    write: (model, nextToast) => modifyFields(model, { toast: () => nextToast }),
     toParentMessage: toGotToastMessage,
     toParentOutMessage: (outMessage: BoundOutMessage): OutMessage =>
       OutMessage.DismissedToast({ payload: outMessage.payload }),
@@ -429,7 +445,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
         heights[id] = height
       }
     }
-    return evo(model, { heights: () => heights })
+    return modifyFields(model, { heights: () => heights })
   }
 
   /** Processes a toast message. Delegates to the bound toast update and
@@ -450,7 +466,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     const { model: nextToast, commands = [], outMessage: out } = Bound.show(model.toast, input)
     return Update.withOutMessage(
       {
-        model: evo(model, { toast: () => nextToast }),
+        model: modifyFields(model, { toast: () => nextToast }),
         commands: [
           ...Command.mapMessages(commands, toGotToastMessage),
           MeasureHeights({ containerId: nextToast.id }),
@@ -465,7 +481,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     const { model: nextToast, commands = [], outMessage: out } = Bound.dismiss(model.toast, entryId)
     return Update.withOutMessage(
       {
-        model: evo(model, { toast: () => nextToast }),
+        model: modifyFields(model, { toast: () => nextToast }),
         commands: Command.mapMessages(commands, toGotToastMessage),
       },
       out,
@@ -477,7 +493,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     const { model: nextToast, commands = [], outMessage: out } = Bound.dismissAll(model.toast)
     return Update.withOutMessage(
       {
-        model: evo(model, { toast: () => nextToast }),
+        model: modifyFields(model, { toast: () => nextToast }),
         commands: Command.mapMessages(commands, toGotToastMessage),
       },
       out,
@@ -512,9 +528,19 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     }),
   )
 
+  /** Lifts the bound toast's document-level swipe listeners onto the foldcn
+   *  Model, which nests the bound model under `toast`. Lift this once at the
+   *  app root so pointermove / pointerup / pointercancel reach the stack. */
+  const subscriptions = Subscription.lift(Bound.subscriptions)<Model, Message>({
+    toChildModel: (model) => model.toast,
+    toParentMessage: toGotToastMessage,
+  })
+
   /** Build the `viewInputs` for `h.submodel`. `toContent` renders the
    *  payload column between the variant icon and the close button; render
-   *  action buttons there when you need them. */
+   *  action buttons there when you need them. `entryClassName` is always the
+   *  entry wrapper's anchor/swipe classes — foldkit drives the gesture on that
+   *  element, so it cannot move to the card. */
   const styledViewInputs = <M2>(
     model: Model,
     config: Readonly<{
@@ -539,11 +565,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
           h.DataAttribute('slot', 'toast'),
           ...(placement.isExpanded ? [h.DataAttribute('expanded', '')] : []),
           ...(placement.isLimited ? [h.DataAttribute('limited', '')] : []),
-          // Docked inside the fixed container's 16px padding so the stack sits
-          // inset from the viewport corner like upstream's viewport.
           h.Style({
-            right: '1rem',
-            bottom: '1rem',
             height: placement.height,
             transform: placement.transform,
           }),
@@ -578,6 +600,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
 
     return {
       position,
+      entryClassName: toastEntryWrapperClass,
       ...(config.ariaLabel !== undefined && { ariaLabel: config.ariaLabel }),
       ...(config.containerClassName !== undefined && {
         containerClassName: config.containerClassName,
@@ -596,6 +619,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
     show,
     dismiss,
     dismissAll,
+    subscriptions,
     view,
     styledViewInputs,
   } as const

@@ -1,7 +1,7 @@
 import { Command, Subscription, Update } from 'foldkit'
 import { Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { createLazy } from 'foldkit/html'
@@ -619,7 +619,7 @@ export const virtualListView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
 const foldVirtualList = Update.foldChild({
   update: virtualList.update,
   read: (model: State) => Option.some(model.virtualList),
-  write: (model, next) => evo(model, { virtualList: () => next }),
+  write: (model, next) => modifyFields(model, { virtualList: () => next }),
   toParentMessage: (message) => Message.GotVirtualListMessage({ message }),
 })
 
@@ -629,7 +629,7 @@ const foldVirtualList = Update.foldChild({
  *  event (e.g. after a style-switch remount), which would leave the model
  *  stranded past the end of a freshly filtered list and render it blank. */
 const topOfList = (model: State) => {
-  const zeroed = evo(model.virtualList, { scrollTop: () => 0 })
+  const zeroed = modifyFields(model.virtualList, { scrollTop: () => 0 })
   const { model: next, commands = [] } = FoldkitVirtualList.scrollToIndex(zeroed, 0)
   return {
     next,
@@ -678,7 +678,7 @@ export const slice = defineSlice({
     ): UpdateReturn => {
       const { next, commands } = topOfList(model)
       return {
-        model: evo(model, {
+        model: modifyFields(model, {
           virtualListSearch: () => payload.value,
           virtualList: () => next,
         }),
@@ -691,7 +691,7 @@ export const slice = defineSlice({
       if (payload.team === model.virtualListTeam) return { model }
       const { next, commands } = topOfList(model)
       return {
-        model: evo(model, {
+        model: modifyFields(model, {
           virtualListTeam: () => payload.team,
           virtualList: () => next,
         }),
@@ -701,7 +701,7 @@ export const slice = defineSlice({
     ClearedVirtualListFilters: (): UpdateReturn => {
       const { next, commands } = topOfList(model)
       return {
-        model: evo(model, {
+        model: modifyFields(model, {
           virtualListSearch: () => '',
           virtualListTeam: () => ALL_TEAMS,
           virtualList: () => next,
@@ -716,7 +716,7 @@ export const slice = defineSlice({
         Math.floor(items.length / 2),
       )
       return {
-        model: evo(model, { virtualList: () => next }),
+        model: modifyFields(model, { virtualList: () => next }),
         commands: Command.mapMessages(commands, (message) =>
           Message.GotVirtualListMessage({ message }),
         ),
@@ -725,7 +725,7 @@ export const slice = defineSlice({
     ClickedScrollToTop: (): UpdateReturn => {
       const { next, commands } = topOfList(model)
       return {
-        model: evo(model, { virtualList: () => next }),
+        model: modifyFields(model, { virtualList: () => next }),
         commands,
       }
     },

@@ -1,6 +1,6 @@
 import { Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import * as Update from 'foldkit/update'
@@ -236,7 +236,7 @@ type State = typeof stateSchema.Type
 const foldNavigationMenu = Update.foldChild({
   update: NavMenu.update,
   read: (model: State) => Option.some(model.navigationMenu),
-  write: (model, next) => evo(model, { navigationMenu: () => next }),
+  write: (model, next) => modifyFields(model, { navigationMenu: () => next }),
   toParentMessage,
   foldOutMessage: (): Update.Step<State, unknown> => (model) => ({ model }),
 })

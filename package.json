@@ -17,11 +17,11 @@
     "prepare": "lefthook install"
   },
   "devDependencies": {
-    "@effect/platform-node": "4.0.0-rc.115",
-    "@foldkit/oxlint-plugin": "0.14.0",
+    "@effect/platform-node": "4.0.0-rc.116",
+    "@foldkit/oxlint-plugin": "0.15.0",
     "@oxlint/plugins": "1.77.0",
     "alchemy": "2.0.0-beta.75",
-    "effect": "4.0.0-rc.115",
+    "effect": "4.0.0-rc.116",
     "lefthook": "^2.1.12",
     "oxlint": "1.77.0",
     "turbo": "^2.10.12",

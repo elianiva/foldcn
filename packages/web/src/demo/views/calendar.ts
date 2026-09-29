@@ -3,7 +3,7 @@ import { Update } from 'foldkit'
 import { Calendar as FoldkitCalendar } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -67,7 +67,7 @@ const foldCalendarOutMessage = M.type<calendar.OutMessage>().pipe(
   M.tagsExhaustive({
     SelectedDate:
       ({ date }) =>
-      (model) => ({ model: evo(model, { maybeSelectedDate: () => Option.some(date) }) }),
+      (model) => ({ model: modifyFields(model, { maybeSelectedDate: () => Option.some(date) }) }),
     ChangedViewMonth: () => (model) => ({ model }),
   }),
 )
@@ -75,7 +75,7 @@ const foldCalendarOutMessage = M.type<calendar.OutMessage>().pipe(
 const foldCalendar = Update.foldChild({
   update: calendar.update,
   read: (model: State) => Option.some(model.calendar),
-  write: (model, next) => evo(model, { calendar: () => next }),
+  write: (model, next) => modifyFields(model, { calendar: () => next }),
   toParentMessage: (message) => Message.GotCalendarMessage({ message }),
   foldOutMessage: foldCalendarOutMessage,
 })
@@ -85,7 +85,9 @@ const foldLocalizedOutMessage = M.type<calendar.OutMessage>().pipe(
   M.tagsExhaustive({
     SelectedDate:
       ({ date }) =>
-      (model) => ({ model: evo(model, { localizedCalendarDate: () => Option.some(date) }) }),
+      (model) => ({
+        model: modifyFields(model, { localizedCalendarDate: () => Option.some(date) }),
+      }),
     ChangedViewMonth: () => (model) => ({ model }),
   }),
 )
@@ -93,7 +95,7 @@ const foldLocalizedOutMessage = M.type<calendar.OutMessage>().pipe(
 const foldLocalized = Update.foldChild({
   update: calendar.update,
   read: (model: State) => Option.some(model.localizedCalendar),
-  write: (model, next) => evo(model, { localizedCalendar: () => next }),
+  write: (model, next) => modifyFields(model, { localizedCalendar: () => next }),
   toParentMessage: (message) => Message.GotLocalizedCalendarMessage({ message }),
   foldOutMessage: foldLocalizedOutMessage,
 })

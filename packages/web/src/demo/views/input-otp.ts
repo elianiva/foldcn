@@ -1,5 +1,5 @@
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -285,19 +285,19 @@ export const slice = defineSlice({
   ],
   handlers: (model: State) => ({
     UpdatedOtp: ({ value }: typeof Message.UpdatedOtp.Type): UpdateReturn => ({
-      model: evo(model, { otp: () => value }),
+      model: modifyFields(model, { otp: () => value }),
     }),
     UpdatedSeparatedOtp: ({ value }: typeof Message.UpdatedSeparatedOtp.Type): UpdateReturn => ({
-      model: evo(model, { otpSeparated: () => value }),
+      model: modifyFields(model, { otpSeparated: () => value }),
     }),
     UpdatedFourOtp: ({ value }: typeof Message.UpdatedFourOtp.Type): UpdateReturn => ({
-      model: evo(model, { otpFour: () => value }),
+      model: modifyFields(model, { otpFour: () => value }),
     }),
     UpdatedControlledOtp: ({ value }: typeof Message.UpdatedControlledOtp.Type): UpdateReturn => ({
-      model: evo(model, { otpControlled: () => value }),
+      model: modifyFields(model, { otpControlled: () => value }),
     }),
     UpdatedInvalidOtp: ({ value }: typeof Message.UpdatedInvalidOtp.Type): UpdateReturn => ({
-      model: evo(model, { otpInvalid: () => value }),
+      model: modifyFields(model, { otpInvalid: () => value }),
     }),
   }),
   samples: [

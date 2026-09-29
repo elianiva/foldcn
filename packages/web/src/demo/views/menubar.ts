@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -579,9 +579,9 @@ const foldCheckOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
       ({ value }) =>
       (model) =>
         value === 'Bookmarks Bar' || value === 'Always Show Bookmarks Bar'
-          ? { model: evo(model, { showBookmarks: () => !model.showBookmarks }) }
+          ? { model: modifyFields(model, { showBookmarks: () => !model.showBookmarks }) }
           : value === 'Full URLs' || value === 'Always Show Full URLs'
-            ? { model: evo(model, { showFullUrls: () => !model.showFullUrls }) }
+            ? { model: modifyFields(model, { showFullUrls: () => !model.showFullUrls }) }
             : { model },
   }),
 )
@@ -592,7 +592,7 @@ const foldFormatOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
     Selected:
       ({ value }) =>
       (model) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           checkedFormats: () =>
             model.checkedFormats.includes(value)
               ? model.checkedFormats.filter((entry) => entry !== value)
@@ -608,7 +608,7 @@ const foldProfileOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
     Selected:
       ({ value }) =>
       (model) => ({
-        model: evo(model, { profile: () => value }),
+        model: modifyFields(model, { profile: () => value }),
       }),
   }),
 )
@@ -619,7 +619,7 @@ const foldThemeOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
     Selected:
       ({ value }) =>
       (model) => ({
-        model: evo(model, { theme: () => value }),
+        model: modifyFields(model, { theme: () => value }),
       }),
   }),
 )
@@ -693,7 +693,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.fileMenu),
-        write: (state, next) => evo(state, { fileMenu: () => next }),
+        write: (state, next) => modifyFields(state, { fileMenu: () => next }),
         toParentMessage: (message) => Message.GotFileMessage({ message }),
         foldOutMessage: foldIgnoredOutMessage,
       })(model, payload.message),
@@ -701,7 +701,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.editMenu),
-        write: (state, next) => evo(state, { editMenu: () => next }),
+        write: (state, next) => modifyFields(state, { editMenu: () => next }),
         toParentMessage: (message) => Message.GotEditMessage({ message }),
         foldOutMessage: foldIgnoredOutMessage,
       })(model, payload.message),
@@ -709,7 +709,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.viewMenu),
-        write: (state, next) => evo(state, { viewMenu: () => next }),
+        write: (state, next) => modifyFields(state, { viewMenu: () => next }),
         toParentMessage: (message) => Message.GotViewMessage({ message }),
         foldOutMessage: foldCheckOutMessage,
       })(model, payload.message),
@@ -717,7 +717,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.profilesMenu),
-        write: (state, next) => evo(state, { profilesMenu: () => next }),
+        write: (state, next) => modifyFields(state, { profilesMenu: () => next }),
         toParentMessage: (message) => Message.GotProfilesMessage({ message }),
         foldOutMessage: foldProfileOutMessage,
       })(model, payload.message),
@@ -725,7 +725,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.subFileMenu),
-        write: (state, next) => evo(state, { subFileMenu: () => next }),
+        write: (state, next) => modifyFields(state, { subFileMenu: () => next }),
         toParentMessage: (message) => Message.GotSubFileMessage({ message }),
         foldOutMessage: foldIgnoredOutMessage,
       })(model, payload.message),
@@ -733,7 +733,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.subEditMenu),
-        write: (state, next) => evo(state, { subEditMenu: () => next }),
+        write: (state, next) => modifyFields(state, { subEditMenu: () => next }),
         toParentMessage: (message) => Message.GotSubEditMessage({ message }),
         foldOutMessage: foldIgnoredOutMessage,
       })(model, payload.message),
@@ -741,7 +741,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.checkViewMenu),
-        write: (state, next) => evo(state, { checkViewMenu: () => next }),
+        write: (state, next) => modifyFields(state, { checkViewMenu: () => next }),
         toParentMessage: (message) => Message.GotCheckViewMessage({ message }),
         foldOutMessage: foldCheckOutMessage,
       })(model, payload.message),
@@ -749,7 +749,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.checkFormatMenu),
-        write: (state, next) => evo(state, { checkFormatMenu: () => next }),
+        write: (state, next) => modifyFields(state, { checkFormatMenu: () => next }),
         toParentMessage: (message) => Message.GotCheckFormatMessage({ message }),
         foldOutMessage: foldFormatOutMessage,
       })(model, payload.message),
@@ -757,7 +757,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.radioProfilesMenu),
-        write: (state, next) => evo(state, { radioProfilesMenu: () => next }),
+        write: (state, next) => modifyFields(state, { radioProfilesMenu: () => next }),
         toParentMessage: (message) => Message.GotRadioProfilesMessage({ message }),
         foldOutMessage: foldProfileOutMessage,
       })(model, payload.message),
@@ -765,7 +765,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.radioThemeMenu),
-        write: (state, next) => evo(state, { radioThemeMenu: () => next }),
+        write: (state, next) => modifyFields(state, { radioThemeMenu: () => next }),
         toParentMessage: (message) => Message.GotRadioThemeMessage({ message }),
         foldOutMessage: foldThemeOutMessage,
       })(model, payload.message),
@@ -773,7 +773,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.iconFileMenu),
-        write: (state, next) => evo(state, { iconFileMenu: () => next }),
+        write: (state, next) => modifyFields(state, { iconFileMenu: () => next }),
         toParentMessage: (message) => Message.GotIconFileMessage({ message }),
         foldOutMessage: foldIgnoredOutMessage,
       })(model, payload.message),
@@ -781,7 +781,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.iconMoreMenu),
-        write: (state, next) => evo(state, { iconMoreMenu: () => next }),
+        write: (state, next) => modifyFields(state, { iconMoreMenu: () => next }),
         toParentMessage: (message) => Message.GotIconMoreMessage({ message }),
         foldOutMessage: foldIgnoredOutMessage,
       })(model, payload.message),
@@ -789,7 +789,7 @@ export const slice = defineSlice({
       Update.foldChild({
         update: DemoMenu.update,
         read: (state: State) => Option.some(state.rtlFileMenu),
-        write: (state, next) => evo(state, { rtlFileMenu: () => next }),
+        write: (state, next) => modifyFields(state, { rtlFileMenu: () => next }),
         toParentMessage: (message) => Message.GotRtlFileMessage({ message }),
         foldOutMessage: foldIgnoredOutMessage,
       })(model, payload.message),

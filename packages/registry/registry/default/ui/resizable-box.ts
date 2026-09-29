@@ -12,7 +12,7 @@ import { defineTaggedUnion } from 'foldkit/schema'
 import type { Reflect } from 'foldkit/submodel'
 import * as Subscription from 'foldkit/subscription'
 import * as Update from 'foldkit/update'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 
 // ResizableBox models a resizable container: an ordered list of panels along
 // one orientation, with a draggable, keyboard-operable separator between each
@@ -508,7 +508,7 @@ export const separatorAria = (model: Model, handleIndex: number): SeparatorAria 
 type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
 const writeLayout = (model: Model, sizes: ReadonlyArray<number>): Model =>
-  evo(model, {
+  modifyFields(model, {
     panels: () =>
       model.panels.map((panel, index) => {
         const size = at(sizes, index)
@@ -589,7 +589,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       handleIndex < 0 || handleIndex >= model.panels.length - 1
         ? { model }
         : {
-            model: evo(model, {
+            model: modifyFields(model, {
               dragState: () =>
                 DragState.Dragging({
                   handleIndex,
@@ -609,7 +609,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       if (Option.isSome(dragState.pixelSize)) return { model }
       if (pixelSize <= 0) return { model }
       return {
-        model: evo(model, {
+        model: modifyFields(model, {
           dragState: () => DragState.Dragging({ ...dragState, pixelSize: Option.some(pixelSize) }),
         }),
       }
@@ -625,7 +625,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     ReleasedHandle: () =>
       model.dragState._tag === 'Idle'
         ? { model }
-        : { model: evo(model, { dragState: () => DragState.Idle() }) },
+        : { model: modifyFields(model, { dragState: () => DragState.Idle() }) },
     KeyedHandle: ({ handleIndex, key }) => {
       if (handleIndex < 0 || handleIndex >= model.panels.length - 1) return { model }
       return Option.match(keyboardDelta(model, handleIndex, key), {

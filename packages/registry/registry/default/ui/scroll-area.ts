@@ -10,7 +10,7 @@ import { defineTaggedUnion } from 'foldkit/schema'
 import { defineView } from 'foldkit/submodel'
 import * as Subscription from 'foldkit/subscription'
 import * as Update from 'foldkit/update'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 
 import { cn } from '@/lib/utils'
 
@@ -250,7 +250,7 @@ export const init = (config: InitConfig): Model => ({
 })
 
 const storeMetrics = (model: Model, metrics: ScrollMetrics): Update.Return<Model, Message> => ({
-  model: evo(model, {
+  model: modifyFields(model, {
     scrollTop: () => metrics.scrollTop,
     scrollLeft: () => metrics.scrollLeft,
     scrollHeight: () => metrics.scrollHeight,
@@ -266,7 +266,7 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     ScrolledViewport: (metrics) => storeMetrics(model, metrics),
     MeasuredViewport: (metrics) => storeMetrics(model, metrics),
     PressedThumb: ({ axis, clientX, clientY }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         dragState: () =>
           DragState.Dragging({
             axis,
@@ -306,7 +306,9 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
         ],
       }
     },
-    ReleasedDragPointer: () => ({ model: evo(model, { dragState: () => DragState.Idle() }) }),
+    ReleasedDragPointer: () => ({
+      model: modifyFields(model, { dragState: () => DragState.Idle() }),
+    }),
   })
 
 // SUBSCRIPTIONS

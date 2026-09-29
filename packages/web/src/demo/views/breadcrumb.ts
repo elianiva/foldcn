@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -137,7 +137,7 @@ const foldBreadcrumbMenuOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
 const foldBreadcrumbMenu = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.breadcrumbMenu),
-  write: (model, next) => evo(model, { breadcrumbMenu: () => next }),
+  write: (model, next) => modifyFields(model, { breadcrumbMenu: () => next }),
   toParentMessage: (message) => Message.GotBreadcrumbMenuMessage({ message }),
   foldOutMessage: foldBreadcrumbMenuOutMessage,
 })

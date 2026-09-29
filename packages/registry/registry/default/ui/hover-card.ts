@@ -8,7 +8,7 @@ import { Duration, Match as M, Option, Schema as S } from 'effect'
 import * as Command from 'foldkit/command'
 import { childAttributes, type ChildAttribute, type Html, type HtmlBuilder } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineView } from 'foldkit/submodel'
 import * as Update from 'foldkit/update'
 
@@ -139,7 +139,7 @@ const syncPopover = (
 ): UpdateReturn => {
   const result = operation(model.popover)
   return {
-    model: evo(model, { popover: () => result.model }),
+    model: modifyFields(model, { popover: () => result.model }),
     commands: mapPopoverCommands(result.commands),
     outMessage,
   }
@@ -156,15 +156,15 @@ const foldHoverIntentOutMessage = M.type<HoverIntent.OutMessage>().pipe(
 const foldHoverIntent = Update.foldChild({
   update: HoverIntent.update,
   read: (model: Model) => Option.some(model.hoverIntent),
-  write: (model, hoverIntent) => evo(model, { hoverIntent: () => hoverIntent }),
+  write: (model, hoverIntent) => modifyFields(model, { hoverIntent: () => hoverIntent }),
   toParentMessage: toGotHoverIntentMessage,
   foldOutMessage: foldHoverIntentOutMessage,
 })
 
 const releaseTriggerFocus = (model: Model): Model =>
-  evo(model, {
+  modifyFields(model, {
     hoverIntent: (hoverIntent) =>
-      evo(hoverIntent, {
+      modifyFields(hoverIntent, {
         maybeFocusLocation: () =>
           Option.filter(hoverIntent.maybeFocusLocation, (location) => location !== 'Trigger'),
       }),
@@ -188,7 +188,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
             ? HoverIntent.close(model.hoverIntent)
             : { model: model.hoverIntent }
         const base = {
-          model: evo(model, {
+          model: modifyFields(model, {
             hoverIntent: () => hoverIntent.model,
             popover: () => result.model,
           }),

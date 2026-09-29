@@ -9,6 +9,7 @@ import { subscriptions as resizableSubscriptions } from './views/resizable'
 import { subscriptions as scrollAreaSubscriptions } from './views/scroll-area'
 import { subscriptions as sidebarSubscriptions } from './views/sidebar'
 import { subscriptions as sliderSubscriptions } from './views/slider'
+import { subscriptions as toastSubscriptions } from './views/toast'
 import { subscriptions as virtualListSubscriptions } from './views/virtual-list'
 
 export const subscriptions = Subscription.aggregate<Model, Message>()(
@@ -20,5 +21,6 @@ export const subscriptions = Subscription.aggregate<Model, Message>()(
   scrollAreaSubscriptions,
   sidebarSubscriptions,
   sliderSubscriptions,
+  toastSubscriptions,
   virtualListSubscriptions,
 )

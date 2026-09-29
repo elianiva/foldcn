@@ -2,7 +2,7 @@ import { Update } from 'foldkit'
 import Autoplay from 'embla-carousel-autoplay'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { Subscription } from 'foldkit'
@@ -245,7 +245,7 @@ const foldCarouselOutMessageApi = M.type<carousel.OutMessage>().pipe(
     ChangedIndex:
       ({ index }) =>
       (model: State) => ({
-        model: evo(model, { carouselApiIndex: () => index }),
+        model: modifyFields(model, { carouselApiIndex: () => index }),
       }),
   }),
 )
@@ -359,7 +359,7 @@ export const slice = defineSlice({
     GotCarouselMessage: (payload: typeof Message.GotCarouselMessage.Type): UpdateReturn =>
       foldCarousel(
         (model) => model.carousel,
-        (model, next) => evo(model, { carousel: () => next }),
+        (model, next) => modifyFields(model, { carousel: () => next }),
         (message) => Message.GotCarouselMessage({ message }),
       )(model, payload.message),
     GotCarouselOrientationMessage: (
@@ -367,13 +367,13 @@ export const slice = defineSlice({
     ): UpdateReturn =>
       foldCarousel(
         (model) => model.carouselOrientation,
-        (model, next) => evo(model, { carouselOrientation: () => next }),
+        (model, next) => modifyFields(model, { carouselOrientation: () => next }),
         (message) => Message.GotCarouselOrientationMessage({ message }),
       )(model, payload.message),
     GotCarouselSizeMessage: (payload: typeof Message.GotCarouselSizeMessage.Type): UpdateReturn =>
       foldCarousel(
         (model) => model.carouselSize,
-        (model, next) => evo(model, { carouselSize: () => next }),
+        (model, next) => modifyFields(model, { carouselSize: () => next }),
         (message) => Message.GotCarouselSizeMessage({ message }),
       )(model, payload.message),
     GotCarouselSpacingMessage: (
@@ -381,7 +381,7 @@ export const slice = defineSlice({
     ): UpdateReturn =>
       foldCarousel(
         (model) => model.carouselSpacing,
-        (model, next) => evo(model, { carouselSpacing: () => next }),
+        (model, next) => modifyFields(model, { carouselSpacing: () => next }),
         (message) => Message.GotCarouselSpacingMessage({ message }),
       )(model, payload.message),
     GotCarouselPluginMessage: (
@@ -389,14 +389,14 @@ export const slice = defineSlice({
     ): UpdateReturn =>
       foldCarousel(
         (model) => model.carouselPlugin,
-        (model, next) => evo(model, { carouselPlugin: () => next }),
+        (model, next) => modifyFields(model, { carouselPlugin: () => next }),
         (message) => Message.GotCarouselPluginMessage({ message }),
       )(model, payload.message),
     GotCarouselApiMessage: (payload: typeof Message.GotCarouselApiMessage.Type): UpdateReturn =>
       Update.foldChild({
         update: carousel.update,
         read: (model: State) => Option.some(model.carouselApi),
-        write: (model, next) => evo(model, { carouselApi: () => next }),
+        write: (model, next) => modifyFields(model, { carouselApi: () => next }),
         toParentMessage: (message) => Message.GotCarouselApiMessage({ message }),
         foldOutMessage: foldCarouselOutMessageApi,
       })(model, payload.message),

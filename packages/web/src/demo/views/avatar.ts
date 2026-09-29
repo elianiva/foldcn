@@ -1,6 +1,6 @@
 import { Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import * as Update from 'foldkit/update'
@@ -487,92 +487,92 @@ const makeFold = (
 const folds = {
   sizeSm: makeFold(
     (m) => Option.some(m.avatarSizeShadcnSm),
-    (m, n) => evo(m, { avatarSizeShadcnSm: () => n }),
+    (m, n) => modifyFields(m, { avatarSizeShadcnSm: () => n }),
     (msg) => Message.GotSizeShadcnSmMessage({ message: msg }),
   ),
   sizeDefault: makeFold(
     (m) => Option.some(m.avatarSizeShadcnDefault),
-    (m, n) => evo(m, { avatarSizeShadcnDefault: () => n }),
+    (m, n) => modifyFields(m, { avatarSizeShadcnDefault: () => n }),
     (msg) => Message.GotSizeShadcnDefaultMessage({ message: msg }),
   ),
   sizeLg: makeFold(
     (m) => Option.some(m.avatarSizeShadcnLg),
-    (m, n) => evo(m, { avatarSizeShadcnLg: () => n }),
+    (m, n) => modifyFields(m, { avatarSizeShadcnLg: () => n }),
     (msg) => Message.GotSizeShadcnLgMessage({ message: msg }),
   ),
   badgeSm: makeFold(
     (m) => Option.some(m.avatarBadgeJzSm),
-    (m, n) => evo(m, { avatarBadgeJzSm: () => n }),
+    (m, n) => modifyFields(m, { avatarBadgeJzSm: () => n }),
     (msg) => Message.GotBadgeJzSmMessage({ message: msg }),
   ),
   badgeDefault: makeFold(
     (m) => Option.some(m.avatarBadgeJzDefault),
-    (m, n) => evo(m, { avatarBadgeJzDefault: () => n }),
+    (m, n) => modifyFields(m, { avatarBadgeJzDefault: () => n }),
     (msg) => Message.GotBadgeJzDefaultMessage({ message: msg }),
   ),
   badgeLg: makeFold(
     (m) => Option.some(m.avatarBadgeJzLg),
-    (m, n) => evo(m, { avatarBadgeJzLg: () => n }),
+    (m, n) => modifyFields(m, { avatarBadgeJzLg: () => n }),
     (msg) => Message.GotBadgeJzLgMessage({ message: msg }),
   ),
   badgeIconSm: makeFold(
     (m) => Option.some(m.avatarBadgeIconPpSm),
-    (m, n) => evo(m, { avatarBadgeIconPpSm: () => n }),
+    (m, n) => modifyFields(m, { avatarBadgeIconPpSm: () => n }),
     (msg) => Message.GotBadgeIconPpSmMessage({ message: msg }),
   ),
   badgeIconDefault: makeFold(
     (m) => Option.some(m.avatarBadgeIconPpDefault),
-    (m, n) => evo(m, { avatarBadgeIconPpDefault: () => n }),
+    (m, n) => modifyFields(m, { avatarBadgeIconPpDefault: () => n }),
     (msg) => Message.GotBadgeIconPpDefaultMessage({ message: msg }),
   ),
   badgeIconLg: makeFold(
     (m) => Option.some(m.avatarBadgeIconPpLg),
-    (m, n) => evo(m, { avatarBadgeIconPpLg: () => n }),
+    (m, n) => modifyFields(m, { avatarBadgeIconPpLg: () => n }),
     (msg) => Message.GotBadgeIconPpLgMessage({ message: msg }),
   ),
   groupShadcn: makeFold(
     (m) => Option.some(m.avatarGroupShadcn),
-    (m, n) => evo(m, { avatarGroupShadcn: () => n }),
+    (m, n) => modifyFields(m, { avatarGroupShadcn: () => n }),
     (msg) => Message.GotGroupShadcnMessage({ message: msg }),
   ),
   groupMaxleiter: makeFold(
     (m) => Option.some(m.avatarGroupMaxleiter),
-    (m, n) => evo(m, { avatarGroupMaxleiter: () => n }),
+    (m, n) => modifyFields(m, { avatarGroupMaxleiter: () => n }),
     (msg) => Message.GotGroupMaxleiterMessage({ message: msg }),
   ),
   groupEvilrabbit: makeFold(
     (m) => Option.some(m.avatarGroupEvilrabbit),
-    (m, n) => evo(m, { avatarGroupEvilrabbit: () => n }),
+    (m, n) => modifyFields(m, { avatarGroupEvilrabbit: () => n }),
     (msg) => Message.GotGroupEvilrabbitMessage({ message: msg }),
   ),
   groupCountShadcn: makeFold(
     (m) => Option.some(m.avatarGroupCountShadcn),
-    (m, n) => evo(m, { avatarGroupCountShadcn: () => n }),
+    (m, n) => modifyFields(m, { avatarGroupCountShadcn: () => n }),
     (msg) => Message.GotGroupCountShadcnMessage({ message: msg }),
   ),
   groupCountMaxleiter: makeFold(
     (m) => Option.some(m.avatarGroupCountMaxleiter),
-    (m, n) => evo(m, { avatarGroupCountMaxleiter: () => n }),
+    (m, n) => modifyFields(m, { avatarGroupCountMaxleiter: () => n }),
     (msg) => Message.GotGroupCountMaxleiterMessage({ message: msg }),
   ),
   groupCountEvilrabbit: makeFold(
     (m) => Option.some(m.avatarGroupCountEvilrabbit),
-    (m, n) => evo(m, { avatarGroupCountEvilrabbit: () => n }),
+    (m, n) => modifyFields(m, { avatarGroupCountEvilrabbit: () => n }),
     (msg) => Message.GotGroupCountEvilrabbitMessage({ message: msg }),
   ),
   emptyShadcn: makeFold(
     (m) => Option.some(m.avatarEmptyShadcn),
-    (m, n) => evo(m, { avatarEmptyShadcn: () => n }),
+    (m, n) => modifyFields(m, { avatarEmptyShadcn: () => n }),
     (msg) => Message.GotEmptyShadcnMessage({ message: msg }),
   ),
   emptyMaxleiter: makeFold(
     (m) => Option.some(m.avatarEmptyMaxleiter),
-    (m, n) => evo(m, { avatarEmptyMaxleiter: () => n }),
+    (m, n) => modifyFields(m, { avatarEmptyMaxleiter: () => n }),
     (msg) => Message.GotEmptyMaxleiterMessage({ message: msg }),
   ),
   emptyEvilrabbit: makeFold(
     (m) => Option.some(m.avatarEmptyEvilrabbit),
-    (m, n) => evo(m, { avatarEmptyEvilrabbit: () => n }),
+    (m, n) => modifyFields(m, { avatarEmptyEvilrabbit: () => n }),
     (msg) => Message.GotEmptyEvilrabbitMessage({ message: msg }),
   ),
 }

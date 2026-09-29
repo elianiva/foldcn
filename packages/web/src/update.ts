@@ -1,7 +1,7 @@
 import { Effect, Match as M, Option, pipe, Schema as S } from 'effect'
 import { Command, Url } from 'foldkit'
 import { load, pushUrl } from 'foldkit/navigation'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import type * as Update from 'foldkit/update'
 import * as Tabs from '@foldkit/ui/tabs'
 
@@ -150,7 +150,7 @@ const resolveTheme = (model: Model, preference: ThemePreference): ResolvedTheme 
  *  submodel. Shared by the direct SelectedThemePreference message and the
  *  ToggleGroup's ChangedValue out-message. */
 const applyThemePreference = (model: Model, preference: ThemePreference): UpdateReturn => ({
-  model: evo(model, {
+  model: modifyFields(model, {
     maybeThemePreference: () => Option.some(preference),
     resolvedTheme: () => resolveTheme(model, preference),
     themeToggleGroup: () => ToggleGroup.reflect(model.themeToggleGroup, [preference]),
@@ -172,7 +172,10 @@ const foldThemeToggleGroup = (model: Model, message: ToggleGroup.Message): Updat
   )
 
   if (outMessage === undefined) {
-    return { model: evo(model, { themeToggleGroup: () => next }), commands: mappedCommands }
+    return {
+      model: modifyFields(model, { themeToggleGroup: () => next }),
+      commands: mappedCommands,
+    }
   }
 
   return M.value(outMessage).pipe(
@@ -211,7 +214,7 @@ export const LoadBrowserEnvironment = Command.define('LoadBrowserEnvironment', {
 const foldDemo = (model: Model, message: Demo.DemoMessage): UpdateReturn => {
   const { model: nextDemo, commands: demoCommands = [] } = Demo.update(model.demo, message)
   return {
-    model: evo(model, { demo: () => nextDemo }),
+    model: modifyFields(model, { demo: () => nextDemo }),
     commands: Command.mapMessages(demoCommands, (m) => Message.GotDemoMessage({ message: m })),
   }
 }
@@ -227,14 +230,14 @@ const foldInstallTabs = (model: Model, message: Tabs.Message): UpdateReturn => {
   )
 
   if (outMessage === undefined) {
-    return { model: evo(model, { installTabs: () => next }), commands: mappedCommands }
+    return { model: modifyFields(model, { installTabs: () => next }), commands: mappedCommands }
   }
 
   return M.value(outMessage).pipe(
     M.tagsExhaustive({
       Selected: (outMessage) => {
         return {
-          model: evo(model, {
+          model: modifyFields(model, {
             installTabs: () => next,
             selectedPackageManager: () => outMessage.value satisfies PackageManager,
           }),
@@ -251,7 +254,7 @@ const foldInstallTabs = (model: Model, message: Tabs.Message): UpdateReturn => {
 const foldNavSheet = (model: Model, message: Sheet.Message): UpdateReturn => {
   const { model: next, commands = [] } = Sheet.update(model.navSheet, message)
   return {
-    model: evo(model, { navSheet: () => next }),
+    model: modifyFields(model, { navSheet: () => next }),
     commands: Command.mapMessages(commands, (m) => Message.GotNavSheetMessage({ message: m })),
   }
 }
@@ -274,7 +277,10 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
       ChangedUrl: ({ url }) => {
         const { model: nextNavSheet, commands: navCommands = [] } = Sheet.close(model.navSheet)
         return {
-          model: evo(model, { route: () => parseRoute(url), navSheet: () => nextNavSheet }),
+          model: modifyFields(model, {
+            route: () => parseRoute(url),
+            navSheet: () => nextNavSheet,
+          }),
           commands: [
             ScrollToTop(),
             ...Command.mapMessages(navCommands, (m) => Message.GotNavSheetMessage({ message: m })),
@@ -287,7 +293,7 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
       ClickedOpenNavSheet: () => {
         const { model: next, commands = [] } = Sheet.open(model.navSheet)
         return {
-          model: evo(model, { navSheet: () => next }),
+          model: modifyFields(model, { navSheet: () => next }),
           commands: Command.mapMessages(commands, (m) =>
             Message.GotNavSheetMessage({ message: m }),
           ),
@@ -298,7 +304,10 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
       SelectedThemePreference: ({ preference }) => applyThemePreference(model, preference),
       ChangedSystemTheme: ({ theme }) =>
         Option.exists(model.maybeThemePreference, (p) => p === 'System')
-          ? { model: evo(model, { resolvedTheme: () => theme }), commands: [ApplyTheme({ theme })] }
+          ? {
+              model: modifyFields(model, { resolvedTheme: () => theme }),
+              commands: [ApplyTheme({ theme })],
+            }
           : { model },
       CompletedApplyTheme: () => ({ model }),
       CompletedSaveThemePreference: () => ({ model }),
@@ -310,7 +319,7 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
           onSome: (preference) => (preference === 'System' ? systemTheme : preference),
         })
         return {
-          model: evo(model, {
+          model: modifyFields(model, {
             maybeThemePreference: () => maybePreference,
             resolvedTheme: () => resolvedTheme,
             selectedPackageManager: () => packageManager,
@@ -335,12 +344,14 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
         Option.isSome(model.maybeCopiedValue)
           ? { model }
           : {
-              model: evo(model, { maybeCopiedValue: () => Option.some(value) }),
+              model: modifyFields(model, { maybeCopiedValue: () => Option.some(value) }),
               commands: [CopyText({ value })],
             },
-      CompletedCopy: () => ({ model: evo(model, { maybeCopiedValue: () => Option.none() }) }),
+      CompletedCopy: () => ({
+        model: modifyFields(model, { maybeCopiedValue: () => Option.none() }),
+      }),
       ToggledCodeBlock: ({ id }) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           expandedCodeBlocks: () =>
             model.expandedCodeBlocks.has(id)
               ? new Set([...model.expandedCodeBlocks].filter((v) => v !== id))
@@ -353,7 +364,7 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
         // exports rebound to the new tree. Persistence lives inside
         // setActiveStyle — no reload, so demo state survives the switch.
         setActiveStyle(style)
-        return { model: evo(model, { selectedStyle: () => style }) }
+        return { model: modifyFields(model, { selectedStyle: () => style }) }
       },
       CompletedNavigateInternal: () => ({ model }),
       CompletedLoadExternal: () => ({ model }),

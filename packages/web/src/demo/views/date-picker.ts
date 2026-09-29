@@ -3,7 +3,7 @@ import { Update } from 'foldkit'
 import { Calendar as FoldkitCalendar } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -67,8 +67,10 @@ const foldDatePickerOutMessage = M.type<datePicker.OutMessage>().pipe(
   M.tagsExhaustive({
     SelectedDate:
       ({ date }) =>
-      (model) => ({ model: evo(model, { maybePickedDate: () => Option.some(date) }) }),
-    ClearedDate: () => (model) => ({ model: evo(model, { maybePickedDate: () => Option.none() }) }),
+      (model) => ({ model: modifyFields(model, { maybePickedDate: () => Option.some(date) }) }),
+    ClearedDate: () => (model) => ({
+      model: modifyFields(model, { maybePickedDate: () => Option.none() }),
+    }),
     ChangedViewMonth: () => (model) => ({ model }),
   }),
 )
@@ -76,7 +78,7 @@ const foldDatePickerOutMessage = M.type<datePicker.OutMessage>().pipe(
 const foldDatePicker = Update.foldChild({
   update: datePicker.update,
   read: (model: State) => Option.some(model.datePicker),
-  write: (model, next) => evo(model, { datePicker: () => next }),
+  write: (model, next) => modifyFields(model, { datePicker: () => next }),
   toParentMessage: (message) => Message.GotDatePickerMessage({ message }),
   foldOutMessage: foldDatePickerOutMessage,
 })
@@ -86,9 +88,9 @@ const foldLocalizedOutMessage = M.type<datePicker.OutMessage>().pipe(
   M.tagsExhaustive({
     SelectedDate:
       ({ date }) =>
-      (model) => ({ model: evo(model, { localizedPickerDate: () => Option.some(date) }) }),
+      (model) => ({ model: modifyFields(model, { localizedPickerDate: () => Option.some(date) }) }),
     ClearedDate: () => (model) => ({
-      model: evo(model, { localizedPickerDate: () => Option.none() }),
+      model: modifyFields(model, { localizedPickerDate: () => Option.none() }),
     }),
     ChangedViewMonth: () => (model) => ({ model }),
   }),
@@ -97,7 +99,7 @@ const foldLocalizedOutMessage = M.type<datePicker.OutMessage>().pipe(
 const foldLocalized = Update.foldChild({
   update: datePicker.update,
   read: (model: State) => Option.some(model.localizedDatepicker),
-  write: (model, next) => evo(model, { localizedDatepicker: () => next }),
+  write: (model, next) => modifyFields(model, { localizedDatepicker: () => next }),
   toParentMessage: (message) => Message.GotLocalizedDatePickerMessage({ message }),
   foldOutMessage: foldLocalizedOutMessage,
 })

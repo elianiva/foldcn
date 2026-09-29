@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 import { Check, CreditCard, LogOut, Settings, User } from 'lucide'
@@ -309,7 +309,7 @@ export const menuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   )
 
 const recordSelection = (menuName: string, value: string) => (model: State) => ({
-  model: evo(model, { lastMenuAction: () => `${menuName}: ${value}` }),
+  model: modifyFields(model, { lastMenuAction: () => `${menuName}: ${value}` }),
 })
 
 const foldOutMessage = (menuName: string) =>
@@ -324,7 +324,7 @@ const foldChecksOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
     Selected:
       ({ value }) =>
       (model) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           showStatusBar: () =>
             value === 'Status Bar' ? !model.showStatusBar : model.showStatusBar,
           showPanel: () => (value === 'Panel' ? !model.showPanel : model.showPanel),
@@ -340,7 +340,7 @@ const foldRadioOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
     Selected:
       ({ value }) =>
       (model) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           panelPosition: () => value,
           lastMenuAction: () => `Panel position: ${value}`,
         }),
@@ -351,7 +351,7 @@ const foldRadioOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
 const foldBasic = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.basicMenu),
-  write: (model, next) => evo(model, { basicMenu: () => next }),
+  write: (model, next) => modifyFields(model, { basicMenu: () => next }),
   toParentMessage: (message) => Message.GotBasicMenuMessage({ message }),
   foldOutMessage: foldOutMessage('Basic'),
 })
@@ -359,7 +359,7 @@ const foldBasic = Update.foldChild({
 const foldShortcuts = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.shortcutsMenu),
-  write: (model, next) => evo(model, { shortcutsMenu: () => next }),
+  write: (model, next) => modifyFields(model, { shortcutsMenu: () => next }),
   toParentMessage: (message) => Message.GotShortcutsMenuMessage({ message }),
   foldOutMessage: foldOutMessage('Shortcuts'),
 })
@@ -367,7 +367,7 @@ const foldShortcuts = Update.foldChild({
 const foldIcons = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.iconsMenu),
-  write: (model, next) => evo(model, { iconsMenu: () => next }),
+  write: (model, next) => modifyFields(model, { iconsMenu: () => next }),
   toParentMessage: (message) => Message.GotIconsMenuMessage({ message }),
   foldOutMessage: foldOutMessage('Icons'),
 })
@@ -375,7 +375,7 @@ const foldIcons = Update.foldChild({
 const foldChecks = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.checksMenu),
-  write: (model, next) => evo(model, { checksMenu: () => next }),
+  write: (model, next) => modifyFields(model, { checksMenu: () => next }),
   toParentMessage: (message) => Message.GotChecksMenuMessage({ message }),
   foldOutMessage: foldChecksOutMessage,
 })
@@ -383,7 +383,7 @@ const foldChecks = Update.foldChild({
 const foldRadio = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.radioMenu),
-  write: (model, next) => evo(model, { radioMenu: () => next }),
+  write: (model, next) => modifyFields(model, { radioMenu: () => next }),
   toParentMessage: (message) => Message.GotRadioMenuMessage({ message }),
   foldOutMessage: foldRadioOutMessage,
 })
@@ -391,7 +391,7 @@ const foldRadio = Update.foldChild({
 const foldComplex = Update.foldChild({
   update: DemoMenu.update,
   read: (model: State) => Option.some(model.complexMenu),
-  write: (model, next) => evo(model, { complexMenu: () => next }),
+  write: (model, next) => modifyFields(model, { complexMenu: () => next }),
   toParentMessage: (message) => Message.GotComplexMenuMessage({ message }),
   foldOutMessage: foldOutMessage('Complex'),
 })

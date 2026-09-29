@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -191,7 +191,7 @@ const foldStandalone = M.type<questionnaire.OutMessage>().pipe(
     SubmittedAnswers:
       ({ answers }) =>
       (model) => ({
-        model: evo(model, {
+        model: modifyFields(model, {
           maybeQuestionnaireSubmission: () => Option.some(summarizeAnswers(answers)),
         }),
       }),
@@ -223,19 +223,19 @@ const makeFold = (
 const folds = {
   standalone: makeFold(
     (m) => Option.some(m.questionnaireStandalone),
-    (m, n) => evo(m, { questionnaireStandalone: () => n }),
+    (m, n) => modifyFields(m, { questionnaireStandalone: () => n }),
     (msg) => Message.GotQuestionnaireStandaloneMessage({ message: msg }),
     foldStandalone,
   ),
   plans: makeFold(
     (m) => Option.some(m.questionnairePlans),
-    (m, n) => evo(m, { questionnairePlans: () => n }),
+    (m, n) => modifyFields(m, { questionnairePlans: () => n }),
     (msg) => Message.GotQuestionnairePlansMessage({ message: msg }),
     foldPlain,
   ),
   task: makeFold(
     (m) => Option.some(m.questionnaireTask),
-    (m, n) => evo(m, { questionnaireTask: () => n }),
+    (m, n) => modifyFields(m, { questionnaireTask: () => n }),
     (msg) => Message.GotQuestionnaireTaskMessage({ message: msg }),
     foldPlain,
   ),

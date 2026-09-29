@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -222,7 +222,7 @@ const foldPopoverOutMessage = M.type<popover.OutMessage>().pipe(
 const foldPopover = Update.foldChild({
   update: popover.update,
   read: (model: State) => Option.some(model.popover),
-  write: (model, next) => evo(model, { popover: () => next }),
+  write: (model, next) => modifyFields(model, { popover: () => next }),
   toParentMessage: (message) => Message.GotPopoverMessage({ message }),
   foldOutMessage: foldPopoverOutMessage,
 })
@@ -230,7 +230,7 @@ const foldPopover = Update.foldChild({
 const foldTopPopover = Update.foldChild({
   update: popover.update,
   read: (model: State) => Option.some(model.topPopover),
-  write: (model, next) => evo(model, { topPopover: () => next }),
+  write: (model, next) => modifyFields(model, { topPopover: () => next }),
   toParentMessage: (message) => Message.GotTopPopoverMessage({ message }),
   foldOutMessage: foldPopoverOutMessage,
 })
@@ -238,7 +238,7 @@ const foldTopPopover = Update.foldChild({
 const foldRightPopover = Update.foldChild({
   update: popover.update,
   read: (model: State) => Option.some(model.rightPopover),
-  write: (model, next) => evo(model, { rightPopover: () => next }),
+  write: (model, next) => modifyFields(model, { rightPopover: () => next }),
   toParentMessage: (message) => Message.GotRightPopoverMessage({ message }),
   foldOutMessage: foldPopoverOutMessage,
 })
@@ -246,7 +246,7 @@ const foldRightPopover = Update.foldChild({
 const foldBottomPopover = Update.foldChild({
   update: popover.update,
   read: (model: State) => Option.some(model.bottomPopover),
-  write: (model, next) => evo(model, { bottomPopover: () => next }),
+  write: (model, next) => modifyFields(model, { bottomPopover: () => next }),
   toParentMessage: (message) => Message.GotBottomPopoverMessage({ message }),
   foldOutMessage: foldPopoverOutMessage,
 })
@@ -254,7 +254,7 @@ const foldBottomPopover = Update.foldChild({
 const foldLeftPopover = Update.foldChild({
   update: popover.update,
   read: (model: State) => Option.some(model.leftPopover),
-  write: (model, next) => evo(model, { leftPopover: () => next }),
+  write: (model, next) => modifyFields(model, { leftPopover: () => next }),
   toParentMessage: (message) => Message.GotLeftPopoverMessage({ message }),
   foldOutMessage: foldPopoverOutMessage,
 })

@@ -7,7 +7,7 @@ import * as Command from 'foldkit/command'
 import type { Html } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import * as Subscription from 'foldkit/subscription'
 import * as Update from 'foldkit/update'
 
@@ -261,7 +261,7 @@ type UpdateReturn = Update.Return<Model, Message>
 const issueScroll = (model: Model, scrollTop: number, behavior: ScrollMode): UpdateReturn => {
   const version = model.pendingScrollVersion + 1
   return {
-    model: evo(model, {
+    model: modifyFields(model, {
       autoscrolling: () => true,
       pendingScrollVersion: () => version,
     }),
@@ -278,7 +278,7 @@ const issueScrollToMessage = (
 ): UpdateReturn => {
   const version = model.pendingScrollVersion + 1
   return {
-    model: evo(model, {
+    model: modifyFields(model, {
       autoscrolling: () => true,
       pendingScrollVersion: () => version,
     }),
@@ -292,7 +292,7 @@ const endScrollTop = (viewportHeight: number, contentHeight: number): number =>
 /** Applies the opening position once, on the first non-empty render. */
 const initialPosition = (model: Model, snapshot: Model): UpdateReturn => {
   const version = model.pendingScrollVersion + 1
-  const opened = evo(model, {
+  const opened = modifyFields(model, {
     initialPositionApplied: () => true,
     autoscrolling: () => true,
     pendingScrollVersion: () => version,
@@ -302,12 +302,12 @@ const initialPosition = (model: Model, snapshot: Model): UpdateReturn => {
       return { model: opened, commands: [ApplyLastAnchor({ id: model.id, version })] }
     case 'start':
       return {
-        model: evo(opened, { scrollTop: () => 0 }),
+        model: modifyFields(opened, { scrollTop: () => 0 }),
         commands: [ApplyScroll({ id: model.id, scrollTop: 0, version, behavior: 'auto' })],
       }
     case 'end':
       return {
-        model: evo(opened, {
+        model: modifyFields(opened, {
           scrollTop: () => endScrollTop(snapshot.viewportHeight, snapshot.contentHeight),
         }),
         commands: [
@@ -328,7 +328,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
   return Match.value(message).pipe(
     Match.tagsExhaustive({
       SyncedViewport: (message) => {
-        const snapshot = evo(model, {
+        const snapshot = modifyFields(model, {
           scrollTop: () => message.scrollTop,
           viewportHeight: () => message.viewportHeight,
           contentHeight: () => message.contentHeight,
@@ -364,7 +364,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
         return {
           model:
             message.version === model.pendingScrollVersion
-              ? evo(model, { autoscrolling: () => false })
+              ? modifyFields(model, { autoscrolling: () => false })
               : model,
         }
       },

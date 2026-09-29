@@ -1,6 +1,6 @@
 import { Effect, Option, Schema as S } from 'effect'
 import { Command, Subscription, Update } from 'foldkit'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -240,7 +240,7 @@ export const messageScrollerView = (model: Model, h: HtmlBuilder<AppMessage>): H
 const foldScroller = Update.foldChild({
   update: MessageScroller.update,
   read: (model: State) => Option.some(model.messageScroller),
-  write: (model, next) => evo(model, { messageScroller: () => next }),
+  write: (model, next) => modifyFields(model, { messageScroller: () => next }),
   toParentMessage: (message) => Message.GotMessageScrollerMessage({ message }),
 })
 
@@ -284,7 +284,7 @@ export const slice = defineSlice({
       payload: typeof Message.GotMessageScrollerMessage.Type,
     ): UpdateReturn => foldScroller(model, payload.message),
     TypedChatDraft: (payload: typeof Message.TypedChatDraft.Type): UpdateReturn => ({
-      model: evo(model, { chatDraft: () => payload.value }),
+      model: modifyFields(model, { chatDraft: () => payload.value }),
     }),
     SentChatMessage: (): UpdateReturn => {
       const text = model.chatDraft.trim()
@@ -292,7 +292,7 @@ export const slice = defineSlice({
       const userId = mintId('user')
       const replyId = mintId('reply')
       return {
-        model: evo(model, {
+        model: modifyFields(model, {
           chatDraft: () => '',
           chatMessages: () => [
             ...model.chatMessages,
@@ -314,7 +314,7 @@ export const slice = defineSlice({
       const nextCount = (target.text.match(/\S+/g)?.length ?? 0) + CHUNK_WORDS
       const isDone = nextCount >= REPLY_WORDS.length
       return {
-        model: evo(model, {
+        model: modifyFields(model, {
           chatMessages: () =>
             model.chatMessages.map((message) =>
               message.id === payload.messageId
@@ -330,7 +330,7 @@ export const slice = defineSlice({
       }
     },
     ClickedResetChat: (): UpdateReturn => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         chatMessages: () => [...SCRIPTED],
         chatDraft: () => '',
       }),
@@ -344,7 +344,7 @@ export const slice = defineSlice({
         { align: 'start', behavior: 'smooth' },
       )
       return {
-        model: evo(model, { messageScroller: () => next }),
+        model: modifyFields(model, { messageScroller: () => next }),
         commands: Command.mapMessages(commands, (message) =>
           Message.GotMessageScrollerMessage({ message }),
         ),

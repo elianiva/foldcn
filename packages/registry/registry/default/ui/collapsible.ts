@@ -9,7 +9,7 @@ import * as Update from 'foldkit/update'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Reflect } from 'foldkit/submodel'
 import { defineView } from 'foldkit/submodel'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 
 type Child = Html | string
 
@@ -83,7 +83,7 @@ export const init = (config: InitConfig): Model => ({
  *  an OutMessage (the world is the source of truth). */
 export const reflect: Reflect<Model, boolean> = Function.dual(
   2,
-  (model: Model, isOpen: boolean): Model => evo(model, { isOpen: () => isOpen }),
+  (model: Model, isOpen: boolean): Model => modifyFields(model, { isOpen: () => isOpen }),
 )
 
 type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
@@ -97,7 +97,7 @@ export const update = (model: Model, message: Message): UpdateReturn => {
         {
           const isOpen = !model.isOpen
           return {
-            model: evo(model, { isOpen: () => isOpen }),
+            model: modifyFields(model, { isOpen: () => isOpen }),
             outMessage: OutMessage.ChangedOpen({ isOpen }),
           }
         }

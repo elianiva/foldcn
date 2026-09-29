@@ -1,7 +1,7 @@
 import { Update } from 'foldkit'
 import { Match as M, Option } from 'effect'
 import { Schema as S } from 'effect'
-import { evo } from 'foldkit/struct'
+import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
 
@@ -98,7 +98,7 @@ const foldHoverCardOutMessage = M.type<HoverCard.OutMessage>().pipe(
 const foldHoverCard = Update.foldChild({
   update: HoverCard.update,
   read: (model: State) => Option.some(model.hoverCard),
-  write: (model, next) => evo(model, { hoverCard: () => next }),
+  write: (model, next) => modifyFields(model, { hoverCard: () => next }),
   toParentMessage: (message) => Message.GotHoverCardMessage({ message }),
   foldOutMessage: foldHoverCardOutMessage,
 })
@@ -106,7 +106,7 @@ const foldHoverCard = Update.foldChild({
 const foldDelayedHoverCard = Update.foldChild({
   update: HoverCard.update,
   read: (model: State) => Option.some(model.delayedHoverCard),
-  write: (model, next) => evo(model, { delayedHoverCard: () => next }),
+  write: (model, next) => modifyFields(model, { delayedHoverCard: () => next }),
   toParentMessage: (message) => Message.GotDelayedHoverCardMessage({ message }),
   foldOutMessage: foldHoverCardOutMessage,
 })
