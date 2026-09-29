@@ -33,16 +33,11 @@ Grep each component for:
 
 ## 4. Behavior
 
-Cross-check against `docs/shadcn-base-parity-audit.md` Functional gaps:
+Cross-check against the `docs/shadcn-base-parity-audit.md` open-gaps table, and regression-check:
 
 1. button disabled twins
-2. progress indeterminate
-3. switch hidden input
-4. input-otp onComplete
-5. hover-card hover vs click
-6. context-menu pointer anchoring
-7. menubar traversal
-8. command filtering
+2. switch hidden input
+3. command filtering
 9. toast/sonner swipe/stack
 10. sidebar persistence/tooltip
 11. avatar fallback chain

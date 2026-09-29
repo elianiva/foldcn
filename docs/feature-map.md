@@ -47,7 +47,7 @@ Command owns its query and active value; CommandDialog owns both Command and Dia
 - **Disabled is never native.** Foldkit emits `aria-disabled`/`data-disabled`, not `disabled`. Styling keyed only on `disabled:` never matches. Add compat twins in `cn-compat.css` for any new disabled-capable control.
 - **Animation windows.** Base UI keys enter on `data-open:` and exit on `data-closed:`. Foldkit emits `data-enter`/`data-leave` only during transition. Resolve rewrites `data-open:`→`data-enter:` and `data-closed:`→`data-leave:` for enter/exit utilities only; persistent open styling on `data-open:` stays untouched. See `resolve-styles.mjs`.
 - **Placement vs side.** Popover/tooltip emit `data-placement` (`bottom-start`); styles expect `data-side` (`bottom`). Views must emit `data-side` from placement. Logical sides `inline-start/end` have no Foldkit equivalent.
-- **Menu ceiling.** Submenu, checkbox/radio items, destructive variant, and inset have no `@foldkit/ui` primitive. Dropdown/context/menubar cannot reach parity until the primitive does. Menubar is independent menus, not roving. Context menu has no pointer anchoring. Hover card is click-toggled.
+- **Menu ceiling.** Submenu, checkbox/radio items, destructive variant, and inset have no `@foldkit/ui` primitive. Dropdown/context/menubar cannot reach parity until the primitive does. Menubar is independent menus, not roving. Context menu has no pointer anchoring.
 - **`cn-*` must not leak.** Resolved output must contain no `cn-*` literal or the build fails. Copy token form, put visual deltas in `cn-compat.css`.
 - **Blocks compose via alias.** `@/components/ui/*` in blocks resolves through shims via Vite alias. Breaking that alias locks blocks to one style.
 - **Tailwind scan coverage.** Every resolved tree must be listed in `styles.css` `@source` lines or utilities go missing in production.
@@ -57,7 +57,7 @@ Command owns its query and active value; CommandDialog owns both Command and Dia
 
 - `CONTEXT.md` — glossary, ADR index, repo orientation.
 - `docs/deriving-from-base.md` — recipe for porting a component from upstream Base UI.
-- `docs/shadcn-base-parity-audit.md` — gap analysis against the live Base registry.
+- `docs/shadcn-base-parity-audit.md` — open behavioral gaps against the Base registry.
 - `docs/adr/` — individual ADRs.
 - `packages/registry/scripts/sync-styles.mjs` + `registry/styles/README.md` — vendoring provenance.
 - `packages/web/src/demo/{slice,assemble}.ts` — harness contract.

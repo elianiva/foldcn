@@ -50,4 +50,4 @@ packages/web/src/demo/{slice,assemble,views/}               demo harness
 packages/web/src/{active-style,generated/registry/}         style-switching shims (ADR-016)
 ```
 
-Inventory and file details are discoverable from the source — see `registry/default/ui/registry.json` (60 `registry:ui` items), `registry/default/lib/registry.json`, `registry/default/blocks/registry.json`, and `registry.json` at the package root. Install flow: `AGENTS.md` quick rules and `packages/registry/components.json`.
+Inventory and file details are discoverable from the source — see `registry/default/ui/registry.json` (`registry:ui` items), `registry/default/lib/registry.json`, `registry/default/blocks/registry.json`, and `registry.json` at the package root. Install flow: `AGENTS.md` quick rules and `packages/registry/components.json`.

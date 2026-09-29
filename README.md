@@ -72,7 +72,9 @@ A few components are intentionally diverged. Usually because the underlying `@fo
 
 These shadcn/ui base components are not ported yet. Track progress in [GitHub Issues](https://github.com/elianiva/foldcn/issues):
 
-- bubble, carousel, chart, message, message-scroller, pagination, questionnaire, scroll-area, sonner
+- chart, message
+
+Sonner is covered by `toast`.
 
 ## LLM-friendly
 

@@ -1,10 +1,8 @@
 # Command and CommandDialog guide
 
-This guide describes the implementation in this checkout. The changes are pending review; the published registry and showcase may still contain the previous implementation.
-
 ## Install and import
 
-Once this version is published, install the Command registry item:
+Install the Command registry item:
 
 ```sh
 npx shadcn@latest add @foldcn/command
@@ -126,7 +124,7 @@ const { verifyCommandComposition } = await import('/scripts/verify-command-compo
 await verifyCommandComposition()
 ```
 
-These are verification instructions, not a claim that browser checks have passed for every style. Unit coverage lives in `packages/web/src/command-behavior.test.ts`.
+Unit coverage lives in `packages/web/src/command-behavior.test.ts`. Browser checks have not been run against every style.
 
 ## Scope relative to cmdk
 

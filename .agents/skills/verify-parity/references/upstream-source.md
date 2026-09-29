@@ -55,7 +55,7 @@ agent-browser read https://ui.shadcn.com/docs/components/button  # markdown-frie
 
 ### 3. Existing audit
 
-`docs/shadcn-base-parity-audit.md` already enumerates paired vs not-covered sets and verdicts (MATCHES/MINOR/MAJOR). Use it as baseline, but re-verify against live upstream — the audit's Status blockquote notes which gaps are FIXED post-migration.
+`docs/shadcn-base-parity-audit.md` lists renames, foldcn-only and upstream-only components, and open behavioral gaps. Use it as a baseline, but re-verify against live upstream.
 
 ## When to refresh vendored styles
 

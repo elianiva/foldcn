@@ -45,7 +45,7 @@ node .agents/skills/verify-parity/scripts/verify-parity.mjs --inventory
 node .agents/skills/verify-parity/scripts/fetch-upstream.mjs && node .agents/skills/verify-parity/scripts/verify-parity.mjs --inventory
 ```
 
-Compare `packages/registry/registry/default/ui/registry.json` (60 items) against upstream `bases/base/ui` (and `docs/shadcn-base-parity-audit.md` not-covered lists). Classify each as paired, foldcn-only, or upstream-only.
+Compare `packages/registry/registry/default/ui/registry.json` against upstream `bases/base/ui` (and the audit's Coverage section). Classify each as paired, foldcn-only, or upstream-only.
 
 **Completion:** every name accounted for with Verdict.
 
@@ -78,10 +78,9 @@ Checks:
 
 ### 5. Behavioral gaps
 
-**Do:** Check `docs/shadcn-base-parity-audit.md` Functional gaps (#1–#12) against current code:
+**Do:** Check the "Open functional gaps" table in `docs/shadcn-base-parity-audit.md` and `packages/web/src/catalog/gaps.ts` against current code, and re-check button disabled twins, switch hidden input, and command filtering for regressions.
 
-- #1 button disabled twins, #2 progress indeterminate, #3 switch hidden input, #4 input-otp onComplete, #5 hover-card hover vs click, #6 context-menu pointer anchoring, #7 menubar traversal, #8 command filtering, #9 toast swipe/stack, #10 sidebar persistence, #11 avatar fallback, #12 inert classes.
-- Mark each FIXED or OPEN with file:line evidence.
+- Mark each gap FIXED or OPEN with file:line evidence. Remove fixed gaps from both files.
 
 **Completion:** gap list is current, no fixed gap regressed.
 
@@ -128,7 +127,7 @@ Checks:
 
 ### 7. Report
 
-**Do:** Emit `ParityReport` with verdicts per component (MATCHES/MINOR/MAJOR) matching `docs/shadcn-base-parity-audit.md` Scorecard. Update that file's Status blockquote if fixes landed. Do not edit `packages/registry/registry/styles/style-*.css` (vendored, byte-identical per ADR-015).
+**Do:** Emit `ParityReport` with verdicts per component (MATCHES/MINOR/MAJOR) matching the audit's coverage notes. Update that file's Status blockquote if fixes landed. Do not edit `packages/registry/registry/styles/style-*.css` (vendored, byte-identical per ADR-015).
 
 **Completion:** report covers inventory, tokens, attributes, behavior with file references.
 
@@ -147,7 +146,7 @@ Visual image diffs are opt-in for CI — they require `agent-browser` (`npm i -g
 ## References
 
 - `docs/deriving-from-base.md` — recipe for porting (class strings, data-slot, compat layer).
-- `docs/shadcn-base-parity-audit.md` — last full audit, scorecard, and gap list.
+- `docs/shadcn-base-parity-audit.md` — coverage notes and open gap list.
 - `docs/feature-map.md` — pipeline, style system, and breakage notes.
 - `packages/registry/scripts/sync-styles.mjs --check` — vendored CSS drift check.
 - `references/visual-parity.md` — state matrix, capture protocol, diff thresholds, harness modes.

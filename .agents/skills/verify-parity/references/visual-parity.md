@@ -138,7 +138,7 @@ At minimum `default` (nova) is compared — it's the `dist/r` catalog and web de
 
 - **Visual `MAJOR` + token `MAJOR`:** expected — class strings or attributes still diverge.
 - **Visual `MAJOR` + token `MATCHES`:** attribute/state-hook mismatch, animation-window mismatch (`data-open` vs `data-enter`), or behavioral difference (hover vs click, missing `data-side`) — fix the attribute mapping or compat layer, not the class string.
-- **Visual `MINOR` + token `MINOR`:** metric drift (`h-9` vs `h-8`, `rounded-md` vs `rounded-lg`, density) — intentional or pending design decision; record in audit Scorecard.
+- **Visual `MINOR` + token `MINOR`:** metric drift (`h-9` vs `h-8`, `rounded-md` vs `rounded-lg`, density) — intentional or pending design decision; record in the audit.
 - Don't edit `registry/styles/style-*.css` to fix a visual — those are vendored byte-identical. Fix `cn-compat.css` or the component's view/attrs.
 
 ## CI note

@@ -66,6 +66,10 @@ pnpm --filter @foldcn/registry run validate
 pnpm typecheck && pnpm test
 ```
 
+## Upgrading Foldkit
+
+Foldkit pins `effect` exactly, so bump `foldkit`, `@foldkit/ui`, `@foldkit/devtools`, `@foldkit/vite-plugin`, `effect`, and the `@effect/platform-*` packages together. Alchemy's optional Effect SQL peers are pinned in `pnpm-workspace.yaml`; left alone they resolve to a newer rc than Foldkit allows. Also update the versions the base registry item installs (`registry/default/style/registry.json`). Components are source copies, so breaking API changes need source edits, not just a dependency bump. Per-release notes live in the git history.
+
 ## Submitting
 
 Fork, branch, keep commits focused, run `pnpm fmt && pnpm typecheck && pnpm test && pnpm validate`, open a PR with what/why.
