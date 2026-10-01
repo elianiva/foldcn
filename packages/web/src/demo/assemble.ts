@@ -48,6 +48,7 @@ import { slice as listboxSlice } from './views/listbox'
 import { slice as loginFormSlice } from './views/login-form'
 import { slice as markerSlice } from './views/marker'
 import { slice as menuSlice } from './views/menu'
+import { slice as messageSlice } from './views/message'
 import { slice as messageScrollerSlice } from './views/message-scroller'
 import { slice as menubarSlice } from './views/menubar'
 import { slice as navSlice } from './views/nav'
@@ -123,6 +124,7 @@ const ModelSchema = S.Struct({
   ...loginFormSlice.fields,
   ...markerSlice.fields,
   ...menuSlice.fields,
+  ...messageSlice.fields,
   ...messageScrollerSlice.fields,
   ...menubarSlice.fields,
   ...navSlice.fields,
@@ -198,6 +200,7 @@ const MessageSchema = S.Union([
   ...loginFormSlice.messages,
   ...markerSlice.messages,
   ...menuSlice.messages,
+  ...messageSlice.messages,
   ...messageScrollerSlice.messages,
   ...menubarSlice.messages,
   ...navSlice.messages,
@@ -277,6 +280,7 @@ export const init = (): DemoUpdateReturn => {
     ...loginFormSlice.init,
     ...markerSlice.init,
     ...menuSlice.init,
+    ...messageSlice.init,
     ...messageScrollerSlice.init,
     ...menubarSlice.init,
     ...navSlice.init,

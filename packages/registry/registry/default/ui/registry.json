@@ -896,6 +896,19 @@
       ]
     },
     {
+      "name": "message",
+      "type": "registry:ui",
+      "title": "Message",
+      "description": "Chat message layout with group, avatar, content, header and footer builders and start/end alignment.",
+      "registryDependencies": ["@foldcn/utils"],
+      "files": [
+        {
+          "path": "message.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "message-scroller",
       "type": "registry:ui",
       "title": "Message Scroller",

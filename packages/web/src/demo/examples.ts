@@ -29,6 +29,7 @@ import labelViewSource from './views/label.ts?raw'
 import listboxViewSource from './views/listbox.ts?raw'
 import loginFormViewSource from './views/login-form.ts?raw'
 import markerViewSource from './views/marker.ts?raw'
+import messageViewSource from './views/message.ts?raw'
 import menuViewSource from './views/menu.ts?raw'
 import messageScrollerViewSource from './views/message-scroller.ts?raw'
 import nativeSelectViewSource from './views/native-select.ts?raw'
@@ -338,6 +339,11 @@ export const demoExampleByName: Readonly<Record<DemoItemName, DemoExample>> = {
     path: 'src/demo/views/menubar.ts',
     code: menubarViewSource,
     githubUrl: gh('src/demo/views/menubar.ts'),
+  },
+  message: {
+    path: 'src/demo/views/message.ts',
+    code: messageViewSource,
+    githubUrl: gh('src/demo/views/message.ts'),
   },
   'message-scroller': {
     path: 'src/demo/views/message-scroller.ts',
