@@ -305,3 +305,47 @@
 .cn-radio-group-field-description {
   @apply rtl:text-right;
 }
+
+/* Foldkit chart layout around the vendored cn-chart-tooltip surface. */
+.cn-chart-root {
+  @apply relative;
+}
+.cn-chart-root svg {
+  font-family: Arial, Helvetica, sans-serif;
+}
+.cn-chart-tooltip-position {
+  @apply pointer-events-none absolute z-10;
+}
+.cn-chart-tooltip-label {
+  @apply mb-1 font-medium;
+}
+.cn-chart-tooltip-row {
+  @apply flex items-center gap-2;
+}
+.cn-chart-tooltip-dot {
+  @apply size-2 rounded-full;
+}
+.cn-chart-legend {
+  @apply flex gap-2.5 text-sm text-muted-foreground;
+}
+.cn-chart-legend-left {
+  @apply justify-start;
+}
+.cn-chart-legend-center {
+  @apply justify-center;
+}
+.cn-chart-legend-right {
+  @apply justify-end;
+}
+.cn-chart-legend-item {
+  @apply inline-flex items-center gap-1;
+}
+.cn-chart-legend-swatch {
+  @apply inline-block h-0.5 w-4;
+}
+.cn-chart-legend-square {
+  @apply inline-block size-3.5;
+}
+.cn-chart-legend-circle {
+  @apply inline-block size-3 rounded-full;
+}

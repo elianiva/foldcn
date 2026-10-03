@@ -11,7 +11,8 @@ import { separator } from '../generated/registry/ui/separator'
 import { styledViewInputs as tabsStyledViewInputs } from '../generated/registry/ui/tabs'
 import * as toggleGroup from '../generated/registry/ui/toggle-group'
 import * as Sheet from '../generated/registry/ui/sheet'
-import { ArrowRight, Computer, Menu, Moon, Sun } from 'lucide'
+import * as Accordion from '../generated/registry/ui/accordion'
+import { ArrowRight, ChevronDown, Computer, Menu, Moon, Sun } from 'lucide'
 
 import { Message } from '../message'
 import type { Message as AppMessage } from '../message'
@@ -19,6 +20,7 @@ import type { Model, PackageManager } from '../model'
 import type { RegistryStyle } from '../active-style'
 
 import { categoryGroups } from '../catalog'
+import { chartItemNames } from '../catalog/charts'
 import { gapsForItem } from '../catalog/gaps'
 import { requestComponentUrl } from '../catalog/issues'
 import {
@@ -64,7 +66,8 @@ export const themeSelector = (
     toParentMessage: (message) => Message.GotThemeToggleGroupMessage({ message }),
   })
 
-const isDocsRoute = (routeTag: string): boolean => routeTag === 'Components' || routeTag === 'Item'
+const isDocsRoute = (routeTag: string): boolean =>
+  routeTag === 'Components' || routeTag === 'ChartGuide' || routeTag === 'Item'
 
 export const headerView = (
   h: HtmlBuilder<AppMessage>,
@@ -169,6 +172,8 @@ const parityLegendBadge = (status: ParityStatus, h: HtmlBuilder<AppMessage>): Ht
 
 export const docsNavContent = (
   h: HtmlBuilder<AppMessage>,
+  docsNav: Accordion.Model,
+  surface: 'desktop' | 'mobile',
   routeTag: string,
   routeName: string | undefined,
 ): ReadonlyArray<Html> => {
@@ -179,6 +184,93 @@ export const docsNavContent = (
     diverged: components.filter((i) => parityStatus(i.name) === 'diverged').length,
     'foldcn-only': components.filter((i) => parityStatus(i.name) === 'foldcn-only').length,
   } as const
+  const chartItems = [...(categoryGroups.find((g) => g.category === 'Charts')?.items ?? [])].sort(
+    (a, b) => a.title.localeCompare(b.title),
+  )
+  const navLink = (href: string, title: string, active: boolean): Html =>
+    h.a(
+      [
+        h.Href(href),
+        h.Class(
+          cn(
+            'block rounded-md px-2 py-1.5 text-sm',
+            active
+              ? 'bg-muted font-medium text-foreground'
+              : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+          ),
+        ),
+        ...(active ? [h.AriaCurrent('page')] : []),
+      ],
+      [title],
+    )
+  const renderChartNav = (): Html =>
+    h.div(
+      [h.Class('flex flex-col gap-2 pl-2')],
+      [
+        h.details(
+          [
+            h.Class('group/chart-guide'),
+            ...(routeTag === 'ChartGuide' ? [h.Attribute('open', '')] : []),
+          ],
+          [
+            h.summary(
+              [
+                h.Class(
+                  'flex cursor-pointer list-none items-center justify-between px-2 py-1 text-xs font-medium text-foreground',
+                ),
+              ],
+              [
+                'Guide',
+                icon(
+                  h,
+                  ChevronDown,
+                  'size-3.5 text-muted-foreground transition-transform duration-200 group-open/chart-guide:rotate-180',
+                ),
+              ],
+            ),
+            h.div(
+              [h.Class('mt-1 pl-2')],
+              [navLink('/docs/charts', 'Getting started', routeTag === 'ChartGuide')],
+            ),
+          ],
+        ),
+        h.details(
+          [
+            h.Class('group/chart-api'),
+            ...(routeTag === 'Item' && routeName !== undefined && chartItemNames.has(routeName)
+              ? [h.Attribute('open', '')]
+              : []),
+          ],
+          [
+            h.summary(
+              [
+                h.Class(
+                  'flex cursor-pointer list-none items-center justify-between px-2 py-1 text-xs font-medium text-foreground',
+                ),
+              ],
+              [
+                'API',
+                icon(
+                  h,
+                  ChevronDown,
+                  'size-3.5 text-muted-foreground transition-transform duration-200 group-open/chart-api:rotate-180',
+                ),
+              ],
+            ),
+            h.div(
+              [h.Class('mt-1 flex flex-col gap-0.5 pl-2')],
+              chartItems.map((item) =>
+                navLink(
+                  `/docs/${item.name}`,
+                  item.title,
+                  routeTag === 'Item' && routeName === item.name,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    )
 
   return [
     h.div(
@@ -226,10 +318,79 @@ export const docsNavContent = (
       ],
     ),
     h.nav(
-      [h.Class('flex flex-col gap-6'), h.AriaLabel('Components')],
+      [h.Class('flex flex-col gap-6'), h.AriaLabel('Docs navigation')],
       categoryGroups.map((group) => {
         const sortedItems = [...group.items].sort((a, b) => a.title.localeCompare(b.title))
         const isComponentsGroup = group.category === 'Components'
+        if (group.category === 'Charts') return h.empty
+        const itemList = (): Html =>
+          h.ul(
+            [h.Class('flex flex-col gap-0.5')],
+            sortedItems.map((item) => {
+              const isActive = routeTag === 'Item' && routeName === item.name
+              const status: ParityStatus | null = isComponentsGroup ? parityStatus(item.name) : null
+              const badgeTitle =
+                status === null
+                  ? ''
+                  : status === 'diverged'
+                    ? (gapsForItem(item.name)?.[0] ?? parityTitle.diverged)
+                    : parityTitleForItem(item.name)
+              return h.li(
+                [],
+                [
+                  h.a(
+                    [
+                      h.Href(`/docs/${item.name}`),
+                      h.Class(
+                        cn(
+                          'flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+                          isActive
+                            ? 'bg-muted font-medium text-foreground'
+                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                        ),
+                      ),
+                      ...(isActive ? [h.AriaCurrent('page')] : []),
+                      ...(status !== null
+                        ? [h.Title(badgeTitle), h.AriaLabel(`${item.title} — ${badgeTitle}`)]
+                        : []),
+                    ],
+                    [
+                      h.span([h.Class('truncate')], [item.title]),
+                      status !== null ? parityBadge(status, h) : h.span([], []),
+                    ],
+                  ),
+                ],
+              )
+            }),
+          )
+        if (isComponentsGroup) {
+          return h.submodel({
+            slotId: docsNav.id,
+            model: docsNav,
+            view: Accordion.view,
+            viewInputs: {
+              className: 'gap-6',
+              items: [
+                {
+                  id: `${surface}-docs-components`,
+                  title: 'Components',
+                  triggerClass: 'px-2 py-1 text-xs font-semibold tracking-wide text-foreground',
+                  contentClass: 'mt-2',
+                  content: '',
+                },
+                {
+                  id: `${surface}-docs-charts`,
+                  title: 'Charts',
+                  triggerClass: 'px-2 py-1 text-xs font-semibold tracking-wide text-foreground',
+                  contentClass: 'mt-2',
+                  content: '',
+                },
+              ],
+              renderContent: (index) => (index === 0 ? itemList() : renderChartNav()),
+            },
+            toParentMessage: (message) => Message.GotDocsNavAccordionMessage({ surface, message }),
+          })
+        }
         return h.div(
           [h.Class('flex flex-col gap-2')],
           [
@@ -237,47 +398,7 @@ export const docsNavContent = (
               [h.Class('px-2 text-xs font-semibold tracking-wide text-foreground')],
               [group.label],
             ),
-            h.ul(
-              [h.Class('flex flex-col gap-0.5')],
-              sortedItems.map((item) => {
-                const isActive = routeTag === 'Item' && routeName === item.name
-                const status: ParityStatus | null = isComponentsGroup
-                  ? parityStatus(item.name)
-                  : null
-                const badgeTitle =
-                  status === null
-                    ? ''
-                    : status === 'diverged'
-                      ? (gapsForItem(item.name)?.[0] ?? parityTitle.diverged)
-                      : parityTitleForItem(item.name)
-                return h.li(
-                  [],
-                  [
-                    h.a(
-                      [
-                        h.Href(`/docs/${item.name}`),
-                        h.Class(
-                          cn(
-                            'flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
-                            isActive
-                              ? 'bg-muted font-medium text-foreground'
-                              : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-                          ),
-                        ),
-                        ...(isActive ? [h.AriaCurrent('page')] : []),
-                        ...(status !== null
-                          ? [h.Title(badgeTitle), h.AriaLabel(`${item.title} — ${badgeTitle}`)]
-                          : []),
-                      ],
-                      [
-                        h.span([h.Class('truncate')], [item.title]),
-                        status !== null ? parityBadge(status, h) : h.span([], []),
-                      ],
-                    ),
-                  ],
-                )
-              }),
-            ),
+            itemList(),
           ],
         )
       }),
@@ -308,6 +429,7 @@ export const docsNavContent = (
 
 export const sidebarView = (
   h: HtmlBuilder<AppMessage>,
+  docsNav: Accordion.Model,
   routeTag: string,
   routeName: string | undefined,
   // oxlint-disable-next-line typescript/no-unused-vars
@@ -322,7 +444,7 @@ export const sidebarView = (
             'sticky top-10 h-[calc(100vh-2.5rem)] overflow-y-auto overflow-x-visible border-r border-border py-6 pr-4',
           ),
         ],
-        docsNavContent(h, routeTag, routeName),
+        docsNavContent(h, docsNav, 'desktop', routeTag, routeName),
       ),
     ],
   )
@@ -330,6 +452,7 @@ export const sidebarView = (
 export const navSheetView = (
   h: HtmlBuilder<AppMessage>,
   navSheet: Model['navSheet'],
+  docsNav: Accordion.Model,
   routeTag: string,
   routeName: string | undefined,
 ): Html =>
@@ -346,7 +469,10 @@ export const navSheetView = (
             [Sheet.title({ attributes: title, className: 'sr-only' }, ['Docs navigation'], h)],
             h,
           ),
-          h.div([h.Class('overflow-y-auto px-2 pb-6')], docsNavContent(h, routeTag, routeName)),
+          h.div(
+            [h.Class('overflow-y-auto px-2 pb-6')],
+            docsNavContent(h, docsNav, 'mobile', routeTag, routeName),
+          ),
         ],
       },
       h,

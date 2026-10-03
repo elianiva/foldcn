@@ -1,6 +1,7 @@
 import { blocksGroup, libGroup, styleGroup, uiGroup } from './manifest'
 import { sourceByItem } from './sources'
 import type { Category, CategoryGroup, Item, RegistryGroupJson } from './types'
+import { chartItemNames } from './charts'
 
 const INSTALL_PREFIX = 'npx shadcn@latest add @foldcn/'
 
@@ -31,7 +32,9 @@ const buildItems = (group: RegistryGroupJson, category: Category): ReadonlyArray
 export const items: ReadonlyArray<Item> = [
   ...buildItems(styleGroup, 'Base'),
   ...buildItems(libGroup, 'Lib'),
-  ...buildItems(uiGroup, 'Components'),
+  ...buildItems(uiGroup, 'Components').map((item): Item =>
+    chartItemNames.has(item.name) ? { ...item, category: 'Charts' } : item,
+  ),
   ...buildItems(blocksGroup, 'Blocks'),
 ]
 
@@ -45,6 +48,12 @@ export const categoryGroups: ReadonlyArray<CategoryGroup> = [
     label: 'Components',
     description: 'The styled primitives: stateless helpers and stateful submodels.',
     items: items.filter((item) => item.category === 'Components'),
+  },
+  {
+    category: 'Charts',
+    label: 'Charts',
+    description: 'Data visualization components with Recharts-shaped APIs.',
+    items: items.filter((item) => item.category === 'Charts'),
   },
   {
     category: 'Blocks',

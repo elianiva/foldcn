@@ -1,0 +1,492 @@
+[
+  {
+    "name": "LineChart",
+    "items": [
+      {
+        "title": "Simple Line Chart",
+        "upstream": "SimpleLineChart"
+      },
+      {
+        "title": "Dashed Line Chart",
+        "upstream": "DashedLineChart"
+      },
+      {
+        "title": "Vertical Line Chart",
+        "upstream": "VerticalLineChart"
+      },
+      {
+        "title": "Biaxial Line Chart",
+        "upstream": "BiaxialLineChart"
+      },
+      {
+        "title": "Vertical Line Chart With Specified Domain",
+        "upstream": "VerticalLineChartWithSpecifiedDomain"
+      },
+      {
+        "title": "Line Chart Connect Nulls",
+        "upstream": "LineChartConnectNulls"
+      },
+      {
+        "title": "Line Chart With X Axis Padding",
+        "upstream": "LineChartWithXAxisPadding"
+      },
+      {
+        "title": "Line Chart With Reference Lines",
+        "upstream": "LineChartWithReferenceLines"
+      },
+      {
+        "title": "Customized Dot Line Chart",
+        "upstream": "CustomizedDotLineChart"
+      },
+      {
+        "title": "Customized Label Line Chart",
+        "upstream": "CustomizedLabelLineChart"
+      },
+      {
+        "title": "Synchronized Line Chart",
+        "upstream": "SynchronizedLineChart"
+      },
+      {
+        "title": "Synchronized Charts With Different Data",
+        "upstream": "SynchronizedDifferentData"
+      },
+      {
+        "title": "Line that animates opacity",
+        "upstream": "LineChartCustomShapeExample"
+      },
+      {
+        "title": "Highlight And Zoom Line Chart",
+        "upstream": "HighlightAndZoomLineChart"
+      },
+      {
+        "title": "Line Chart Has Multi Series",
+        "upstream": "LineChartHasMultiSeries"
+      },
+      {
+        "title": "Line Chart Axis Interval",
+        "upstream": "LineChartAxisInterval"
+      },
+      {
+        "title": "Line Chart Negative Values With Reference Lines",
+        "upstream": "LineChartNegativeValuesWithReferenceLines"
+      },
+      {
+        "title": "Compare Two Lines",
+        "upstream": "CompareTwoLines"
+      },
+      {
+        "title": "Dynamic Z-Index Line Chart",
+        "upstream": "DynamicZIndexLineChart"
+      },
+      {
+        "title": "Tiny Line Chart",
+        "upstream": "TinyLineChart"
+      },
+      {
+        "title": "Animated Time Series",
+        "upstream": "AnimatedTimeSeriesExample"
+      }
+    ]
+  },
+  {
+    "name": "AreaChart",
+    "items": [
+      {
+        "title": "Simple Area Chart",
+        "upstream": "AreaChartExample"
+      },
+      {
+        "title": "Stacked Area Chart",
+        "upstream": "StackedAreaChart"
+      },
+      {
+        "title": "Ranged Area Chart",
+        "upstream": "AreaChartRangeExample"
+      },
+      {
+        "title": "Area Chart Connect Nulls",
+        "upstream": "AreaChartConnectNulls"
+      },
+      {
+        "title": "Cardinal Area Chart",
+        "upstream": "CardinalAreaChart"
+      },
+      {
+        "title": "Percent Area Chart",
+        "upstream": "PercentAreaChart"
+      },
+      {
+        "title": "Synchronized Area Chart",
+        "upstream": "SynchronizedAreaChart"
+      },
+      {
+        "title": "Tiny Area Chart",
+        "upstream": "TinyAreaChart"
+      },
+      {
+        "title": "Area Chart Fill By Value",
+        "upstream": "AreaChartFillByValue"
+      },
+      {
+        "title": "Custom Animation Example",
+        "upstream": "AreaChartCustomAnimation"
+      },
+      {
+        "title": "Range Area Custom Animation",
+        "upstream": "RangeAreaChartCustomAnimation"
+      },
+      {
+        "title": "Area Chart With Custom Events",
+        "upstream": "AreaChartWithCustomEvents"
+      },
+      {
+        "title": "Prevent right click menu",
+        "upstream": "PreventRightClickExample"
+      }
+    ]
+  },
+  {
+    "name": "BarChart",
+    "items": [
+      {
+        "title": "Simple Bar Chart",
+        "upstream": "SimpleBarChart"
+      },
+      {
+        "title": "Stacked Bar Chart",
+        "upstream": "StackedBarChart"
+      },
+      {
+        "title": "Population Pyramid",
+        "upstream": "PopulationPyramid"
+      },
+      {
+        "title": "Timeline",
+        "upstream": "TimelineExample"
+      },
+      {
+        "title": "Candlestick",
+        "upstream": "Candlestick"
+      },
+      {
+        "title": "Box Plot",
+        "upstream": "BoxPlot"
+      },
+      {
+        "title": "Animated Bar Width",
+        "upstream": "AnimatedBarWidthExample"
+      },
+      {
+        "title": "Waterfall",
+        "upstream": "Waterfall"
+      },
+      {
+        "title": "Animated Bar series",
+        "upstream": "AnimatedBarTimeSeriesExample"
+      },
+      {
+        "title": "Mix Bar Chart",
+        "upstream": "MixBarChart"
+      },
+      {
+        "title": "Custom Shape Bar Chart",
+        "upstream": "CustomShapeBarChart"
+      },
+      {
+        "title": "Positive and Negative Bar Chart",
+        "upstream": "PositiveAndNegativeBarChart"
+      },
+      {
+        "title": "Brush Bar Chart",
+        "upstream": "BrushBarChart"
+      },
+      {
+        "title": "Bar Chart With Customized Event",
+        "upstream": "BarChartWithCustomizedEvent"
+      },
+      {
+        "title": "Bar Chart With Min Height",
+        "upstream": "BarChartWithMinHeight"
+      },
+      {
+        "title": "Bar Chart Stacked By Sign",
+        "upstream": "BarChartStackedBySign"
+      },
+      {
+        "title": "Biaxial Bar Chart",
+        "upstream": "BiaxialBarChart"
+      },
+      {
+        "title": "Bar Chart with background",
+        "upstream": "BarChartHasBackground"
+      },
+      {
+        "title": "Bar Chart With Multi X Axis",
+        "upstream": "BarChartWithMultiXAxis"
+      },
+      {
+        "title": "Ranged Stacked Bar Chart",
+        "upstream": "RangedStackedBarChart"
+      },
+      {
+        "title": "Ranged Bar Chart",
+        "upstream": "BarChartRangeExample"
+      },
+      {
+        "title": "Tiny Bar Chart",
+        "upstream": "TinyBarChart"
+      },
+      {
+        "title": "Animate by Scroll",
+        "upstream": "ScrollAnimateBarChart"
+      },
+      {
+        "title": "Stacked Bar Chart with Horizontal Line",
+        "upstream": "StackedBarChartWithHorizontalLine"
+      }
+    ]
+  },
+  {
+    "name": "ComposedChart",
+    "items": [
+      {
+        "title": "Line Bar Area Composed Chart",
+        "upstream": "LineBarAreaComposedChart"
+      },
+      {
+        "title": "Same Data Composed Chart",
+        "upstream": "SameDataComposedChart"
+      },
+      {
+        "title": "Vertical Composed Chart",
+        "upstream": "VerticalComposedChart"
+      },
+      {
+        "title": "Composed Chart With Axis Labels",
+        "upstream": "ComposedChartWithAxisLabels"
+      },
+      {
+        "title": "Scatter And Line Of Best Fit",
+        "upstream": "ScatterAndLineOfBestFit"
+      },
+      {
+        "title": "Banded Chart",
+        "upstream": "BandedChart"
+      },
+      {
+        "title": "Target Price Chart with active Label",
+        "upstream": "TargetPriceChart"
+      }
+    ]
+  },
+  {
+    "name": "ScatterChart",
+    "items": [
+      {
+        "title": "Simple Scatter Chart",
+        "upstream": "SimpleScatterChart"
+      },
+      {
+        "title": "Three Dim Scatter Chart",
+        "upstream": "ThreeDimScatterChart"
+      },
+      {
+        "title": "Joint Line Scatter Chart",
+        "upstream": "JointLineScatterChart"
+      },
+      {
+        "title": "Bubble Chart",
+        "upstream": "BubbleChart"
+      },
+      {
+        "title": "Custom Animation",
+        "upstream": "CustomAnimation"
+      },
+      {
+        "title": "Scatter Chart With Labels",
+        "upstream": "ScatterChartWithLabels"
+      },
+      {
+        "title": "Multiple Y Axes Scatter Chart",
+        "upstream": "MultipleYAxesScatterChart"
+      },
+      {
+        "title": "Scatter Chart With Cells",
+        "upstream": "ScatterChartWithCells"
+      },
+      {
+        "title": "Scatter Chart with many points (performance test)",
+        "upstream": "ScatterChartPerformance"
+      }
+    ]
+  },
+  {
+    "name": "PieChart",
+    "items": [
+      {
+        "title": "Two Level Pie Chart",
+        "upstream": "TwoLevelPieChart"
+      },
+      {
+        "title": "Straight Angle Pie Chart",
+        "upstream": "StraightAnglePieChart"
+      },
+      {
+        "title": "Custom Active Shape Pie Chart",
+        "upstream": "CustomActiveShapePieChart"
+      },
+      {
+        "title": "Pie Chart With Customized Label",
+        "upstream": "PieChartWithCustomizedLabel"
+      },
+      {
+        "title": "Pie Chart with gap and rounded corners",
+        "upstream": "PieChartWithPaddingAngle"
+      },
+      {
+        "title": "Pie Chart With Needle",
+        "upstream": "PieChartWithNeedle"
+      },
+      {
+        "title": "Pie Chart in Flexbox",
+        "upstream": "PieChartInFlexbox"
+      },
+      {
+        "title": "Pie Chart in Grid",
+        "upstream": "PieChartInGrid"
+      },
+      {
+        "title": "Pie Chart with Gradient",
+        "upstream": "PieWithGradient"
+      }
+    ]
+  },
+  {
+    "name": "RadarChart",
+    "items": [
+      {
+        "title": "Simple Radar Chart",
+        "upstream": "SimpleRadarChart"
+      },
+      {
+        "title": "Specified Domain Radar Chart",
+        "upstream": "SpecifiedDomainRadarChart"
+      },
+      {
+        "title": "Range Radar Custom Animation",
+        "upstream": "RangeRadarChartCustomAnimation"
+      }
+    ]
+  },
+  {
+    "name": "RadialBarChart",
+    "items": [
+      {
+        "title": "Simple Radial Bar Chart",
+        "upstream": "SimpleRadialBarChart"
+      },
+      {
+        "title": "Radial Bar Chart with Click to Focus Legend",
+        "upstream": "RadialBarChartClickToFocusLegendExample"
+      }
+    ]
+  },
+  {
+    "name": "TreeMap",
+    "items": [
+      {
+        "title": "Bundle Size Treemap",
+        "upstream": "BundleSizeTreemap"
+      },
+      {
+        "title": "Simple Treemap",
+        "upstream": "SimpleTreemap"
+      },
+      {
+        "title": "Custom Content Treemap",
+        "upstream": "CustomContentTreemap"
+      },
+      {
+        "title": "Nested Treemap",
+        "upstream": "NestedTreemap"
+      },
+      {
+        "title": "Treemap with Padding and Gaps",
+        "upstream": "TreemapWithPaddingAndGaps"
+      }
+    ]
+  },
+  {
+    "name": "SunburstChart",
+    "items": [
+      {
+        "title": "Bundle Size Sunburst",
+        "upstream": "BundleSizeSunburst"
+      },
+      {
+        "title": "Sunburst Chart Example",
+        "upstream": "SunburstChartExample"
+      }
+    ]
+  },
+  {
+    "name": "Tooltip",
+    "items": [
+      {
+        "title": "Custom Content Of Tooltip",
+        "upstream": "CustomContentOfTooltip"
+      },
+      {
+        "title": "Tooltip Style",
+        "upstream": "TooltipStylesDemo"
+      }
+    ]
+  },
+  {
+    "name": "Legend",
+    "items": [
+      {
+        "title": "Legend with Opacity",
+        "upstream": "LegendEffectOpacity"
+      },
+      {
+        "title": "Legend Position",
+        "upstream": "LegendPosition"
+      },
+      {
+        "title": "Custom Legend Styles",
+        "upstream": "LegendStylesExample"
+      }
+    ]
+  },
+  {
+    "name": "ResponsiveContainer",
+    "items": [
+      {
+        "title": "Area Responsive Container",
+        "upstream": "AreaResponsiveContainer"
+      },
+      {
+        "title": "Composed Responsive Container",
+        "upstream": "ComposedResponsiveContainer"
+      },
+      {
+        "title": "Pie Responsive Container",
+        "upstream": "PieResponsiveContainer"
+      }
+    ]
+  },
+  {
+    "name": "XAxis",
+    "items": [
+      {
+        "title": "Multiple X Axes",
+        "upstream": "MultiXAxisExample"
+      },
+      {
+        "title": "Automatic X Axis Height",
+        "upstream": "XAxisAutoHeightExample"
+      }
+    ]
+  }
+]
