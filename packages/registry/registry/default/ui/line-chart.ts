@@ -201,6 +201,7 @@ export type LineChartProps<M> = Readonly<{
   onBrushEnd?: (index: number) => M
 }>
 
+const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 const numberValue = (value: ChartValue): number | undefined => {
   if (value === null || value === undefined || value === '') return undefined
   const numeric = Number(isNumberRange(value) ? value.at(-1) : value)
@@ -492,9 +493,9 @@ export const LineChart = <M>(props: LineChartProps<M>, h: HtmlBuilder<M>): Html 
   const tickWidth = (label: string): number =>
     label.startsWith('Iter: ')
       ? 26.656 + (label.length - 6) * 6.96
-      : [...label].reduce(
-          (sum, character) =>
-            sum + ('ilIjt: '.includes(character) ? 4 : 'MWmw'.includes(character) ? 11 : 7),
+      : Array.from(graphemes.segment(label)).reduce(
+          (sum, { segment }) =>
+            sum + ('ilIjt: '.includes(segment) ? 4 : 'MWmw'.includes(segment) ? 11 : 7),
           0,
         )
   const tickBounds = (index: number, keepInside: boolean) => {

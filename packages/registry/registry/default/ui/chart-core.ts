@@ -3129,15 +3129,16 @@ const hierarchyName = (node: HierarchyNode, nameKey: string): string => {
   return typeof value === 'string' || typeof value === 'number' ? String(value) : node.name
 }
 const treemapPalette = ['#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57']
+const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 const treemapLabelWidth = (label: string): number =>
-  [...label].reduce(
-    (width, character) =>
+  Array.from(graphemes.segment(label)).reduce(
+    (width, { segment }) =>
       width +
-      ('ilrtfj'.includes(character)
+      ('ilrtfj'.includes(segment)
         ? 3.5
-        : 'MWmw'.includes(character)
+        : 'MWmw'.includes(segment)
           ? 12
-          : character === character.toUpperCase()
+          : segment === segment.toUpperCase()
             ? 8.5
             : 7.4),
     0,
@@ -3685,7 +3686,7 @@ export const Sankey = <M>(props: SankeyProps, h: HtmlBuilder<M>): Html => {
       flow.reduce((sum, value, index) => sum + (depth[index] === layer ? value : 0), 0),
     ),
   )
-  const unit = (height - 48) / largestLayer
+  const unit = Math.min((height - 64) / largestLayer, 12)
   const positions = props.data.nodes.map((_, index) => {
     const layer = depth[index] ?? 0
     const peers = props.data.nodes.map((__, i) => i).filter((i) => depth[i] === layer)
@@ -3702,22 +3703,34 @@ export const Sankey = <M>(props: SankeyProps, h: HtmlBuilder<M>): Html => {
       height: Math.max(14, (flow[index] ?? 1) * unit),
     }
   })
+  const outgoingOffsets = Array<number>(count).fill(0)
+  const incomingOffsets = Array<number>(count).fill(0)
   const links = validLinks.flatMap((link) => {
     const source = positions[link.source]
     const target = positions[link.target]
     if (source === undefined || target === undefined) return []
     const x1 = source.x + 16
     const x2 = target.x
-    const y1 = source.y + source.height / 2
-    const y2 = target.y + target.height / 2
+    const thickness = link.value * unit
+    const sourceFlow = validLinks
+      .filter((candidate) => candidate.source === link.source)
+      .reduce((sum, candidate) => sum + candidate.value, 0)
+    const targetFlow = validLinks
+      .filter((candidate) => candidate.target === link.target)
+      .reduce((sum, candidate) => sum + candidate.value, 0)
+    const y1 =
+      source.y + (source.height - sourceFlow * unit) / 2 + (outgoingOffsets[link.source] ?? 0)
+    const y2 =
+      target.y + (target.height - targetFlow * unit) / 2 + (incomingOffsets[link.target] ?? 0)
+    outgoingOffsets[link.source] = (outgoingOffsets[link.source] ?? 0) + thickness
+    incomingOffsets[link.target] = (incomingOffsets[link.target] ?? 0) + thickness
+    const bend = (x1 + x2) / 2
     return [
       h.path(
         attrs(h, {
-          d: `M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}`,
-          fill: 'none',
-          stroke: palette[link.source % palette.length] ?? '#8884d8',
-          'stroke-width': String(Math.max(2, link.value * unit)),
-          'stroke-opacity': '0.35',
+          d: `M${x1},${y1} C${bend},${y1} ${bend},${y2} ${x2},${y2} L${x2},${y2 + thickness} C${bend},${y2 + thickness} ${bend},${y1 + thickness} ${x1},${y1 + thickness} Z`,
+          fill: palette[link.source % palette.length] ?? '#8884d8',
+          'fill-opacity': '0.45',
         }),
       ),
     ]
@@ -3737,8 +3750,8 @@ export const Sankey = <M>(props: SankeyProps, h: HtmlBuilder<M>): Html => {
       ),
       h.text(
         attrs(h, {
-          x: String((depth[i] ?? 0) === maxDepth ? position.x - 6 : position.x + 22),
-          y: String(position.y + position.height / 2 + 4),
+          x: String((depth[i] ?? 0) === maxDepth ? position.x + 16 : position.x),
+          y: String(position.y - 8),
           'text-anchor': (depth[i] ?? 0) === maxDepth ? 'end' : 'start',
           fill: '#666',
           'font-size': '11',

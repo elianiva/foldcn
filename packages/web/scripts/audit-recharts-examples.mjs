@@ -358,7 +358,7 @@ const literalArray = (code, name) => {
       if (depth === 0) {
         const literal = code
           .slice(start, i + 1)
-          .replace(/\b([A-Za-z_$][\w$]*)\s*:/g, '\"$1\":')
+          .replace(/\b([A-Za-z_$][\w$]*)\s*:/g, '"$1":')
           .replace(/'((?:\\.|[^'\\])*)'/g, (_match, value) => JSON.stringify(value))
           .replace(/,\s*([}\]])/g, '$1')
         try {
@@ -522,6 +522,22 @@ const rows = entries.map(({ family, title, upstream }) => {
 })
 const count = (status) => rows.filter((row) => row.data === status).length
 const visuallyReviewed = rows.filter((row) => row.visual.startsWith('reviewed:')).length
+const tableRows = [
+  ['Example', 'Upstream source', 'Upstream PNG', 'Local source', 'Dataset', 'Visual'],
+  ...rows.map((row) => [
+    `${row.family} / ${row.title.replaceAll('|', '\\|')}`,
+    row.path === undefined ? 'unresolved' : `[source](${rawUrl(row.path)})`,
+    row.snapshot === undefined ? 'unavailable' : `[PNG](${rawUrl(row.snapshot)})`,
+    `[local](../${row.local})`,
+    row.data,
+    row.visual,
+  ]),
+]
+const columnWidths = tableRows[0].map((_, index) =>
+  Math.max(...tableRows.map((row) => row[index].length)),
+)
+const tableLine = (row) =>
+  `| ${row.map((cell, index) => cell.padEnd(columnWidths[index])).join(' | ')} |`
 const markdown = [
   '# Recharts example parity audit',
   '',
@@ -532,13 +548,9 @@ const markdown = [
   '',
   'A source or screenshot link provides a review target, not proof of parity. The visual column records only comparisons actually performed.',
   '',
-  '| Example | Upstream source | Upstream PNG | Local source | Dataset | Visual |',
-  '| --- | --- | --- | --- | --- | --- |',
-  ...rows.map((row) => {
-    const source = row.path === undefined ? 'unresolved' : `[source](${rawUrl(row.path)})`
-    const snapshot = row.snapshot === undefined ? 'unavailable' : `[PNG](${rawUrl(row.snapshot)})`
-    return `| ${row.family} / ${row.title.replaceAll('|', '\\|')} | ${source} | ${snapshot} | [local](../${row.local}) | ${row.data} | ${row.visual} |`
-  }),
+  tableLine(tableRows[0]),
+  tableLine(columnWidths.map((width) => '-'.repeat(width))),
+  ...tableRows.slice(1).map(tableLine),
   '',
 ]
 writeFileSync(resolve(root, 'docs/recharts-example-parity-audit.md'), markdown.join('\n'))
