@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+LOG_DIR="$HOME/.cache/amp/logs"
+mkdir -p "$LOG_DIR"
+exec > >(tee -a "$LOG_DIR/setup.log") 2>&1
+
+NODE_MAJOR=26
+PNPM_VERSION=11.22.0
+
+run_step() {
+	local name="$1"
+	shift
+	local started_at
+	started_at="$(date +%s)"
+	printf '\n==> %s\n' "$name"
+	"$@"
+	printf '<== %s (%ss)\n' "$name" "$(( $(date +%s) - started_at ))"
+}
+
+node_major() {
+	local version
+	version="$(node --version 2>/dev/null || true)"
+	if [[ "$version" =~ ^v([0-9]+)\. ]]; then
+		printf '%s' "${BASH_REMATCH[1]}"
+	fi
+	return 0
+}
+
+ensure_node() {
+	local installed_major
+	installed_major="$(node_major)"
+	if [[ "$installed_major" == "$NODE_MAJOR" ]]; then
+		printf 'Node.js %s is available.\n' "$(node --version)"
+		return
+	fi
+
+	local missing_packages=()
+	command -v curl >/dev/null 2>&1 || missing_packages+=(curl)
+	command -v tar >/dev/null 2>&1 || missing_packages+=(tar)
+	command -v xz >/dev/null 2>&1 || missing_packages+=(xz-utils)
+	if ((${#missing_packages[@]})); then
+		local apt=(apt-get)
+		if [[ "$EUID" -ne 0 ]]; then
+			apt=(sudo apt-get)
+		fi
+		"${apt[@]}" update
+		"${apt[@]}" install -y "${missing_packages[@]}"
+	fi
+
+	local arch
+	case "$(uname -m)" in
+		x86_64) arch=x64 ;;
+		aarch64|arm64) arch=arm64 ;;
+		*) printf 'Unsupported architecture for Node.js bootstrap: %s\n' "$(uname -m)" >&2; return 1 ;;
+	esac
+
+	local release
+	release="$(curl -fsSL https://nodejs.org/dist/index.json | sed -n 's/.*"version":"\(v26\.[^"]*\)".*/\1/p' | sed -n '1p')"
+	if [[ -z "$release" ]]; then
+		printf 'Could not find a Node.js %s release.\n' "$NODE_MAJOR" >&2
+		return 1
+	fi
+
+	local install_dir="$HOME/.local/share/foldcn/node-${release#v}"
+	local current_link="$HOME/.local/share/foldcn/node-current"
+	if [[ ! -x "$install_dir/bin/node" ]]; then
+		local temp_dir archive
+		mkdir -p "$(dirname "$install_dir")"
+		temp_dir="$(mktemp -d "$HOME/.local/share/foldcn/node-install.XXXXXX")"
+		archive="$temp_dir/node.tar.xz"
+		curl -fsSL "https://nodejs.org/dist/$release/node-$release-linux-$arch.tar.xz" -o "$archive"
+		mkdir -p "$temp_dir/unpacked"
+		tar -xJf "$archive" --strip-components=1 -C "$temp_dir/unpacked"
+		rm -rf "$install_dir"
+		mv "$temp_dir/unpacked" "$install_dir"
+		rm -rf "$temp_dir"
+	fi
+
+	rm -f "$current_link"
+	ln -s "$install_dir" "$current_link"
+	local profile="$HOME/.bash_profile"
+	local marker='# foldcn Node.js toolchain'
+	touch "$profile"
+	if ! grep -Fqx "$marker" "$profile"; then
+		cat >> "$profile" <<EOF
+
+# foldcn Node.js toolchain
+if [[ "\${PWD:-}" == "$ROOT" && -z "\${FOLDCN_NODE_PATH_ADDED:-}" && -d "$current_link/bin" ]]; then
+	export PATH="$current_link/bin:\$PATH"
+	export FOLDCN_NODE_PATH_ADDED=1
+fi
+EOF
+	fi
+	export PATH="$current_link/bin:$PATH"
+	printf 'Installed Node.js %s for this orb.\n' "$release"
+}
+
+ensure_pnpm() {
+	if ! command -v node >/dev/null 2>&1 || [[ "$(node_major)" != "$NODE_MAJOR" ]]; then
+		printf 'Node.js %s is required but was not installed.\n' "$NODE_MAJOR" >&2
+		return 1
+	fi
+	if ! command -v pnpm >/dev/null 2>&1 || [[ "$(pnpm --version 2>/dev/null || true)" != "$PNPM_VERSION" ]]; then
+		if ! command -v npm >/dev/null 2>&1; then
+			printf 'npm is not available with Node.js %s.\n' "$NODE_MAJOR" >&2
+			return 1
+		fi
+		npm install --global "pnpm@$PNPM_VERSION"
+	fi
+	if [[ "$(pnpm --version)" != "$PNPM_VERSION" ]]; then
+		printf 'Expected pnpm %s; found %s.\n' "$PNPM_VERSION" "$(pnpm --version)" >&2
+		return 1
+	fi
+	printf 'pnpm %s is available.\n' "$PNPM_VERSION"
+}
+
+cd "$ROOT"
+run_step 'Ensure Node.js toolchain' ensure_node
+run_step 'Ensure pnpm toolchain' ensure_pnpm
+run_step 'Install workspace dependencies' pnpm install --frozen-lockfile
+
+printf '\nOrb setup completed successfully.\n'
