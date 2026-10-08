@@ -8,6 +8,8 @@ import type { RegistryStyle } from './active-style'
 import { componentsIndexView } from './page/components'
 import { homeView, notFoundView } from './page/home'
 import { itemPage } from './page/item'
+import { chartGuidePage, chartApiPage } from './page/charts'
+import { chartItemNames } from './catalog/charts'
 import type { AppRoute } from './route'
 import type { Message } from './message'
 import type { Model } from './model'
@@ -17,6 +19,7 @@ const pathOf = (route: AppRoute): string =>
   Match.value(route).pipe(
     Match.tag('Home', () => '/'),
     Match.tag('Components', () => '/docs'),
+    Match.tag('ChartGuide', () => '/docs/charts'),
     Match.tag('Item', (itemRoute) => `/docs/${itemRoute.name}`),
     Match.orElse((notFound) => notFound.path),
   )
@@ -53,13 +56,18 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
             Match.value(model.route).pipe(
               Match.tag('Home', () => homeView(model, h)),
               Match.tag('Components', () => componentsIndexView(model, h)),
-              Match.tag('Item', (itemRoute) => itemPage(model, itemRoute.name, h)),
+              Match.tag('ChartGuide', () => chartGuidePage(model, h)),
+              Match.tag('Item', (itemRoute) =>
+                chartItemNames.has(itemRoute.name)
+                  ? chartApiPage(model, itemRoute.name, h)
+                  : itemPage(model, itemRoute.name, h),
+              ),
               Match.orElse(() => notFoundView(h)),
             ),
           ],
         ),
         siteFooterLazy(footerView, [h, activeRegistryStyle()]),
-        navSheetView(h, model.navSheet, routeTag, routeName),
+        navSheetView(h, model.navSheet, model.docsNavMobile, routeTag, routeName),
       ],
     ),
   }

@@ -13,6 +13,11 @@ import type { Message as AppMessage } from './message'
 import { Model, PackageManager, ResolvedTheme, ThemePreference } from './model'
 import * as ToggleGroup from './generated/registry/ui/toggle-group'
 import * as Sheet from './generated/registry/ui/sheet'
+import * as Accordion from './generated/registry/ui/accordion'
+import * as Collapsible from './generated/registry/ui/collapsible'
+import { examplesFor } from './page/chart-examples/catalog'
+import { chartItemNames } from './catalog/charts'
+import { loadExample } from './page/chart-examples/loader'
 
 export const THEME_STORAGE_KEY = 'foldcn-theme'
 export const PACKAGE_MANAGER_STORAGE_KEY = 'foldcn-package-manager'
@@ -68,6 +73,25 @@ const CopyText = Command.define('CopyText', {
       yield* Effect.sleep('1500 millis')
       return Message.CompletedCopy({ value })
     }),
+})
+
+const LoadChartExample = Command.define('LoadChartExample', {
+  args: { id: S.String },
+  messages: [Message.LoadedChartExample, Message.FailedChartExample],
+  execute: ({ id }) =>
+    Effect.tryPromise(() => loadExample(id)).pipe(
+      Effect.match({
+        onSuccess: () => Message.LoadedChartExample({ id }),
+        onFailure: () => Message.FailedChartExample({ id }),
+      }),
+    ),
+})
+
+const TickChartWindow = Command.define('TickChartWindow', {
+  args: { id: S.String, token: S.Number, delayMs: S.Number },
+  messages: [Message.ChartWindowTicked],
+  execute: ({ id, token, delayMs }) =>
+    Effect.sleep(delayMs).pipe(Effect.as(Message.ChartWindowTicked({ id, token }))),
 })
 
 const NavigateInternal = Command.define('NavigateInternal', {
@@ -276,10 +300,28 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
         ),
       ChangedUrl: ({ url }) => {
         const { model: nextNavSheet, commands: navCommands = [] } = Sheet.close(model.navSheet)
+        const route = parseRoute(url)
+        const chartsActive =
+          route._tag === 'ChartGuide' || (route._tag === 'Item' && chartItemNames.has(route.name))
+        const examples = route._tag === 'Item' ? examplesFor(route.name) : []
+        const navValue = [!chartsActive, chartsActive]
         return {
           model: modifyFields(model, {
-            route: () => parseRoute(url),
+            route: () => route,
+            chartStreaming: () => new Set(),
             navSheet: () => nextNavSheet,
+            docsNavDesktop: () => Accordion.reflect(model.docsNavDesktop, navValue),
+            docsNavMobile: () => Accordion.reflect(model.docsNavMobile, navValue),
+            chartExamples: () =>
+              Accordion.init({
+                id: 'chart-examples',
+                type: 'multiple',
+                value: examples.map((_, index) => index === 0),
+              }),
+            chartExampleSources: () =>
+              examples.map((example) =>
+                Collapsible.init({ id: `chart-example-source-${example.id}` }),
+              ),
           }),
           commands: [
             ScrollToTop(),
@@ -356,6 +398,255 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
             model.expandedCodeBlocks.has(id)
               ? new Set([...model.expandedCodeBlocks].filter((v) => v !== id))
               : new Set([...model.expandedCodeBlocks, id]),
+        }),
+      }),
+      GotDocsNavAccordionMessage: ({ surface, message }) => {
+        if (surface === 'desktop') {
+          const { model: next } = Accordion.update(model.docsNavDesktop, message)
+          return { model: modifyFields(model, { docsNavDesktop: () => next }) }
+        }
+        const { model: next } = Accordion.update(model.docsNavMobile, message)
+        return { model: modifyFields(model, { docsNavMobile: () => next }) }
+      },
+      GotChartExamplesAccordionMessage: ({ message }) => {
+        const example =
+          model.route._tag === 'Item' ? examplesFor(model.route.name)[message.index] : undefined
+        if (message.index === 0 || example === undefined) return { model }
+        const { model: next } = Accordion.update(model.chartExamples, message)
+        return {
+          model: modifyFields(model, {
+            chartExamples: () => next,
+            failedChartExamples: () =>
+              message.isOpen
+                ? new Set([...model.failedChartExamples].filter((id) => id !== example.id))
+                : model.failedChartExamples,
+          }),
+          commands:
+            message.isOpen && !model.loadedChartExamples.has(example.id)
+              ? [LoadChartExample({ id: example.id })]
+              : [],
+        }
+      },
+      GotChartExampleSourceMessage: ({ index, message }) => {
+        const source = model.chartExampleSources[index]
+        if (source === undefined) return { model }
+        const { model: next } = Collapsible.update(source, message)
+        return {
+          model: modifyFields(model, {
+            chartExampleSources: () =>
+              model.chartExampleSources.map((item, itemIndex) =>
+                itemIndex === index ? next : item,
+              ),
+          }),
+        }
+      },
+      LoadedChartExample: ({ id }) => ({
+        model: modifyFields(model, {
+          loadedChartExamples: () => new Set([...model.loadedChartExamples, id]),
+        }),
+      }),
+      FailedChartExample: ({ id }) => ({
+        model: modifyFields(model, {
+          failedChartExamples: () => new Set([...model.failedChartExamples, id]),
+        }),
+      }),
+      ChartHovered: ({ example, index }) => ({
+        model: modifyFields(model, {
+          chartHover: () => (index === null ? Option.none() : Option.some({ example, index })),
+        }),
+      }),
+      ChartLegendHovered: ({ example, key }) => ({
+        model: modifyFields(model, {
+          chartLegendHover: () =>
+            model.chartLockedLegends.has(example)
+              ? model.chartLegendHover
+              : key === null
+                ? Option.none()
+                : Option.some({ example, key }),
+        }),
+      }),
+      ChartLegendClicked: ({ example, key }) => {
+        const focused = Option.match(model.chartLegendHover, {
+          onNone: () => null,
+          onSome: (hover) => (hover.example === example ? hover.key : null),
+        })
+        const locked = new Set(model.chartLockedLegends)
+        if (locked.has(example) && focused === key) locked.delete(example)
+        else locked.add(example)
+        return {
+          model: modifyFields(model, {
+            chartLockedLegends: () => locked,
+            chartLegendHover: () =>
+              locked.has(example) ? Option.some({ example, key }) : Option.none(),
+          }),
+        }
+      },
+      ChartWindowShifted: ({ id, offset }) => ({
+        model: modifyFields(model, {
+          chartWindowStarts: () => ({
+            ...model.chartWindowStarts,
+            [id]: ((model.chartWindowStarts[id] ?? 0) + offset + 30) % 30,
+          }),
+        }),
+      }),
+      ChartWindowStreamToggled: ({ id }) => {
+        const streaming = new Set(model.chartStreaming)
+        const token = (model.chartStreamTokens[id] ?? 0) + 1
+        if (streaming.has(id)) streaming.delete(id)
+        else streaming.add(id)
+        return {
+          model: modifyFields(model, {
+            chartStreaming: () => streaming,
+            chartStreamTokens: () => ({ ...model.chartStreamTokens, [id]: token }),
+          }),
+          commands: streaming.has(id)
+            ? [
+                TickChartWindow({
+                  id,
+                  token,
+                  delayMs: Math.max(
+                    1,
+                    (model.chartAnimationDurations[id] ??
+                      (id.startsWith('bar-chart/') ? 1200 : 800)) * 1.1,
+                  ),
+                }),
+              ]
+            : [],
+        }
+      },
+      ChartWindowTicked: ({ id, token }) =>
+        model.chartStreaming.has(id) && model.chartStreamTokens[id] === token
+          ? {
+              model: modifyFields(model, {
+                chartWindowStarts: () => ({
+                  ...model.chartWindowStarts,
+                  [id]: ((model.chartWindowStarts[id] ?? 0) + 1) % 30,
+                }),
+              }),
+              commands: [
+                TickChartWindow({
+                  id,
+                  token,
+                  delayMs: Math.max(
+                    1,
+                    (model.chartAnimationDurations[id] ??
+                      (id.startsWith('bar-chart/') ? 1200 : 800)) * 1.1,
+                  ),
+                }),
+              ],
+            }
+          : { model },
+      ChartZoomStarted: ({ id, index }) => ({
+        model: modifyFields(model, {
+          chartSelectionStarts: () => ({ ...model.chartSelectionStarts, [id]: index }),
+        }),
+      }),
+      ChartZoomEnded: ({ id, index }) => {
+        const start = model.chartSelectionStarts[id]
+        const starts = { ...model.chartSelectionStarts }
+        delete starts[id]
+        if (start === undefined || start === index)
+          return {
+            model: modifyFields(model, { chartSelectionStarts: () => starts }),
+          }
+        return {
+          model: modifyFields(model, {
+            chartSelectionStarts: () => starts,
+            chartZoomRanges: () => ({
+              ...model.chartZoomRanges,
+              [id]: [Math.min(start, index), Math.max(start, index)] as const,
+            }),
+          }),
+        }
+      },
+      ChartZoomReset: ({ id }) => {
+        const ranges = { ...model.chartZoomRanges }
+        delete ranges[id]
+        return { model: modifyFields(model, { chartZoomRanges: () => ranges }) }
+      },
+      TreemapFocused: ({ path }) => ({
+        model: modifyFields(model, { treemapPath: () => path }),
+      }),
+      ChartTreemapFocused: ({ id, path }) => ({
+        model: modifyFields(model, {
+          chartTreemapPaths: () => ({ ...model.chartTreemapPaths, [id]: path }),
+          chartTreemapHover: () => Option.none(),
+        }),
+      }),
+      ChartTreemapHovered: ({ id, node }) => ({
+        model: modifyFields(model, {
+          chartTreemapHover: () => (node === null ? Option.none() : Option.some({ id, ...node })),
+        }),
+      }),
+      ChartTreemapMoved: ({ id, x, y }) => ({
+        model: modifyFields(model, {
+          chartTreemapHover: (hover) =>
+            Option.map(hover, (value) => (value.id === id ? { ...value, x, y } : value)),
+        }),
+      }),
+      ChartDatasetSwapped: ({ id }) => ({
+        model: modifyFields(model, {
+          chartDatasetB: () => {
+            const selected = new Set(model.chartDatasetB)
+            if (selected.has(id)) selected.delete(id)
+            else selected.add(id)
+            return selected
+          },
+        }),
+      }),
+      ChartBarToggled: ({ id, index }) => ({
+        model: modifyFields(model, {
+          chartActiveBars: () => {
+            const key = `${id}:${index}`
+            const selected = new Set(model.chartActiveBars)
+            if (selected.has(key)) selected.delete(key)
+            else selected.add(key)
+            return selected
+          },
+        }),
+      }),
+      ChartResized: ({ id, width, height }) => ({
+        model: modifyFields(model, {
+          chartSizes: () => ({ ...model.chartSizes, [id]: { width, height } }),
+        }),
+      }),
+      ChartAnimationDurationChanged: ({ id, value }) => {
+        const duration = Number(value)
+        if (!Number.isFinite(duration) || duration < 0) return { model }
+        const streaming = model.chartStreaming.has(id)
+        const token = (model.chartStreamTokens[id] ?? 0) + 1
+        return {
+          model: modifyFields(model, {
+            chartAnimationDurations: () => ({ ...model.chartAnimationDurations, [id]: duration }),
+            chartStreamTokens: () =>
+              streaming ? { ...model.chartStreamTokens, [id]: token } : model.chartStreamTokens,
+          }),
+          commands: streaming
+            ? [TickChartWindow({ id, token, delayMs: Math.max(1, duration * 1.1) })]
+            : [],
+        }
+      },
+      ChartAnimationReplayed: ({ id }) => ({
+        model: modifyFields(model, {
+          chartReplayCounts: () => ({
+            ...model.chartReplayCounts,
+            [id]: (model.chartReplayCounts[id] ?? 0) + 1,
+          }),
+        }),
+      }),
+      ChartAnimationModeChanged: ({ id, value }) => ({
+        model: modifyFields(model, {
+          chartAnimationModes: () => ({ ...model.chartAnimationModes, [id]: value }),
+        }),
+      }),
+      ChartAnimationToggled: ({ id }) => ({
+        model: modifyFields(model, {
+          chartAnimationDisabled: () => {
+            const disabled = new Set(model.chartAnimationDisabled)
+            if (disabled.has(id)) disabled.delete(id)
+            else disabled.add(id)
+            return disabled
+          },
         }),
       }),
       SelectedRegistryStyle: ({ style }) => {

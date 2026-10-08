@@ -13,6 +13,8 @@ npx shadcn@latest add @foldcn/button @foldcn/dialog
 
 ## Component families
 
+Charts have their own documentation section with Guide and API navigation. Twelve chart APIs use Recharts-named Foldkit descriptors and SVG renderers. Cartesian hover state is routed through the caller's update loop. The gallery indexes all 95 Recharts chart examples as lazy Foldkit adaptations; each source is available inside its example. The pages state which upstream features remain open. Authored styling uses `cn-chart-*` tokens resolved by the normal registry pipeline.
+
 | Family                   | Pattern                                                       | When                                                                                                                                                                          |
 | ------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Helpers**              | Stateless builder (`ViewConfig + builder → Html`)             | Simple controls: button, input, switch, checkbox                                                                                                                              |
