@@ -28,6 +28,8 @@ const ENTRY_ID = 'test-entry-0'
 const POINTER_ID = 1
 /** `settleSnapBack` increments the press's `swipeVersion` 1 to 2. */
 const SETTLING_SWIPE_VERSION = 2
+/** `hide` advances the toast animation's transition generation before paint. */
+const LEAVING_ANIMATION_GENERATION = 1
 
 const entryZero = Scene.selector('div[key="test-entry-0"]')
 const card = Scene.selector('[data-slot="toast"]')
@@ -134,9 +136,15 @@ describe('toast swipe-to-dismiss', () => {
       Scene.expect(entryZero).toHaveAttr('data-swipe', 'end'),
       Scene.expect(entryZero).toHaveStyle('translate', '100px'),
       Scene.expect(entryZero).toHaveAttr('data-leave', ''),
-      Scene.Command.resolve(Animation.WaitForPaint, Animation.Message.CompletedWaitForPaint()),
+      Scene.Command.resolve(
+        Animation.WaitForPaint,
+        Animation.Message.CompletedWaitForPaint({ generation: LEAVING_ANIMATION_GENERATION }),
+      ),
       Scene.expect(entryZero).toHaveStyle('translate', '100vw'),
-      Scene.Command.resolve(Animation.WaitForAnimationSettled, Animation.Message.EndedAnimation()),
+      Scene.Command.resolve(
+        Animation.WaitForAnimationSettled,
+        Animation.Message.EndedAnimation({ generation: LEAVING_ANIMATION_GENERATION }),
+      ),
       Scene.expect(entryZero).toBeAbsent(),
     )
   })

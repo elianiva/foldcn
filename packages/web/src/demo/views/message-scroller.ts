@@ -256,7 +256,7 @@ type State = typeof stateSchema.Type
 export const subscriptions = Subscription.lift({
   messageScrollerViewportEvents: MessageScroller.subscriptions.viewportEvents,
 })<State, typeof Message.GotMessageScrollerMessage.Type>({
-  toChildModel: (model) => model.messageScroller,
+  read: (model) => Option.some(model.messageScroller),
   toParentMessage: (message) => Message.GotMessageScrollerMessage({ message }),
 })
 

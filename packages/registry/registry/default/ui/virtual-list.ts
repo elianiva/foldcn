@@ -45,15 +45,12 @@ export const styledViewInputs = <Item>(
     items: viewInputs.items,
     itemToKey: viewInputs.itemToKey,
     itemToView: viewInputs.itemToView,
-    itemToRowHeightPx: viewInputs.itemToRowHeightPx,
     overscan: viewInputs.overscan,
     containerClassName: cn(virtualListContainerClass, viewInputs.containerClass),
+    ...(h === undefined
+      ? {}
+      : { containerAttributes: childAttributes([h.DataAttribute('slot', 'virtual-list')]) }),
   }
-  if (h !== undefined) {
-    return {
-      ...base,
-      containerAttributes: childAttributes([h.DataAttribute('slot', 'virtual-list')]),
-    }
-  }
-  return base
+  if (viewInputs.itemToRowHeightPx === undefined) return base
+  return { ...base, itemToRowHeightPx: viewInputs.itemToRowHeightPx }
 }

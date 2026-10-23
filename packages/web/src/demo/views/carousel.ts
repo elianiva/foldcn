@@ -284,7 +284,7 @@ const liftCarouselSubscriptions = (
   const lifted = Subscription.lift({
     engineEvents: carousel.subscriptions.engineEvents,
   })<State, CarouselMessage>({
-    toChildModel: read,
+    read: (model) => Option.some(read(model)),
     toParentMessage,
   })
   return { [`${name}EngineEvents`]: lifted.engineEvents }

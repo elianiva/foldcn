@@ -162,7 +162,7 @@ const liftScrollAreaSubscriptions = (
     viewportEvents: ScrollArea.subscriptions.viewportEvents,
     dragPointer: ScrollArea.subscriptions.dragPointer,
   })<State, ScrollAreaAppMessage>({
-    toChildModel: read,
+    read: (model) => Option.some(read(model)),
     toParentMessage,
   })
   return {

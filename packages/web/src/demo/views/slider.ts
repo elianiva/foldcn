@@ -294,7 +294,7 @@ const liftSliderSubscriptions = (
     dragPointer: Slider.subscriptions.dragPointer,
     dragEscape: Slider.subscriptions.dragEscape,
   })<State, SliderMessage>({
-    toChildModel: read,
+    read: (model) => Option.some(read(model)),
     toParentMessage,
   })
   return {

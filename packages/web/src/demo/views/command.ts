@@ -1,4 +1,5 @@
 import { Subscription, Update } from 'foldkit'
+import * as Dom from 'foldkit/dom'
 import * as RuntimeCommand from 'foldkit/command'
 import { Option, Schema as S } from 'effect'
 import { defineMessageUnion } from 'foldkit/message'
@@ -177,7 +178,7 @@ export const subscriptions = Subscription.make<
     {
       modelToDependencies: (model) => ({ isEnabled: model.isCommandPage }),
       dependenciesToStream: ({ isEnabled }) =>
-        Subscription.keyBindings({
+        Dom.streamFromKeyBindings({
           bindings: [
             {
               keys: 'Mod+K',

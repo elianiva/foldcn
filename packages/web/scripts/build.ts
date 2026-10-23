@@ -5,8 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { NodeRuntime, NodeServices } from '@effect/platform-node'
 import { Console, Effect, FileSystem } from 'effect'
 import type * as PlatformError from 'effect/PlatformError'
-import { ChildProcess } from 'effect/unstable/process'
-import { ChildProcessSpawner } from 'effect/unstable/process/ChildProcessSpawner'
+import { ChildProcess, ChildProcessSpawner } from 'effect/process'
 
 // One id names this build, and every command below is given that same id, so
 // the client bundle and the server bundle of a deployment agree on which
@@ -48,7 +47,7 @@ const steps = [
 /** Run an external command with inherited stdio, dying on a non-zero exit. */
 const runStep = ([command, args]: (typeof steps)[number]) =>
   Effect.gen(function* () {
-    const spawner = yield* ChildProcessSpawner
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
     const exitCode = yield* spawner.exitCode(
       ChildProcess.make(command, [...args], {
         stdin: 'inherit',
@@ -59,7 +58,7 @@ const runStep = ([command, args]: (typeof steps)[number]) =>
         shell: process.platform === 'win32',
       }),
     )
-    if (exitCode !== 0) {
+    if (exitCode !== ChildProcessSpawner.ExitCode(0)) {
       return yield* Effect.die(
         new Error(`${command} ${args.join(' ')} exited with code ${exitCode}`),
       )

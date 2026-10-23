@@ -171,7 +171,7 @@ const stateSchema = S.Struct(fields)
 type State = typeof stateSchema.Type
 
 export const subscriptions = Subscription.lift(Toast.subscriptions)<State, ToastMessage>({
-  toChildModel: (model) => model.toast,
+  read: (model) => Option.some(model.toast),
   toParentMessage: (message) => Message.GotToastMessage({ message }),
 })
 

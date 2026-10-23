@@ -11,6 +11,7 @@ import {
   type HtmlBuilder,
 } from 'foldkit/html'
 import { defineMessageUnion } from 'foldkit/message'
+import * as Dom from 'foldkit/dom'
 import { modifyFields } from 'foldkit/struct'
 import { defineView } from 'foldkit/submodel'
 import type { View as SubmodelView } from 'foldkit/submodel'
@@ -243,7 +244,7 @@ export const subscriptions = Subscription.make<Model, Message>()((entry) => {
         modelToDependencies: () => ({ isListening: true }),
         dependenciesToStream: ({ isListening }) =>
           Stream.when(
-            Subscription.keyBindings({
+            Dom.streamFromKeyBindings<Message>({
               bindings: [
                 {
                   keys: `Mod+${SIDEBAR_KEYBOARD_SHORTCUT}`,

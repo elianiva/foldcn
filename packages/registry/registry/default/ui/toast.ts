@@ -532,7 +532,7 @@ export const make = <A, I>(payloadSchema: S.Codec<A, I>) => {
    *  Model, which nests the bound model under `toast`. Lift this once at the
    *  app root so pointermove / pointerup / pointercancel reach the stack. */
   const subscriptions = Subscription.lift(Bound.subscriptions)<Model, Message>({
-    toChildModel: (model) => model.toast,
+    read: (model) => Option.some(model.toast),
     toParentMessage: toGotToastMessage,
   })
 
