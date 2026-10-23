@@ -43,7 +43,7 @@
     "portless": "^0.15.10",
     "takumi-js": "^2.17.1",
     "tsx": "^4.23.15",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
   }
