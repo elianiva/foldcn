@@ -507,7 +507,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, config, h) =>
       h.OnMount(CommandDom()),
     ],
     [
-      Command.input(
+      Command.input<Message>(
         {
           id: inputId(model.id),
           ariaLabel: config.label ?? 'Command menu',

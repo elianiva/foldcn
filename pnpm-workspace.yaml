@@ -11,6 +11,8 @@ allowBuilds:
 # Keep Alchemy's optional Effect integrations on that same release; otherwise
 # pnpm selects 4.0.6, which does not satisfy Foldkit's exact Effect peer.
 # @effect/vitest is unused and its current release requires Effect ^4.0.6.
+# The Effect pin also caps Alchemy at 2.0.0-beta.83; beta.84 requires Effect
+# ^4.0.5. Move both together when Foldkit widens its Effect peer.
 overrides:
   '@effect/platform-node@4.0.0>@effect/platform-node-shared': 4.0.0
   '@effect/sql-d1': 4.0.0
