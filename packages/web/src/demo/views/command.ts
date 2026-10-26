@@ -82,8 +82,13 @@ const groups: ReadonlyArray<Command.Group> = [
   { value: 'settings', heading: 'Settings' },
 ]
 
+// tsgolint resolves the shimmed schema types as `any`, so it reports both union members as error
+// types. `tsc` and `tsrs` resolve them, and this is the union both submodels emit.
+// oxlint-disable-next-line typescript/no-redundant-type-constituents
+type CommandOut = Command.OutMessage | Command.CommandDialogOutMessage
+
 const recordCommand =
-  (out: Command.OutMessage | Command.CommandDialogOutMessage): Update.Step<State, unknown> =>
+  (out: CommandOut): Update.Step<State, unknown> =>
   (model) => ({
     model:
       out._tag === 'Selected'

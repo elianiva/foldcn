@@ -121,6 +121,8 @@ const submissionLine = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
     onSome: (summary) =>
       h.p(
         [h.Class('px-1 text-sm text-emerald-600 dark:text-emerald-400')],
+        // tsgolint resolves the Option payload as `unknown`; `tsc` and `tsrs` resolve it as `string`.
+        // oxlint-disable-next-line typescript/restrict-template-expressions
         [`Submitted: ${summary}`],
       ),
   })
