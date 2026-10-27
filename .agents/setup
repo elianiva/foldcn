@@ -7,7 +7,7 @@ mkdir -p "$LOG_DIR"
 exec > >(tee -a "$LOG_DIR/setup.log") 2>&1
 
 NODE_MAJOR=26
-PNPM_VERSION=11.22.0
+PNPM_VERSION=12.15.0
 
 run_step() {
 	local name="$1"
