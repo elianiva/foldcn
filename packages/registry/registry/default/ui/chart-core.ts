@@ -219,6 +219,10 @@ const numeric = (value: ChartValue): number | undefined => {
   const result = Number(isNumberRange(value) ? value.at(-1) : value)
   return Number.isFinite(result) ? result : undefined
 }
+const domainMin = (values: ReadonlyArray<number>): number =>
+  values.length === 0 ? 0 : Math.min(...values)
+const domainMax = (values: ReadonlyArray<number>): number =>
+  values.length === 0 ? 1 : Math.max(...values)
 const rangeStart = (value: ChartValue): number | undefined =>
   isNumberRange(value) && value.length >= 2 ? numeric(value[0]) : undefined
 const stringColor = (value: ChartValue | ReadonlyArray<HierarchyNode>): string | undefined => {
@@ -352,14 +356,14 @@ const scatterCartesian = <M>(props: CartesianChartProps<M>, h: HtmlBuilder<M>): 
       typeof end === 'number'
         ? end
         : end === 'dataMin'
-          ? Math.min(...values)
+          ? domainMin(values)
           : end === 'dataMax'
-            ? Math.max(...values)
+            ? domainMax(values)
             : end === undefined || end === 'auto'
               ? fallback
               : end.startsWith('dataMax + ')
-                ? Math.max(...values) + Number(end.slice('dataMax + '.length))
-                : Math.min(...values) - Number(end.slice('dataMin - '.length))
+                ? domainMax(values) + Number(end.slice('dataMax + '.length))
+                : domainMin(values) - Number(end.slice('dataMin - '.length))
     const start = resolveEnd(specified?.[0], low)
     const end = resolveEnd(specified?.[1], high)
     const rawStep = Math.max(1, end - start) / 4
@@ -833,7 +837,7 @@ const cartesian = <M>(kind: string, props: CartesianChartProps<M>, h: HtmlBuilde
         return value === undefined ? [] : [value]
       }),
     )
-    const extremes = [0, Math.min(...values), Math.max(...values)]
+    const extremes = [0, domainMin(values), domainMax(values)]
     const labels = extremes.map(
       (value) => axis.props.tickFormatter?.(value) ?? String(Math.round(value)),
     )
@@ -892,9 +896,7 @@ const cartesian = <M>(kind: string, props: CartesianChartProps<M>, h: HtmlBuilde
         const result = numeric(at(entry, item.props.dataKey))
         return result === undefined ? [] : [result]
       })
-      return item.props.baseValue === 'dataMax'
-        ? Math.max(...chartValues)
-        : Math.min(...chartValues)
+      return item.props.baseValue === 'dataMax' ? domainMax(chartValues) : domainMin(chartValues)
     }
     if (item.kind === 'line' || item.props.stackId === undefined) return 0
     const before = series.slice(0, series.indexOf(item))
@@ -941,20 +943,16 @@ const cartesian = <M>(kind: string, props: CartesianChartProps<M>, h: HtmlBuilde
   const domain = numAxis?.props.domain
   const resolve = (value: DomainEnd | undefined, fallback: number): number =>
     value === 'dataMin'
-      ? values.length === 0
-        ? 0
-        : Math.min(...values)
+      ? domainMin(values)
       : value === 'dataMax'
-        ? values.length === 0
-          ? 1
-          : Math.max(...values)
+        ? domainMax(values)
         : value === undefined || value === 'auto'
           ? fallback
           : typeof value === 'number'
             ? value
             : value.startsWith('dataMax + ')
-              ? Math.max(...values) + Number(value.slice('dataMax + '.length))
-              : Math.min(...values) - Number(value.slice('dataMin - '.length))
+              ? domainMax(values) + Number(value.slice('dataMax + '.length))
+              : domainMin(values) - Number(value.slice('dataMin - '.length))
   const rawMin = resolve(domain?.[0], minValue)
   const rawMax = resolve(domain?.[1], maxValue || 1)
   const nice = numAxis?.props.ticks ?? niceTickValues(rawMin, rawMax, numAxis?.props.tickCount ?? 5)
@@ -979,13 +977,13 @@ const cartesian = <M>(kind: string, props: CartesianChartProps<M>, h: HtmlBuilde
       ? Math.min(0, ...rightValues)
       : typeof rightDomain[0] === 'number'
         ? rightDomain[0]
-        : Math.min(...rightValues)
+        : domainMin(rightValues)
   const rightRawMax =
     rightDomain?.[1] === undefined || rightDomain[1] === 'auto'
       ? Math.max(1, ...rightValues)
       : typeof rightDomain[1] === 'number'
         ? rightDomain[1]
-        : Math.max(...rightValues)
+        : domainMax(rightValues)
   const rightNice = niceTickValues(rightRawMin, rightRawMax, rightAxis?.props.tickCount ?? 5)
   const rightMin =
     rightDomain?.[0] === undefined || rightDomain[0] === 'auto'
@@ -1008,13 +1006,13 @@ const cartesian = <M>(kind: string, props: CartesianChartProps<M>, h: HtmlBuilde
     typeof categoryDomain?.[0] === 'number'
       ? categoryDomain[0]
       : categoryDomain?.[0] === 'dataMin'
-        ? Math.min(...categoryValues)
+        ? domainMin(categoryValues)
         : Math.min(0, ...categoryValues)
   const categoryRawMax =
     typeof categoryDomain?.[1] === 'number'
       ? categoryDomain[1]
       : categoryDomain?.[1] === 'dataMax'
-        ? Math.max(...categoryValues)
+        ? domainMax(categoryValues)
         : Math.max(1, ...categoryValues)
   const categoryNice = niceTickValues(categoryRawMin, categoryRawMax, catAxis?.props.tickCount ?? 5)
   const categoryMin =

@@ -94,6 +94,14 @@ const TickChartWindow = Command.define('TickChartWindow', {
     Effect.sleep(delayMs).pipe(Effect.as(Message.ChartWindowTicked({ id, token }))),
 })
 
+const MIN_CHART_STREAM_DELAY_MS = 100
+
+const chartStreamDelayMs = (model: Model, id: string): number =>
+  Math.max(
+    MIN_CHART_STREAM_DELAY_MS,
+    (model.chartAnimationDurations[id] ?? (id.startsWith('bar-chart/') ? 1200 : 800)) * 1.1,
+  )
+
 const NavigateInternal = Command.define('NavigateInternal', {
   args: { url: S.String },
   messages: [Message.CompletedNavigateInternal],
@@ -413,9 +421,21 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
           model.route._tag === 'Item' ? examplesFor(model.route.name)[message.index] : undefined
         if (message.index === 0 || example === undefined) return { model }
         const { model: next } = Accordion.update(model.chartExamples, message)
+        const stopsStream = !message.isOpen && model.chartStreaming.has(example.id)
         return {
           model: modifyFields(model, {
             chartExamples: () => next,
+            chartStreaming: () =>
+              stopsStream
+                ? new Set([...model.chartStreaming].filter((id) => id !== example.id))
+                : model.chartStreaming,
+            chartStreamTokens: () =>
+              stopsStream
+                ? {
+                    ...model.chartStreamTokens,
+                    [example.id]: (model.chartStreamTokens[example.id] ?? 0) + 1,
+                  }
+                : model.chartStreamTokens,
             failedChartExamples: () =>
               message.isOpen
                 ? new Set([...model.failedChartExamples].filter((id) => id !== example.id))
@@ -500,17 +520,7 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
             chartStreamTokens: () => ({ ...model.chartStreamTokens, [id]: token }),
           }),
           commands: streaming.has(id)
-            ? [
-                TickChartWindow({
-                  id,
-                  token,
-                  delayMs: Math.max(
-                    1,
-                    (model.chartAnimationDurations[id] ??
-                      (id.startsWith('bar-chart/') ? 1200 : 800)) * 1.1,
-                  ),
-                }),
-              ]
+            ? [TickChartWindow({ id, token, delayMs: chartStreamDelayMs(model, id) })]
             : [],
         }
       },
@@ -523,17 +533,7 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
                   [id]: ((model.chartWindowStarts[id] ?? 0) + 1) % 30,
                 }),
               }),
-              commands: [
-                TickChartWindow({
-                  id,
-                  token,
-                  delayMs: Math.max(
-                    1,
-                    (model.chartAnimationDurations[id] ??
-                      (id.startsWith('bar-chart/') ? 1200 : 800)) * 1.1,
-                  ),
-                }),
-              ],
+              commands: [TickChartWindow({ id, token, delayMs: chartStreamDelayMs(model, id) })],
             }
           : { model },
       ChartZoomStarted: ({ id, index }) => ({
@@ -622,7 +622,13 @@ export const update = (model: Model, message: AppMessage): UpdateReturn =>
               streaming ? { ...model.chartStreamTokens, [id]: token } : model.chartStreamTokens,
           }),
           commands: streaming
-            ? [TickChartWindow({ id, token, delayMs: Math.max(1, duration * 1.1) })]
+            ? [
+                TickChartWindow({
+                  id,
+                  token,
+                  delayMs: Math.max(MIN_CHART_STREAM_DELAY_MS, duration * 1.1),
+                }),
+              ]
             : [],
         }
       },
