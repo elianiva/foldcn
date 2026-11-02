@@ -623,7 +623,7 @@ export const subscriptions = Subscription.lift(Sidebar.subscriptions)<
   State,
   typeof Message.GotSidebarMessage.Type
 >({
-  toChildModel: (model) => model.sidebar,
+  read: (model) => Option.some(model.sidebar),
   toParentMessage: (message) => Message.GotSidebarMessage({ message }),
 })
 

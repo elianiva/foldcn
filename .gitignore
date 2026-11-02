@@ -7,4 +7,4 @@ dist/
 packages/registry/styles/
 packages/web/src/generated/
 .tmp/
-
+.amp/portals/*

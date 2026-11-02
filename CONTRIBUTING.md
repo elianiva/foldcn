@@ -46,6 +46,8 @@ pnpm test
 pnpm validate     # registry schema check
 ```
 
+`typecheck` runs `tsrs`, a drop-in `tsc` replacement. It is the Rust port of the TypeScript 7 compiler, shipped as an experimental prerelease that pins its own TypeScript port. If `tsrs` reports an error that `tsc` accepts, inference at that call site is fragile. Name the type argument or annotate the callback instead of dropping the check. See `Command.input<Message>` in `command.ts`.
+
 ## Adding a component
 
 Three things:

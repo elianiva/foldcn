@@ -1,4 +1,4 @@
-import { Command, Subscription, Update } from 'foldkit'
+import { Command, Update } from 'foldkit'
 import { Option } from 'effect'
 import { Schema as S } from 'effect'
 import { modifyFields } from 'foldkit/struct'
@@ -648,13 +648,6 @@ const fields = {
 const stateSchema = S.Struct(fields)
 type State = typeof stateSchema.Type
 
-export const subscriptions = Subscription.lift({
-  virtualListContainerEvents: FoldkitVirtualList.subscriptions.containerEvents,
-})<State, typeof Message.GotVirtualListMessage.Type>({
-  toChildModel: (model) => model.virtualList,
-  toParentMessage: (message) => Message.GotVirtualListMessage({ message }),
-})
-
 export const slice = defineSlice({
   fields,
   init: {
@@ -735,7 +728,4 @@ export const slice = defineSlice({
     Message.SelectedVirtualListTeam({ team: 'Engineering' }),
     Message.ClearedVirtualListFilters(),
   ],
-  // Virtual-list events arrive through the child's own update; there are no
-  // parent-side samples to feed update().
-  subscriptions,
 })

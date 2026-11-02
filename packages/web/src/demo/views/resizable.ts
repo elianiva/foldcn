@@ -300,7 +300,7 @@ const liftDragPointer = (
   const lifted = Subscription.lift({
     dragPointer: resizable.subscriptions.dragPointer,
   })<State, ResizableAppMessage>({
-    toChildModel: read,
+    read: (model) => Option.some(read(model)),
     toParentMessage,
   })
   return { [`${name}DragPointer`]: lifted.dragPointer }

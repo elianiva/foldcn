@@ -45,15 +45,16 @@ const systemThemeSubscriptions = Subscription.make<Model, AppMessage>()((entry) 
 }))
 
 const demoLiftedSubscriptions = Subscription.lift(demoSubscriptions)<Model, AppMessage>({
-  toChildModel: (model) => model.demo,
+  read: (model) => Option.some(model.demo),
   toParentMessage: (message) => Message.GotDemoMessage({ message }),
 })
 
 const commandLiftedSubscriptions = Subscription.lift(commandSubscriptions)<Model, AppMessage>({
-  toChildModel: (model) => ({
-    ...model.demo,
-    isCommandPage: model.route._tag === 'Item' && model.route.name === 'command',
-  }),
+  read: (model) =>
+    Option.some({
+      ...model.demo,
+      isCommandPage: model.route._tag === 'Item' && model.route.name === 'command',
+    }),
   toParentMessage: (message) => Message.GotDemoMessage({ message }),
 })
 

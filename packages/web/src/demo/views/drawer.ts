@@ -329,7 +329,7 @@ const liftDrawerSubscriptions = (
     dragPointer: Drawer.subscriptions.dragPointer,
     dragEscape: Drawer.subscriptions.dragEscape,
   })<State, DrawerMessage>({
-    toChildModel: read,
+    read: (model) => Option.some(read(model)),
     toParentMessage,
   })
   return {
