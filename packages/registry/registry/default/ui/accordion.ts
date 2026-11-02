@@ -152,6 +152,8 @@ export type AccordionItemViewInput = Readonly<{
 export type ViewInputs = Readonly<{
   items: ReadonlyArray<AccordionItemViewInput>
   className?: string
+  /** Build eventful item content in the embedding parent's message scope. */
+  renderContent?: (index: number) => Html
 }>
 
 /** Renders the controlled accordion group. Embedded via `h.submodel`. */
@@ -165,6 +167,10 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
       accordionItem(
         {
           ...item,
+          content:
+            model.value[index] && viewInputs.renderContent !== undefined
+              ? viewInputs.renderContent(index)
+              : item.content,
           isOpen: model.value[index] ?? false,
           onToggle: (isOpen) => Message.ToggledItem({ index, isOpen }),
         },
@@ -174,12 +180,12 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
   ),
 )
 
-const accordionItem = (
+export const accordionItem = <M>(
   config: AccordionItemViewInput & {
     isOpen: boolean
-    onToggle: (isOpen: boolean) => Message
+    onToggle: (isOpen: boolean) => M
   },
-  h: HtmlBuilder<Message>,
+  h: HtmlBuilder<M>,
 ): Html =>
   FoldkitDisclosure.view(
     {

@@ -9,6 +9,7 @@ import { view } from './view'
 export const prerenderPaths: ReadonlyArray<string> = [
   '/',
   '/docs',
+  '/docs/charts',
   ...items.map((item) => `/docs/${item.name}`),
 ]
 

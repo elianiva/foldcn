@@ -1,6 +1,7 @@
 import { Effect, FileSystem } from 'effect'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { chartItemNames } from '../src/catalog/charts'
 
 export { htmlToMarkdown, extractMain } from '../src/markdown'
 
@@ -84,6 +85,7 @@ const composeDocs: SectionComposer = ({ origin, items }) => [
   '## Docs',
   `- [Home](${origin}/index.md): shadcn components for Foldkit — the registry landing page.`,
   `- [Components](${origin}/docs.md): Browse the full catalog of ${items.length} components, blocks and utilities.`,
+  `- [Charts guide](${origin}/docs/charts.md): Use Foldkit charts with Recharts-shaped component and parameter names.`,
 ]
 
 const composeForAgents: SectionComposer = ({ origin }) => {
@@ -103,7 +105,7 @@ const composeForAgents: SectionComposer = ({ origin }) => {
   ]
 }
 
-const CATEGORY_ORDER = ['Base', 'Lib', 'Components', 'Blocks'] as const
+const CATEGORY_ORDER = ['Base', 'Lib', 'Components', 'Charts', 'Blocks'] as const
 
 const composeOptional: SectionComposer = ({ origin }) => [
   '## Optional',
@@ -153,7 +155,11 @@ export const loadRegistryItems = Effect.fn(function* () {
               description: it.description ?? '',
               category: (() => {
                 const type = it.type ?? ''
-                return isRegistryType(type) ? TYPE_TO_CATEGORY[type] : 'Components'
+                return chartItemNames.has(it.name ?? '')
+                  ? 'Charts'
+                  : isRegistryType(type)
+                    ? TYPE_TO_CATEGORY[type]
+                    : 'Components'
               })(),
             })) ?? []
         )

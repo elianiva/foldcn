@@ -23,8 +23,10 @@
   "devDependencies": {
     "@foldkit/ui": "^0.169.0",
     "@tanstack/highlight": "^1.2.0",
+    "@types/d3-shape": "^3.2.0",
     "@types/node": "^26.6.5",
     "cn": "^0.5.0",
+    "d3-shape": "^3.2.0",
     "effect": "4.0.0",
     "embla-carousel": "^8.6.0",
     "foldkit": "^0.169.0",

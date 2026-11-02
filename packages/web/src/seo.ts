@@ -1,5 +1,6 @@
 import { blocksGroup, libGroup, styleGroup, uiGroup } from './catalog/manifest'
 import type { RegistryGroupJson } from './catalog/types'
+import { chartItemNames } from './catalog/charts'
 
 export const SITE_ORIGIN = 'https://foldcn.elianiva.com'
 export const SITE_NAME = 'foldcn'
@@ -24,6 +25,12 @@ const DOCS_META: SeoMeta = {
   section: 'Docs',
 }
 
+const CHARTS_META: SeoMeta = {
+  title: 'Charts guide · foldcn',
+  description: 'Use Foldkit charts with Recharts-shaped components and data props.',
+  section: 'Charts',
+}
+
 const NOT_FOUND_META: SeoMeta = {
   title: 'Not found · foldcn',
   description: 'That page does not exist. Head back to the foldcn registry.',
@@ -40,6 +47,7 @@ const groups: ReadonlyArray<{ category: string; group: RegistryGroupJson }> = [
 const entries: ReadonlyArray<readonly [string, SeoMeta]> = [
   ['/', HOME_META],
   ['/docs', DOCS_META],
+  ['/docs/charts', CHARTS_META],
   ...groups.flatMap(({ category, group }) =>
     (group.items ?? [])
       .filter((item) => item.name !== undefined && item.name !== '')
@@ -51,7 +59,7 @@ const entries: ReadonlyArray<readonly [string, SeoMeta]> = [
           {
             title: `${title} · foldcn`,
             description: (item.description ?? '').trim() || DOCS_META.description,
-            section: category,
+            section: chartItemNames.has(name) ? 'Charts' : category,
           },
         ]
       }),

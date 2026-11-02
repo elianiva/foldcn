@@ -111,6 +111,8 @@ export const update = (model: Model, message: Message): UpdateReturn => {
 export type ViewInputs = Readonly<{
   title: Child
   content: Child
+  /** Build eventful content in the embedding parent's message scope. */
+  renderContent?: () => Html
   /** Collapsed visual preview height. Enables animated panel rendering. */
   peek?: string
   isDisabled?: boolean
@@ -191,7 +193,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
                       h.Class(cn(collapsibleAnimatedContentClass, viewInputs.contentClass)),
                       h.DataAttribute('slot', 'collapsible-content'),
                     ],
-                    [viewInputs.content],
+                    [viewInputs.renderContent?.() ?? viewInputs.content],
                   ),
                   { peek: viewInputs.peek },
                 )
@@ -202,7 +204,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
                       h.Class(cn(collapsibleContentClass, viewInputs.contentClass)),
                       h.DataAttribute('slot', 'collapsible-content'),
                     ],
-                    [viewInputs.content],
+                    [viewInputs.renderContent?.() ?? viewInputs.content],
                   )
                 : h.empty,
           ],

@@ -1,4 +1,4 @@
-export type Category = 'Base' | 'Lib' | 'Components' | 'Blocks'
+export type Category = 'Base' | 'Lib' | 'Components' | 'Charts' | 'Blocks'
 
 /** Light/dark color maps from the registry style's `cssVars`. */
 export type ThemeColorMap = Readonly<Record<string, string>>

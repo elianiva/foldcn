@@ -33,6 +33,11 @@ const GROUP_ORDER: ReadonlyArray<{
     description: 'The styled primitives: stateless helpers and stateful submodels.',
   },
   {
+    category: 'Charts',
+    label: 'Charts',
+    description: 'Foldkit charts with Recharts-shaped APIs and examples.',
+  },
+  {
     category: 'Blocks',
     label: 'Blocks',
     description: 'Composed pages that combine primitives into ready-to-use sections.',
@@ -63,7 +68,13 @@ export const componentsIndexView = (model: Model, h: HtmlBuilder<Message>): Html
   h.div(
     [h.Class('mx-auto flex w-full max-w-6xl flex-1')],
     [
-      sidebarLazy(sidebarView, [h, 'Components', undefined, activeRegistryStyle()]),
+      sidebarLazy(sidebarView, [
+        h,
+        model.docsNavDesktop,
+        'Components',
+        undefined,
+        activeRegistryStyle(),
+      ]),
       h.div(
         [
           h.Class(

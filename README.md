@@ -68,11 +68,9 @@ npx shadcn@latest add @foldcn/button @foldcn/input @foldcn/dialog
 
 A few components are intentionally diverged. Usually because the underlying `@foldkit/ui` primitive doesn't have that behavior yet. You can see them all on the website — diverged items show an amber parity badge and a "Differences vs shadcn/ui" callout on their doc page.
 
-## Not yet in foldcn
+## Charts
 
-These shadcn/ui base components are not ported yet. Track progress in [GitHub Issues](https://github.com/elianiva/foldcn/issues):
-
-- chart
+The [Charts guide](https://foldcn.elianiva.com/docs/charts) documents twelve Foldkit SVG chart APIs with Recharts-shaped names. Their API pages include the 95 chart examples listed in the [Recharts gallery](https://recharts.github.io/en-US/examples/), plus starter examples for FunnelChart and Sankey. Examples load when opened, show their source inside a closed collapsible, and identify upstream behavior that is still an adaptation. Advanced features such as animation, custom shapes, ranges, and coordinated charts remain open under [issue #13](https://github.com/elianiva/foldcn/issues/13).
 
 Sonner is covered by `toast`.
 

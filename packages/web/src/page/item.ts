@@ -30,7 +30,9 @@ import { collapsibleCodeBlock, installTabs, sidebarView } from './chrome'
 import { notFoundView } from './home'
 
 const categoryLabel = (category: Item['category']): string =>
-  ({ Base: 'Base', Lib: 'Lib', Components: 'Components', Blocks: 'Blocks' })[category]
+  ({ Base: 'Base', Lib: 'Lib', Components: 'Components', Charts: 'Charts', Blocks: 'Blocks' })[
+    category
+  ]
 
 /** Known behavioral differences vs the shadcn/ui counterpart — see catalog/gaps.ts. */
 const gapsCallout = (name: string, h: HtmlBuilder<AppMessage>): Html => {
@@ -373,7 +375,13 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<AppMessage>)
     return h.div(
       [h.Class('mx-auto flex w-full max-w-6xl flex-1')],
       [
-        sidebarNotFoundLazy(sidebarView, [h, model.route._tag, name, activeRegistryStyle()]),
+        sidebarNotFoundLazy(sidebarView, [
+          h,
+          model.docsNavDesktop,
+          model.route._tag,
+          name,
+          activeRegistryStyle(),
+        ]),
         h.div([h.Class('flex flex-1')], [notFoundView(h)]),
       ],
     )
@@ -383,7 +391,13 @@ export const itemPage = (model: Model, name: string, h: HtmlBuilder<AppMessage>)
   return h.div(
     [h.Class('mx-auto flex w-full max-w-6xl flex-1')],
     [
-      sidebarMainLazy(sidebarView, [h, 'Item', item.name, activeRegistryStyle()]),
+      sidebarMainLazy(sidebarView, [
+        h,
+        model.docsNavDesktop,
+        'Item',
+        item.name,
+        activeRegistryStyle(),
+      ]),
       h.main(
         [h.Class('flex-1 min-w-0')],
         [

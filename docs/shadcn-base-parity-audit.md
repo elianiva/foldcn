@@ -10,7 +10,7 @@ Reference checkout: `~/Development/repos/shadcn-ui/ui/apps/v4/registry/bases/bas
 
 - **Renames:** foldcn `menu` ↔ upstream `dropdown-menu`; foldcn `fieldset` ↔ upstream `field`; foldcn `toast` covers upstream `sonner`.
 - **foldcn-only:** animation, date-picker, drag-and-drop, file-drop, listbox, nav, virtual-list. Kept in sync with `foldcnOnly` in `packages/web/src/catalog/parity.ts`.
-- **Upstream-only, not ported:** chart.
+- **Charts:** twelve Foldkit SVG chart APIs are available in their own Charts section with Recharts-shaped names and a gallery entry for every chart example on the Recharts index. The API pages list supported props and remaining behavior gaps; the preview gallery is not full Recharts behavior parity.
 - `native-select` is a separate item, though `select.ts` also exports a native variant.
 - Components with no `@foldkit/ui` primitive (questionnaire, message-scroller, resizable) are authored in place as Foldkit submodels; their deltas are in `gaps.ts`.
 

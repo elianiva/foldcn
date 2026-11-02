@@ -66,6 +66,12 @@ const typeExports = (source) => {
   for (const match of source.matchAll(/^export type ([A-Za-z_$][\w$]*)/gm)) {
     names.push(match[1])
   }
+  for (const match of source.matchAll(/^export type \{([^}]+)\}/gm)) {
+    for (const part of match[1].split(',')) {
+      const trimmed = part.trim()
+      if (trimmed) names.push(trimmed.split(/\s+as\s+/)[1] ?? trimmed.split(/\s+/)[0])
+    }
+  }
   return names
 }
 

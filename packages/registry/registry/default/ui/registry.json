@@ -2,6 +2,230 @@
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "items": [
     {
+      "name": "line-chart",
+      "type": "registry:ui",
+      "title": "LineChart",
+      "description": "Foldkit SVG line chart with Recharts-shaped Line, axes, grid, legend, tooltip, and reference line descriptors.",
+      "registryDependencies": ["@foldcn/utils"],
+      "files": [
+        {
+          "path": "line-chart.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "area-chart",
+      "type": "registry:ui",
+      "title": "AreaChart",
+      "description": "Foldkit SVG AreaChart with Recharts-shaped Area API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "area-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "bar-chart",
+      "type": "registry:ui",
+      "title": "BarChart",
+      "description": "Foldkit SVG BarChart with Recharts-shaped Bar API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "bar-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "composed-chart",
+      "type": "registry:ui",
+      "title": "ComposedChart",
+      "description": "Foldkit SVG ComposedChart with Recharts-shaped Composed API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "composed-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "scatter-chart",
+      "type": "registry:ui",
+      "title": "ScatterChart",
+      "description": "Foldkit SVG ScatterChart with Recharts-shaped Scatter API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "scatter-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "pie-chart",
+      "type": "registry:ui",
+      "title": "PieChart",
+      "description": "Foldkit SVG PieChart with Recharts-shaped Pie API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "pie-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "radar-chart",
+      "type": "registry:ui",
+      "title": "RadarChart",
+      "description": "Foldkit SVG RadarChart with Recharts-shaped Radar API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "radar-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "radial-bar-chart",
+      "type": "registry:ui",
+      "title": "RadialBarChart",
+      "description": "Foldkit SVG RadialBarChart with Recharts-shaped RadialBar API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "radial-bar-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "treemap",
+      "type": "registry:ui",
+      "title": "Treemap",
+      "description": "Foldkit SVG Treemap with Recharts-shaped Treemap API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "treemap.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "sunburst-chart",
+      "type": "registry:ui",
+      "title": "SunburstChart",
+      "description": "Foldkit SVG SunburstChart with Recharts-shaped Sunburst API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "sunburst-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "funnel-chart",
+      "type": "registry:ui",
+      "title": "FunnelChart",
+      "description": "Foldkit SVG FunnelChart with Recharts-shaped Funnel API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "funnel-chart.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
+      "name": "sankey",
+      "type": "registry:ui",
+      "title": "Sankey",
+      "description": "Foldkit SVG Sankey with Recharts-shaped Sankey API and descriptors.",
+      "registryDependencies": ["@foldcn/utils", "@foldcn/line-chart"],
+      "files": [
+        {
+          "path": "sankey.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "chart-core.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": ["d3-shape"],
+      "devDependencies": ["@types/d3-shape"]
+    },
+    {
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
@@ -44,7 +268,7 @@
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
-      "description": "Styled custom dropdown select (single/multi) backed by the @foldkit/ui Listbox submodel \u2014 a real submodel you embed via h.submodel. For a plain native <select> helper, use native-select.",
+      "description": "Styled custom dropdown select (single/multi) backed by the @foldkit/ui Listbox submodel — a real submodel you embed via h.submodel. For a plain native <select> helper, use native-select.",
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [
         {
@@ -84,7 +308,7 @@
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
-      "description": "Composable card primitives \u2014 Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter. A pure layout primitive.",
+      "description": "Composable card primitives — Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter. A pure layout primitive.",
       "registryDependencies": ["@foldcn/utils"],
       "cssVars": {
         "theme": {
@@ -154,7 +378,7 @@
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",
-      "description": "Composable modal dialog \u2014 Dialog.header, Dialog.title, Dialog.description, Dialog.footer, Dialog.closeButton. Built on the @foldkit/ui Dialog submodel.",
+      "description": "Composable modal dialog — Dialog.header, Dialog.title, Dialog.description, Dialog.footer, Dialog.closeButton. Built on the @foldkit/ui Dialog submodel.",
       "registryDependencies": ["@foldcn/utils"],
       "cssVars": {
         "theme": {
@@ -172,7 +396,7 @@
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
-      "description": "Composable floating panel \u2014 Popover.header, Popover.title, Popover.description. Built on the @foldkit/ui Popover submodel.",
+      "description": "Composable floating panel — Popover.header, Popover.title, Popover.description. Built on the @foldkit/ui Popover submodel.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -237,7 +461,7 @@
       "name": "tabs",
       "type": "registry:ui",
       "title": "Tabs",
-      "description": "Composable tabbed interface \u2014 Tabs.list, Tabs.trigger, Tabs.content. Built on the @foldkit/ui Tabs submodel.",
+      "description": "Composable tabbed interface — Tabs.list, Tabs.trigger, Tabs.content. Built on the @foldkit/ui Tabs submodel.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -302,7 +526,7 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "Stacked toast notifications \u2014 measured-height choreography matching Base UI: uniform collapsed stack with peek layers, hover-to-expand spread, limited visible entries, enter/exit motion, auto-dismiss, hover-pause and opt-in swipe-to-dismiss \u2014 built on the @foldkit/ui Toast submodel (embed via h.submodel).",
+      "description": "Stacked toast notifications — measured-height choreography matching Base UI: uniform collapsed stack with peek layers, hover-to-expand spread, limited visible entries, enter/exit motion, auto-dismiss, hover-pause and opt-in swipe-to-dismiss — built on the @foldkit/ui Toast submodel (embed via h.submodel).",
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [
         {
@@ -419,7 +643,7 @@
       "name": "avatar",
       "type": "registry:ui",
       "title": "Avatar",
-      "description": "Styled avatar with image, fallback, badge and grouping. Note: no automatic image error fallback \u2014 drive the swap from your own state.",
+      "description": "Styled avatar with image, fallback, badge and grouping. Note: no automatic image error fallback — drive the swap from your own state.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -665,7 +889,7 @@
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",
-      "description": "Menu styled for right-click use, built on the @foldkit/ui Menu submodel. \u26a0 Opens on activation at a fixed anchor, not at the pointer \u2014 foldkit has no pointer-position anchor yet.",
+      "description": "Menu styled for right-click use, built on the @foldkit/ui Menu submodel. ⚠ Opens on activation at a fixed anchor, not at the pointer — foldkit has no pointer-position anchor yet.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -678,7 +902,7 @@
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",
-      "description": "Horizontal bar of menus built on the @foldkit/ui Menu submodel. \u26a0 Each trigger is an independent menu \u2014 no cross-menu arrow-key traversal yet.",
+      "description": "Horizontal bar of menus built on the @foldkit/ui Menu submodel. ⚠ Each trigger is an independent menu — no cross-menu arrow-key traversal yet.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
@@ -795,7 +1019,7 @@
       "name": "sidebar",
       "type": "registry:ui",
       "title": "Sidebar",
-      "description": "Collapsible app shell \u2014 SidebarProvider.view submodel (offcanvas/icon/none \u00d7 sidebar/floating/inset, mobile sheet, \u2318B shortcut, rail) with menu/badge/skeleton/sub-menu/input primitives.",
+      "description": "Collapsible app shell — SidebarProvider.view submodel (offcanvas/icon/none × sidebar/floating/inset, mobile sheet, ⌘B shortcut, rail) with menu/badge/skeleton/sub-menu/input primitives.",
       "registryDependencies": ["@foldcn/utils", "@foldcn/icons"],
       "files": [
         {
