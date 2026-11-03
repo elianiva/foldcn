@@ -17,16 +17,28 @@ type Child = Html | string
 
 // A drawer is a Dialog variant docked to a viewport edge with a drag handle,
 // mirroring the shadcn base `drawer` (Base UI) surface: swipeDirection,
-// showSwipeHandle, and drag-to-dismiss live here. Snap points, nested stacks,
+// showSwipeHandle, snap points, and drag-to-dismiss live here. Nested stacks
 // and non-modal drawers are still out of scope (see the gaps note below).
 //
 // Drag is a model-owned gesture, not a view effect. Pressing the handle
 // enters Dragging; document-level pointermove/pointerup streams (the slider
-// precedent) feed MovedPointer/ReleasedPointer; release past
-// DISMISS_THRESHOLD_PX closes the nested dialog, anything shorter snaps back.
-// While dragging the panel translates via the inline `translate` CSS property
+// precedent) feed MovedPointer/ReleasedPointer, each carrying the pointer
+// timestamp and the panel's measured extent along the swipe axis. While
+// dragging the panel translates via the inline `translate` CSS property
 // (kept separate from the token's `transform` string) and the overlay fades
 // through the upstream `--drawer-swipe-progress` variable.
+//
+// Snap points are fractions of the panel extent that stay visible (0.5 = half
+// open, 1 = fully open), sorted ascending on init. The panel rests at
+// `snapPoints[activeSnap]`, expressed as a percentage `translate` so no px
+// measurement is needed at rest. On release the position is projected forward
+// by the release velocity (SNAP_PROJECTION_MS) and the drawer settles on the
+// nearest snap point. It dismisses only when the projection lands
+// DISMISS_THRESHOLD_PX past the lowest snap point, so a partial drag from a
+// partial position snaps instead of closing, while a fast flick still
+// dismisses. Without snap points the single point is 1 and this reduces to
+// plain drag-to-dismiss. Callers read `model.activeSnap` (see
+// `activeSnapFraction`).
 
 export const SwipeDirection = S.Literals(['up', 'right', 'down', 'left'])
 export type SwipeDirection = typeof SwipeDirection.Type
@@ -37,18 +49,37 @@ const swipeAxis = (direction: SwipeDirection): 'x' | 'y' =>
 const dismissSign = (direction: SwipeDirection): 1 | -1 =>
   direction === 'up' || direction === 'left' ? -1 : 1
 
-/** Inline drag translation for the panel, signed along the dismiss axis.
- *  Positive-only offsets would shove up/left drawers the wrong way. */
-const dragTranslate = (direction: SwipeDirection, offset: number): string => {
-  const signed = String(dismissSign(direction) * offset)
-  return swipeAxis(direction) === 'y' ? `0 ${signed}px` : `${signed}px 0`
+/** Inline panel translation, signed along the dismiss axis. `restFraction`
+ *  is the visible fraction at rest (the panel is shifted by the hidden rest
+ *  share of its own extent, as a percentage), `offset` the live drag delta
+ *  in px. Unsigned values would shove up/left drawers the wrong way. */
+const panelTranslate = (
+  direction: SwipeDirection,
+  restFraction: number,
+  offset: number,
+): string => {
+  const sign = dismissSign(direction)
+  const signedOffset = `${String(sign * offset)}px`
+  const value =
+    restFraction >= 1
+      ? signedOffset
+      : `calc(${String(sign * (1 - restFraction) * 100)}% + ${signedOffset})`
+  return swipeAxis(direction) === 'y' ? `0 ${value}` : `${value} 0`
 }
 
 export const DragState = S.Struct({
   activity: S.Literals(['Idle', 'Dragging']),
   originX: S.Number,
   originY: S.Number,
+  /** Signed drag delta in px from the resting snap position, along the
+   *  dismiss axis (positive closes). */
   offset: S.Number,
+  /** Panel extent in px along the swipe axis, as of the latest pointer event. */
+  extent: S.Number,
+  /** Smoothed pointer velocity in px/ms along the dismiss axis. */
+  velocity: S.Number,
+  lastPosition: S.Number,
+  lastTime: S.Number,
 })
 export type DragState = typeof DragState.Type
 
@@ -57,15 +88,24 @@ export const Model = S.Struct({
   dialog: FoldkitDialog.Model,
   swipeDirection: SwipeDirection,
   isHandleVisible: S.Boolean,
+  /** Visible fractions of the panel, ascending, each in (0, 1]. */
+  snapPoints: S.Array(S.Number),
+  /** Index into `snapPoints` the panel rests at. */
+  activeSnap: S.Number,
   drag: DragState,
 })
 export type Model = typeof Model.Type
 
 export const Message = defineMessageUnion({
   GotDialogMessage: { message: FoldkitDialog.Message },
-  PressedHandle: { clientX: S.Number, clientY: S.Number },
-  MovedPointer: { clientX: S.Number, clientY: S.Number },
-  ReleasedPointer: {},
+  PressedHandle: { clientX: S.Number, clientY: S.Number, timeStamp: S.Number },
+  MovedPointer: {
+    clientX: S.Number,
+    clientY: S.Number,
+    timeStamp: S.Number,
+    extent: S.Number,
+  },
+  ReleasedPointer: { timeStamp: S.Number, extent: S.Number },
   CancelledDrag: {},
 })
 export type Message = typeof Message.Type
@@ -78,10 +118,46 @@ export type InitConfig = Readonly<{
   swipeDirection?: SwipeDirection
   /** When true, the view renders the grab handle that starts the drag gesture. */
   isHandleVisible?: boolean
+  /** Visible fractions of the panel the drawer can rest at, e.g. `[0.4, 1]`.
+   *  Values are clamped to (0, 1], deduplicated, and sorted ascending. */
+  snapPoints?: ReadonlyArray<number>
+  /** Index into the normalized snap points to rest at. Defaults to the last
+   *  (fully open) point. */
+  initialSnapIndex?: number
   focusSelector?: string
 }>
 
-const idleDrag = (): DragState => ({ activity: 'Idle', originX: 0, originY: 0, offset: 0 })
+const idleDrag = (): DragState => ({
+  activity: 'Idle',
+  originX: 0,
+  originY: 0,
+  offset: 0,
+  extent: 0,
+  velocity: 0,
+  lastPosition: 0,
+  lastTime: 0,
+})
+
+const normalizeSnapPoints = (points: ReadonlyArray<number> | undefined): ReadonlyArray<number> => {
+  const cleaned = [
+    ...new Set((points ?? []).filter((point) => point > 0).map((point) => Math.min(1, point))),
+  ].sort((a, b) => a - b)
+  return cleaned.length === 0 ? [1] : cleaned
+}
+
+const initialModelFields = (config: InitConfig) => {
+  const snapPoints = normalizeSnapPoints(config.snapPoints)
+  return {
+    snapPoints,
+    activeSnap: Math.min(
+      Math.max(0, config.initialSnapIndex ?? snapPoints.length - 1),
+      snapPoints.length - 1,
+    ),
+  }
+}
+
+/** Fraction of the panel visible at the active snap point. */
+export const activeSnapFraction = (model: Model): number => model.snapPoints[model.activeSnap] ?? 1
 
 export const init = (config: InitConfig): Model => ({
   id: config.id,
@@ -93,6 +169,7 @@ export const init = (config: InitConfig): Model => ({
   }),
   swipeDirection: config.swipeDirection ?? 'down',
   isHandleVisible: config.isHandleVisible ?? false,
+  ...initialModelFields(config),
   drag: idleDrag(),
 })
 
@@ -112,8 +189,17 @@ export const boot = (config: InitConfig): UpdateReturn =>
     },
   )
 
-/** Release offset in px that dismisses the drawer. Anything shorter snaps back. */
+/** Distance in px past the lowest snap point (the open position when there
+ *  are no snap points) that dismisses the drawer. Anything shorter snaps. */
 export const DISMISS_THRESHOLD_PX = 96
+
+/** How far ahead, in ms, release velocity projects the panel position. */
+export const SNAP_PROJECTION_MS = 200
+
+/** A pause longer than this before release means the flick has ended. */
+const STALE_VELOCITY_MS = 100
+
+const hiddenPx = (fraction: number, extent: number): number => (1 - fraction) * extent
 
 type UpdateReturn = Update.ReturnWithOutMessage<Model, Message, OutMessage>
 
@@ -155,6 +241,10 @@ export const update = (model: Model, message: Message): UpdateReturn => {
               originX: message.clientX,
               originY: message.clientY,
               offset: 0,
+              extent: 0,
+              velocity: 0,
+              lastPosition: 0,
+              lastTime: message.timeStamp,
             }),
           }),
         }
@@ -162,25 +252,52 @@ export const update = (model: Model, message: Message): UpdateReturn => {
       MovedPointer: (message) => {
         if (model.drag.activity !== 'Dragging') return { model }
         const delta =
-          swipeAxis(model.swipeDirection) === 'y'
+          dismissSign(model.swipeDirection) *
+          (swipeAxis(model.swipeDirection) === 'y'
             ? message.clientY - model.drag.originY
-            : message.clientX - model.drag.originX
+            : message.clientX - model.drag.originX)
+        const dt = message.timeStamp - model.drag.lastTime
+        const instant = dt > 0 ? (delta - model.drag.lastPosition) / dt : model.drag.velocity
+        const restHidden = hiddenPx(activeSnapFraction(model), message.extent)
         return {
           model: modifyFields(model, {
             drag: () => ({
               ...model.drag,
-              offset: Math.max(0, dismissSign(model.swipeDirection) * delta),
+              // The panel can't be dragged past fully open.
+              offset: Math.max(-restHidden, delta),
+              extent: message.extent,
+              velocity: dt > 0 ? (instant + model.drag.velocity) / 2 : model.drag.velocity,
+              lastPosition: delta,
+              lastTime: message.timeStamp,
             }),
           }),
         }
       },
-      ReleasedPointer: () => {
+      ReleasedPointer: (message) => {
         if (model.drag.activity !== 'Dragging') return { model }
-        if (model.drag.offset < DISMISS_THRESHOLD_PX) {
-          return { model: modifyFields(model, { drag: () => idleDrag() }) }
-        }
         const parked = modifyFields(model, { drag: () => idleDrag() })
-        return liftDialogReturn(parked, FoldkitDialog.close(parked.dialog))
+        const { extent } = message
+        const velocity =
+          message.timeStamp - model.drag.lastTime > STALE_VELOCITY_MS ? 0 : model.drag.velocity
+        const lowestHidden = hiddenPx(model.snapPoints[0] ?? 1, extent)
+        const dismissAt = lowestHidden + Math.min(DISMISS_THRESHOLD_PX, extent - lowestHidden)
+        // Unmeasured panel: fall back to the raw drag distance.
+        const position = hiddenPx(activeSnapFraction(model), extent) + model.drag.offset
+        const projected = position + velocity * SNAP_PROJECTION_MS
+        const shouldDismiss =
+          extent > 0 ? projected >= dismissAt : model.drag.offset >= DISMISS_THRESHOLD_PX
+        if (shouldDismiss) {
+          return liftDialogReturn(parked, FoldkitDialog.close(parked.dialog))
+        }
+        const nearest = model.snapPoints.reduce(
+          (best, fraction, index) =>
+            Math.abs(hiddenPx(fraction, extent) - projected) <
+            Math.abs(hiddenPx(model.snapPoints[best] ?? 1, extent) - projected)
+              ? index
+              : best,
+          model.activeSnap,
+        )
+        return { model: modifyFields(parked, { activeSnap: () => nearest }) }
       },
       CancelledDrag: () => {
         return { model: modifyFields(model, { drag: () => idleDrag() }) }
@@ -200,16 +317,31 @@ export const titleId = (model: Model): string => FoldkitDialog.titleId(model.dia
 export const descriptionId = (model: Model): string => FoldkitDialog.descriptionId(model.dialog)
 
 const DragActivity = S.Literals(['Idle', 'Dragging'])
+const SwipeAxis = S.Literals(['x', 'y'])
+
+/** Panel extent in px along the swipe axis. offsetHeight/Width ignore the
+ *  panel's own transforms, so the result is the same mid-drag as at rest. */
+const measureExtent = (drawerId: string, axis: 'x' | 'y'): number => {
+  const panel = document.querySelector(
+    `[data-slot="drawer-popup"][data-drawer-id="${CSS.escape(drawerId)}"]`,
+  )
+  if (!(panel instanceof HTMLElement)) return 0
+  return axis === 'y' ? panel.offsetHeight : panel.offsetWidth
+}
 
 /** Document-level drag streams, gated on an active handle drag. Pointercancel
  *  maps to CancelledDrag: an interrupted gesture snaps back instead of
  *  dismissing on an ambiguous end. */
 export const subscriptions = Subscription.make<Model, Message>()((entry) => ({
   dragPointer: entry(
-    { dragActivity: DragActivity },
+    { dragActivity: DragActivity, drawerId: S.String, axis: SwipeAxis },
     {
-      modelToDependencies: (model) => ({ dragActivity: model.drag.activity }),
-      dependenciesToStream: ({ dragActivity }): Stream.Stream<Message> => {
+      modelToDependencies: (model) => ({
+        dragActivity: model.drag.activity,
+        drawerId: model.id,
+        axis: swipeAxis(model.swipeDirection),
+      }),
+      dependenciesToStream: ({ dragActivity, drawerId, axis }): Stream.Stream<Message> => {
         const pointerEvents = Stream.merge(
           Stream.merge(
             Stream.fromEventListener(document, 'pointermove').pipe(
@@ -217,15 +349,25 @@ export const subscriptions = Subscription.make<Model, Message>()((entry) => ({
                 Effect.sync(() => {
                   if (!(event instanceof PointerEvent)) return Option.none()
                   return Option.some(
-                    Message.MovedPointer({ clientX: event.clientX, clientY: event.clientY }),
+                    Message.MovedPointer({
+                      clientX: event.clientX,
+                      clientY: event.clientY,
+                      timeStamp: event.timeStamp,
+                      extent: measureExtent(drawerId, axis),
+                    }),
                   )
                 }),
               ),
               Stream.filter(Option.isSome),
               Stream.map((option) => option.value),
             ),
-            Stream.fromEventListener(document, 'pointerup').pipe(
-              Stream.map(() => Message.ReleasedPointer()),
+            Stream.fromEventListener<PointerEvent>(document, 'pointerup').pipe(
+              Stream.map((event) =>
+                Message.ReleasedPointer({
+                  timeStamp: event.timeStamp,
+                  extent: measureExtent(drawerId, axis),
+                }),
+              ),
             ),
           ),
           Stream.fromEventListener(document, 'pointercancel').pipe(
@@ -282,13 +424,16 @@ export const subscriptions = Subscription.make<Model, Message>()((entry) => ({
 
 // foldcn gaps vs upstream: Base UI's Drawer is a gesture drawer with snap
 // points, nested stacks, and swipe-progress-driven overlay opacity. This port
-// covers drag-to-dismiss from the handle plus all four swipe directions.
-// Snap points, nested stacks, and non-modal drawers stay out of scope: their
-// class lines (--stack-*, --peek, data-nested-*, data-snap-points,
+// covers drag-to-dismiss from the handle, all four swipe directions, and
+// fractional snap points with velocity-weighted settling.
+// Nested stacks and non-modal drawers stay out of scope: their
+// class lines (--stack-*, --peek, data-nested-*,
 // --drawer-swipe-strength, data-starting/ending-style) are dropped below, and
 // the swipe-movement vars (--drawer-swipe-movement-x/y,
-// --drawer-snap-point-offset) are unused because the drag offset travels on
-// the inline `translate` property instead. One frame of style, no token
+// --drawer-snap-point-offset) are unused because the drag offset and the
+// snap rest position travel on the inline `translate` property instead
+// (the data-snap-points / snap-height class line is still dropped: snap
+// positions are a translate, not a panel height). One frame of style, no token
 // string touched. The enter/exit slide reuses the dialog adaptation:
 // [data-enter][data-closed] / [data-leave][data-closed] are the faithful
 // one-frame equivalents of data-starting-style / data-ending-style, sliding
@@ -366,10 +511,10 @@ export const handle = (config: StyleConfig<Message>, h: HtmlBuilder<Message>): H
       h.DataAttribute('slot', 'drawer-swipe-handle'),
       h.Class(cn(drawerHandleClass, config.className)),
       h.Style({ 'touch-action': 'none' }),
-      h.OnPointerDown((pointerType, button, _screenX, _screenY, _timeStamp, clientX, clientY) =>
+      h.OnPointerDown((pointerType, button, _screenX, _screenY, timeStamp, clientX, clientY) =>
         pointerType === 'mouse' && button !== LEFT_MOUSE_BUTTON
           ? Option.none()
-          : Option.some(Message.PressedHandle({ clientX, clientY })),
+          : Option.some(Message.PressedHandle({ clientX, clientY, timeStamp })),
       ),
       ...(config.attributes ?? []),
     ],
@@ -458,8 +603,15 @@ export type StyledViewInputs<M> = Readonly<{
 export type RenderInput = FoldkitDialog.RenderInfo &
   Readonly<{
     direction: SwipeDirection
+    drawerId: string
     dragOffset: number
     isDragging: boolean
+    /** Visible fraction of the panel at the active snap point. */
+    restFraction: number
+    /** True when the drawer has more than one snap point. */
+    hasSnapPoints: boolean
+    /** 0 at the lowest snap point, 1 at the dismiss threshold past it. */
+    swipeProgress: number
     handle: Html
   }>
 
@@ -482,8 +634,24 @@ export const view = defineView<Model, Message, ViewInputs>((model, viewInputs, h
         viewInputs.toView({
           ...render,
           direction: model.swipeDirection,
+          drawerId: model.id,
           dragOffset: model.drag.offset,
           isDragging: model.drag.activity === 'Dragging',
+          restFraction: activeSnapFraction(model),
+          hasSnapPoints: model.snapPoints.length > 1,
+          swipeProgress:
+            model.drag.activity === 'Dragging'
+              ? Math.min(
+                  1,
+                  Math.max(
+                    0,
+                    (hiddenPx(activeSnapFraction(model), model.drag.extent) -
+                      hiddenPx(model.snapPoints[0] ?? 1, model.drag.extent) +
+                      model.drag.offset) /
+                      DISMISS_THRESHOLD_PX,
+                  ),
+                )
+              : 0,
           handle: model.isHandleVisible ? handle({}, h) : h.empty,
         }),
     },
@@ -508,8 +676,12 @@ export const styledViewInputs = <M>(
     description,
     isVisible,
     direction,
+    drawerId,
     dragOffset,
     isDragging,
+    restFraction,
+    hasSnapPoints,
+    swipeProgress,
     handle,
   }) =>
     h.dialog(
@@ -524,18 +696,15 @@ export const styledViewInputs = <M>(
               ...backdrop,
               h.DataAttribute('slot', 'drawer-overlay'),
               h.Class(cn(drawerBackdropClass, viewInputs.backdropClass)),
-              ...(isDragging && dragOffset > 0
-                ? [
-                    h.Style({
-                      '--drawer-swipe-progress': `${String(Math.min(1, dragOffset / DISMISS_THRESHOLD_PX))}`,
-                    }),
-                  ]
+              ...(isDragging && swipeProgress > 0
+                ? [h.Style({ '--drawer-swipe-progress': String(swipeProgress) })]
                 : []),
             ]),
             h.div(
               [
                 ...panel,
                 h.DataAttribute('slot', 'drawer-popup'),
+                h.DataAttribute('drawer-id', drawerId),
                 h.DataAttribute('swipe-direction', direction),
                 h.DataAttribute('swipe-axis', swipeAxis(direction)),
                 h.Class(
@@ -546,8 +715,20 @@ export const styledViewInputs = <M>(
                   ),
                 ),
                 ...(isDragging ? [h.DataAttribute('swiping', '')] : []),
-                ...(isDragging && dragOffset > 0
-                  ? [h.Style({ translate: dragTranslate(direction, dragOffset) })]
+                // Rest position and drag share one `translate`; the transition
+                // property list adds it so settling between snap points animates
+                // (duration/easing still come from the token string).
+                ...(isDragging || hasSnapPoints
+                  ? [
+                      h.Style({
+                        translate: panelTranslate(
+                          direction,
+                          restFraction,
+                          isDragging ? dragOffset : 0,
+                        ),
+                        'transition-property': 'transform, height, opacity, filter, translate',
+                      }),
+                    ]
                   : []),
               ],
               [
