@@ -1006,7 +1006,7 @@
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation Menu",
-      "description": "Top-level navigation bar with delayed hover/focus dropdowns and trigger/content builders.",
+      "description": "Top-level navigation bar with delayed hover/focus triggers sharing one content panel.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {

@@ -33,7 +33,7 @@ export const gapsByItem = {
     'Track clicks jump without continuing into a drag — dragging starts on the thumb only.',
   ],
   'navigation-menu': [
-    'Each dropdown is its own independently-anchored Popover panel — no shared/morphing Viewport panel or slide-direction indicator like upstream.',
+    'One shared panel under the bar swaps content by active trigger, but there is no slide-direction indicator and no activation-direction slide or size morph between contents like upstream.',
   ],
   calendar: ['Single-date selection — no ranges or week numbers.'],
   slider: ['Single thumb, horizontal orientation only.'],
