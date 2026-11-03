@@ -18,6 +18,7 @@ export const gapsByItem = {
   ],
   'context-menu': [
     'Opens at the pointer on right-click or touch long-press; keyboard open anchors to the region, since foldkit gives no point for it. Pointer position is the caller’s model state, passed as `maybePoint`. iOS Safari fires no `contextmenu` on long-press, so it does not open there.',
+    'The trigger is the anchor, so content passed as `buttonContent` travels with it while the menu is open; region content that must stay in place belongs beside the submodel.',
   ],
   toast: [
     'Only a swipe plays the full leave animation. Closing, the auto-dismiss timer, and Dismiss all unmount the entry after roughly 60ms and cut off the card’s own slide-out — foldkit settles leave animations on the entry wrapper, which is where the swipe exit runs.',

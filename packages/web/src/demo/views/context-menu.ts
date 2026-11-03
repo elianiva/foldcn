@@ -152,6 +152,11 @@ const regionAttributes = (h: HtmlBuilder<AppMessage>, opened: AppMessage) => [
   h.OnContextMenu(opened),
 ]
 
+const pointWhileOpen = (
+  menu: ContextMenu.Model,
+  point: Option.Option<ContextMenu.Point>,
+): Option.Option<ContextMenu.Point> => (menu.isOpen ? point : Option.none())
+
 export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
     [h.Class('flex w-full flex-col gap-8')],
@@ -184,7 +189,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                 model: model.ctxBasicMenu,
                 view: DemoMenu.view,
                 viewInputs: ContextMenu.viewInputs<string>({
-                  maybePoint: model.ctxPoint,
+                  maybePoint: pointWhileOpen(model.ctxBasicMenu, model.ctxPoint),
                   items: BASIC_ITEMS,
                   buttonContent: h.span([], ['Right click here']),
                   itemsClass: 'w-48',
@@ -233,7 +238,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                 model: model.ctxIconsMenu,
                 view: DemoMenu.view,
                 viewInputs: ContextMenu.viewInputs<string>({
-                  maybePoint: model.ctxPoint,
+                  maybePoint: pointWhileOpen(model.ctxIconsMenu, model.ctxPoint),
                   items: ICON_ITEMS,
                   buttonContent: h.span([], ['Right click — Copy / Cut / Paste']),
                   itemsClass: 'w-44',
@@ -283,7 +288,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                 model: model.ctxTopMenu,
                 view: DemoMenu.view,
                 viewInputs: ContextMenu.viewInputs<string>({
-                  maybePoint: model.ctxPoint,
+                  maybePoint: pointWhileOpen(model.ctxTopMenu, model.ctxPoint),
                   items: TOP_ITEMS,
                   buttonContent: h.span([], ['Right click — opens above']),
                   anchor: { placement: 'top-start', gap: 4, padding: 8 },

@@ -15,7 +15,10 @@ import { cn } from '@/lib/utils'
 // `maybePoint`, and the trigger becomes a zero-size fixed element at that
 // point. foldkit's anchor positioning (flip + shift with the anchor padding)
 // then places the panel at the pointer and keeps it inside the viewport.
-// Without a point (keyboard open) the trigger stays at the wrapper.
+// Without a point (keyboard open) the trigger keeps its normal place. The
+// trigger is the anchor, so content passed as `buttonContent` travels with it
+// while the menu is open; region content that must stay in place belongs
+// beside the submodel.
 
 export const create = FoldkitMenu.create
 export const init = (config: InitConfig): Model => FoldkitMenu.init({ isAnimated: true, ...config })
@@ -81,10 +84,9 @@ export const contextMenuBackdropClass = 'fixed inset-0 z-0'
 
 export const contextMenuWrapperClass = 'relative inline-block'
 
-// Invisible trigger kept focusable (Tab, then Enter/ArrowDown opens). It is
-// not clickable so a left-click on the region does not open the menu.
-export const contextMenuTriggerAnchorClass =
-  'pointer-events-none absolute top-0 left-0 size-0 opacity-0'
+// Applied only while a pointer point is set: the trigger collapses to an
+// invisible zero-size anchor (positioned by inline style) at the pointer.
+export const contextMenuTriggerAnchorClass = 'pointer-events-none size-0 opacity-0'
 
 export const CONTEXT_MENU_ANCHOR: AnchorConfig = {
   placement: 'bottom-start',
@@ -146,7 +148,7 @@ export const viewInputs = <Item extends string>(
     ariaLabelledBy: config.ariaLabelledBy,
     buttonClassName: cn(
       contextMenuTriggerClass,
-      contextMenuTriggerAnchorClass,
+      Option.isSome(config.maybePoint ?? Option.none()) ? contextMenuTriggerAnchorClass : undefined,
       config.triggerClass,
     ),
     buttonAttributes: childAttributes([
