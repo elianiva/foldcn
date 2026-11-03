@@ -17,6 +17,18 @@ import { DemoMenu } from '../bundles'
 import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
 
+// Menus that share one bar. Traversal is coordinated here because each
+// trigger is an independent Menu model (the primitive has no menubar model).
+const bars = {
+  demo: ['fileMenu', 'editMenu', 'viewMenu', 'profilesMenu'],
+  submenu: ['subFileMenu', 'subEditMenu'],
+  checkbox: ['checkViewMenu', 'checkFormatMenu'],
+  radio: ['radioProfilesMenu', 'radioThemeMenu'],
+  icons: ['iconFileMenu', 'iconMoreMenu'],
+} as const
+const BarName = S.Literals(['demo', 'submenu', 'checkbox', 'radio', 'icons'])
+type BarName = typeof BarName.Type
+
 export const Message = defineMessageUnion({
   GotFileMessage: { message: Menubar.Message },
   GotEditMessage: { message: Menubar.Message },
@@ -31,6 +43,8 @@ export const Message = defineMessageUnion({
   GotIconFileMessage: { message: Menubar.Message },
   GotIconMoreMessage: { message: Menubar.Message },
   GotRtlFileMessage: { message: Menubar.Message },
+  HoveredMenubarTrigger: { bar: BarName, index: S.Number },
+  SteppedMenubar: { bar: BarName, index: S.Number, direction: S.Literals(['Previous', 'Next']) },
 })
 
 // Mirrors apps/v4/examples/base/menubar-*.tsx. Every bar below is a live menu:
@@ -167,6 +181,13 @@ const bar = (h: HtmlBuilder<AppMessage>, children: ReadonlyArray<Html>, classNam
     [Menubar.menubar([h.div([h.Class(className)], children)], h)],
   )
 
+const nav = (h: HtmlBuilder<AppMessage>, bar: BarName, index: number) =>
+  Menubar.navigationAttributes({
+    h,
+    onHoverTrigger: Message.HoveredMenubarTrigger({ bar, index }),
+    onStep: (direction) => Message.SteppedMenubar({ bar, index, direction }),
+  })
+
 export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
     [h.Class('flex w-full flex-col gap-8')],
@@ -181,6 +202,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.fileMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'demo', 0),
                 items: [...fileItems],
                 buttonContent: h.span([], ['File']),
                 itemToConfig: (item) => ({ content: fileContent(h, item) }),
@@ -196,6 +218,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.editMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'demo', 1),
                 items: [...editItems],
                 buttonContent: h.span([], ['Edit']),
                 itemToConfig: (item) => ({ content: editContent(h, item) }),
@@ -210,6 +233,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.viewMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'demo', 2),
                 items: [
                   'Bookmarks Bar',
                   'Full URLs',
@@ -263,6 +287,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.profilesMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'demo', 3),
                 items: ['Andy', 'Benoit', 'Luis', 'Edit...', 'Add Profile...'],
                 buttonContent: h.span([], ['Profiles']),
                 itemToConfig: (item) => {
@@ -295,6 +320,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.subFileMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'submenu', 0),
                 items: ['Email link', 'Messages', 'Notes', 'Print...'],
                 buttonContent: h.span([], ['File']),
                 itemToConfig: (item) => ({ content: fileContent(h, item) }),
@@ -309,6 +335,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.subEditMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'submenu', 1),
                 items: [
                   'Undo',
                   'Redo',
@@ -340,6 +367,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.checkViewMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'checkbox', 0),
                 items: [
                   'Always Show Bookmarks Bar',
                   'Always Show Full URLs',
@@ -383,6 +411,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.checkFormatMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'checkbox', 1),
                 items: ['Strikethrough', 'Code', 'Superscript'],
                 buttonContent: h.span([], ['Format']),
                 itemToConfig: (item) => ({
@@ -405,6 +434,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.radioProfilesMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'radio', 0),
                 items: ['Andy', 'Benoit', 'Luis', 'Edit...', 'Add Profile...'],
                 buttonContent: h.span([], ['Profiles']),
                 itemToConfig: (item) => {
@@ -425,6 +455,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.radioThemeMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'radio', 1),
                 items: ['Light', 'Dark', 'System'],
                 buttonContent: h.span([], ['Theme']),
                 itemToConfig: (item) => ({
@@ -454,6 +485,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.iconFileMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'icons', 0),
                 items: ['New File', 'Open Folder', 'Save'],
                 buttonContent: h.span([], ['File']),
                 itemToConfig: (item) => {
@@ -475,6 +507,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.iconMoreMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
+                ...nav(h, 'icons', 1),
                 items: ['Settings', 'Help', 'Delete'],
                 buttonContent: h.span([], ['More']),
                 itemToConfig: (item) => {
@@ -538,7 +571,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               h.li(
                 [],
                 [
-                  'Each trigger is an independent menu — no ArrowLeft/Right traversal between menus and no open-on-hover-of-next-trigger (needs a menubar behavior primitive).',
+                  'Each trigger is an independent menu; the bar’s update coordinates them — hovering another trigger while a menu is open, or pressing ArrowLeft/Right, switches the open menu (the primitive has no menubar model).',
                 ],
               ),
               h.li(
@@ -651,6 +684,83 @@ const fields = {
 const stateSchema = S.Struct(fields)
 type State = typeof stateSchema.Type
 
+const menuMessages = {
+  fileMenu: Message.GotFileMessage,
+  editMenu: Message.GotEditMessage,
+  viewMenu: Message.GotViewMessage,
+  profilesMenu: Message.GotProfilesMessage,
+  subFileMenu: Message.GotSubFileMessage,
+  subEditMenu: Message.GotSubEditMessage,
+  checkViewMenu: Message.GotCheckViewMessage,
+  checkFormatMenu: Message.GotCheckFormatMessage,
+  radioProfilesMenu: Message.GotRadioProfilesMessage,
+  radioThemeMenu: Message.GotRadioThemeMessage,
+  iconFileMenu: Message.GotIconFileMessage,
+  iconMoreMenu: Message.GotIconMoreMessage,
+} as const
+type MenuField = keyof typeof menuMessages
+
+// Runs `update` on one menu of the bar, lifting its commands to the slice.
+const menuStep = (
+  field: MenuField,
+  update: (menu: Menubar.Model) => ReturnType<typeof DemoMenu.close>,
+) =>
+  Update.foldChildStep({
+    update,
+    read: (state: State) => Option.some(state[field]),
+    write: (state, next) => ({ ...state, [field]: next }),
+    toParentMessage: (message) => menuMessages[field]({ message }),
+    foldOutMessage: foldIgnoredOutMessage,
+  })
+
+const openMenu = (field: MenuField, maybeActiveItemIndex: Option.Option<number>) =>
+  menuStep(field, (menu) =>
+    DemoMenu.update(menu, FoldkitMenu.Message.Opened({ maybeActiveItemIndex })),
+  )
+
+const focusTrigger = (field: MenuField) =>
+  menuStep(field, (menu) => ({
+    model: menu,
+    commands: [FoldkitMenu.FocusButton({ id: menu.id })],
+  }))
+
+// Hovering another trigger while a menu is open moves the open menu over.
+const hoverTrigger = (model: State, bar: BarName, index: number): UpdateReturn => {
+  const fieldsInBar: ReadonlyArray<MenuField> = bars[bar]
+  const target = fieldsInBar[index]
+  if (target === undefined) return { model }
+  const hasOtherOpen = fieldsInBar.some((field) => field !== target && model[field].isOpen)
+  if (!hasOtherOpen || model[target].isOpen) return { model }
+  return Update.combine(model, [
+    ...fieldsInBar
+      .filter((field) => field !== target)
+      .map((field) => menuStep(field, DemoMenu.close)),
+    openMenu(target, Option.none()),
+  ])
+}
+
+// ArrowLeft/Right wraps around the bar: an open menu hands over to the
+// neighbour (first item active), a closed bar just moves trigger focus.
+const stepBar = (
+  model: State,
+  bar: BarName,
+  index: number,
+  direction: 'Previous' | 'Next',
+): UpdateReturn => {
+  const fieldsInBar: ReadonlyArray<MenuField> = bars[bar]
+  const count = fieldsInBar.length
+  const target = fieldsInBar[(index + (direction === 'Next' ? 1 : count - 1)) % count]
+  if (target === undefined || target === fieldsInBar[index]) return { model }
+  if (!fieldsInBar.some((field) => model[field].isOpen))
+    return Update.combine(model, [focusTrigger(target)])
+  return Update.combine(model, [
+    ...fieldsInBar
+      .filter((field) => field !== target)
+      .map((field) => menuStep(field, DemoMenu.close)),
+    openMenu(target, Option.some(0)),
+  ])
+}
+
 export const slice = defineSlice({
   fields,
   init: {
@@ -687,8 +797,16 @@ export const slice = defineSlice({
     Message.GotIconFileMessage,
     Message.GotIconMoreMessage,
     Message.GotRtlFileMessage,
+    Message.HoveredMenubarTrigger,
+    Message.SteppedMenubar,
   ],
   handlers: (model: State) => ({
+    HoveredMenubarTrigger: ({
+      bar,
+      index,
+    }: typeof Message.HoveredMenubarTrigger.Type): UpdateReturn => hoverTrigger(model, bar, index),
+    SteppedMenubar: ({ bar, index, direction }: typeof Message.SteppedMenubar.Type): UpdateReturn =>
+      stepBar(model, bar, index, direction),
     GotFileMessage: (payload: typeof Message.GotFileMessage.Type): UpdateReturn =>
       Update.foldChild({
         update: DemoMenu.update,
