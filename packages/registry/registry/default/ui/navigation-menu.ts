@@ -126,24 +126,23 @@ const updateHoverIntent = (model: Model, message: HoverIntent.Message): UpdateRe
 /** Processes a nav-menu message. Entering or focusing any trigger activates
  *  that item and feeds the shared HoverIntent, so there is one open state for
  *  the whole bar and moving between triggers keeps the panel open. */
-export const update = (model: Model, message: Message): UpdateReturn => {
-  switch (message._tag) {
-    case 'GotHoverIntentMessage':
-      return updateHoverIntent(model, message.message)
-    case 'EnteredTrigger':
-      return updateHoverIntent(
-        { ...model, maybeActiveId: Option.some(message.id) },
+export const update = (model: Model, message: Message): UpdateReturn =>
+  Message.match(message, {
+    GotHoverIntentMessage: ({ message }) => updateHoverIntent(model, message),
+    EnteredTrigger: ({ id }) =>
+      updateHoverIntent(
+        { ...model, maybeActiveId: Option.some(id) },
         HoverIntent.Message.EnteredTrigger(),
-      )
-    case 'FocusedTrigger':
-      return updateHoverIntent(
-        { ...model, maybeActiveId: Option.some(message.id) },
+      ),
+    FocusedTrigger: ({ id }) =>
+      updateHoverIntent(
+        { ...model, maybeActiveId: Option.some(id) },
         HoverIntent.Message.FocusedTrigger(),
-      )
-    case 'GotPopoverMessage': {
-      const result = FoldkitPopover.update(model.popover, message.message)
+      ),
+    GotPopoverMessage: ({ message }) => {
+      const result = FoldkitPopover.update(model.popover, message)
       const hoverIntent =
-        message.message._tag === 'RequestedClose'
+        message._tag === 'RequestedClose'
           ? HoverIntent.close(model.hoverIntent)
           : { model: model.hoverIntent }
       const base = {
@@ -152,9 +151,8 @@ export const update = (model: Model, message: Message): UpdateReturn => {
       }
       if (hoverIntent.outMessage === undefined) return base
       return { ...base, outMessage: OutMessage.Closed() }
-    }
-  }
-}
+    },
+  })
 
 export const navigationMenuClass =
   'cn-navigation-menu group/navigation-menu relative flex max-w-max flex-1 items-center justify-center'
