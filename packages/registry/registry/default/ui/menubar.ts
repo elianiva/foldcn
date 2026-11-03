@@ -222,15 +222,15 @@ export type NavigationConfig<M> = Readonly<{
   isRtl?: boolean
 }>
 
+export type NavigationAttributes = Readonly<{
+  triggerAttributes: ReadonlyArray<ChildAttribute>
+  contentAttributes: ReadonlyArray<ChildAttribute>
+}>
+
 /** Trigger/panel attributes that surface menubar navigation as owner
  *  messages: hover on a trigger, and ArrowLeft/ArrowRight on a trigger or an
  *  open panel. Spread the result into `viewInputs`. */
-export const navigationAttributes = <M>(
-  config: NavigationConfig<M>,
-): Readonly<{
-  triggerAttributes: ReadonlyArray<ChildAttribute>
-  contentAttributes: ReadonlyArray<ChildAttribute>
-}> => {
+export const navigationAttributes = <M>(config: NavigationConfig<M>): NavigationAttributes => {
   const { h } = config
   const [before, after] = config.isRtl
     ? (['ArrowRight', 'ArrowLeft'] as const)
