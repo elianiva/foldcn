@@ -19,13 +19,16 @@ export const Message = defineMessageUnion({
   GotCtxBasicMenuMessage: { message: ContextMenu.Message },
   GotCtxIconsMenuMessage: { message: ContextMenu.Message },
   GotCtxTopMenuMessage: { message: ContextMenu.Message },
+  RecordedCtxPoint: { maybePoint: S.Option(ContextMenu.Point) },
 })
 
 // Sections mirror apps/v4/examples/base/context-menu-demo.tsx. Right-click on
 // a region opens its menu: foldkit's `h.OnContextMenu` suppresses the native
 // menu and the handler injects the primitive's `Opened` message. The panel
-// anchors to the trigger region (not the pointer — primitive ceiling, see
-// gapsByItem['context-menu']). Submenu/checkbox/radio rows render as flat
+// anchors to the pointer: pointerdown (right button, or touch/pen) records the
+// client point in `ctxPoint`, which moves the zero-size trigger there before
+// the menu opens. Keyboard open (Tab to the trigger, Enter/ArrowDown) has no
+// point and anchors to the region. Submenu/checkbox/radio rows render as flat
 // items with demo-owned state, as in the menu demo.
 
 const BASIC_ITEMS = [
@@ -82,6 +85,7 @@ const ICON_SHORTCUTS = new Map<string, string>([
 const TOP_ITEMS = ['Back', 'Forward', 'Reload'] as const
 
 const fields = {
+  ctxPoint: S.Option(ContextMenu.Point),
   ctxBasicMenu: ContextMenu.Model,
   ctxIconsMenu: ContextMenu.Model,
   ctxTopMenu: ContextMenu.Model,
@@ -134,6 +138,20 @@ const basicItemContent = (model: State, h: HtmlBuilder<AppMessage>, item: string
   )
 }
 
+// Region wiring shared by the three demos: keydown clears the stale point so
+// a keyboard open anchors to the region, pointerdown records the new one.
+const regionAttributes = (h: HtmlBuilder<AppMessage>, opened: AppMessage) => [
+  h.OnPointerDown((pointerType, button, _sx, _sy, _t, clientX, clientY) =>
+    Option.some(
+      Message.RecordedCtxPoint({
+        maybePoint: ContextMenu.pointFromPointerDown(pointerType, button, clientX, clientY),
+      }),
+    ),
+  ),
+  h.OnKeyDown(() => Message.RecordedCtxPoint({ maybePoint: Option.none() })),
+  h.OnContextMenu(opened),
+]
+
 export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
     [h.Class('flex w-full flex-col gap-8')],
@@ -153,7 +171,8 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
               h.Class(
                 'flex aspect-[2/0.5] w-full items-center justify-center rounded-lg border border-dashed text-sm',
               ),
-              h.OnContextMenu(
+              ...regionAttributes(
+                h,
                 Message.GotCtxBasicMenuMessage({
                   message: ContextMenu.Message.Opened({ maybeActiveItemIndex: Option.none() }),
                 }),
@@ -165,6 +184,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                 model: model.ctxBasicMenu,
                 view: DemoMenu.view,
                 viewInputs: ContextMenu.viewInputs<string>({
+                  maybePoint: model.ctxPoint,
                   items: BASIC_ITEMS,
                   buttonContent: h.span([], ['Right click here']),
                   itemsClass: 'w-48',
@@ -185,7 +205,9 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
           ),
           h.p(
             [h.Class('px-1 text-xs text-muted-foreground')],
-            ['Right-click opens the menu (left-click works too). Anchors to the region.'],
+            [
+              'Right-click (or touch long-press) opens the menu at the pointer. Tab to the region and press Enter to open it from the keyboard.',
+            ],
           ),
         ],
       ),
@@ -198,7 +220,8 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
               h.Class(
                 'flex aspect-[2/0.5] w-full items-center justify-center rounded-lg border border-dashed text-sm',
               ),
-              h.OnContextMenu(
+              ...regionAttributes(
+                h,
                 Message.GotCtxIconsMenuMessage({
                   message: ContextMenu.Message.Opened({ maybeActiveItemIndex: Option.none() }),
                 }),
@@ -210,6 +233,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                 model: model.ctxIconsMenu,
                 view: DemoMenu.view,
                 viewInputs: ContextMenu.viewInputs<string>({
+                  maybePoint: model.ctxPoint,
                   items: ICON_ITEMS,
                   buttonContent: h.span([], ['Right click — Copy / Cut / Paste']),
                   itemsClass: 'w-44',
@@ -246,7 +270,8 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
               h.Class(
                 'flex aspect-[2/0.5] w-full items-center justify-center rounded-lg border border-dashed text-sm',
               ),
-              h.OnContextMenu(
+              ...regionAttributes(
+                h,
                 Message.GotCtxTopMenuMessage({
                   message: ContextMenu.Message.Opened({ maybeActiveItemIndex: Option.none() }),
                 }),
@@ -258,6 +283,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                 model: model.ctxTopMenu,
                 view: DemoMenu.view,
                 viewInputs: ContextMenu.viewInputs<string>({
+                  maybePoint: model.ctxPoint,
                   items: TOP_ITEMS,
                   buttonContent: h.span([], ['Right click — opens above']),
                   anchor: { placement: 'top-start', gap: 4, padding: 8 },
@@ -329,6 +355,7 @@ const foldCtxTop = Update.foldChild({
 export const slice = defineSlice({
   fields,
   init: {
+    ctxPoint: Option.none(),
     ctxBasicMenu: ContextMenu.init({ id: 'context-menu-basic' }),
     ctxIconsMenu: ContextMenu.init({ id: 'context-menu-icons' }),
     ctxTopMenu: ContextMenu.init({ id: 'context-menu-top' }),
@@ -341,6 +368,7 @@ export const slice = defineSlice({
     Message.GotCtxBasicMenuMessage,
     Message.GotCtxIconsMenuMessage,
     Message.GotCtxTopMenuMessage,
+    Message.RecordedCtxPoint,
   ],
   handlers: (model: State) => ({
     GotCtxBasicMenuMessage: (payload: typeof Message.GotCtxBasicMenuMessage.Type): UpdateReturn =>
@@ -349,6 +377,9 @@ export const slice = defineSlice({
       foldCtxIcons(model, payload.message),
     GotCtxTopMenuMessage: (payload: typeof Message.GotCtxTopMenuMessage.Type): UpdateReturn =>
       foldCtxTop(model, payload.message),
+    RecordedCtxPoint: (payload: typeof Message.RecordedCtxPoint.Type): UpdateReturn => ({
+      model: modifyFields(model, { ctxPoint: () => payload.maybePoint }),
+    }),
   }),
   samples: [],
 })
