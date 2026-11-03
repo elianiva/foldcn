@@ -832,7 +832,7 @@
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",
-      "description": "Directional edge drawer with handle drag-to-dismiss, built on the @foldkit/ui Dialog submodel.",
+      "description": "Directional edge drawer with handle drag-to-dismiss, snap points, built on the @foldkit/ui Dialog submodel.",
       "registryDependencies": ["@foldcn/utils"],
       "cssVars": {
         "theme": {

@@ -15,10 +15,12 @@ const Message = defineMessageUnion({
   GotDrawerLeftMessage: { message: Drawer.Message },
   GotDrawerRightMessage: { message: Drawer.Message },
   GotDrawerUpMessage: { message: Drawer.Message },
+  GotDrawerSnapMessage: { message: Drawer.Message },
   ClickedOpenBasicDrawer: {},
   ClickedOpenLeftDrawer: {},
   ClickedOpenRightDrawer: {},
   ClickedOpenUpDrawer: {},
+  ClickedOpenSnapDrawer: {},
 })
 
 type DrawerMessage =
@@ -26,6 +28,7 @@ type DrawerMessage =
   | typeof Message.GotDrawerLeftMessage.Type
   | typeof Message.GotDrawerRightMessage.Type
   | typeof Message.GotDrawerUpMessage.Type
+  | typeof Message.GotDrawerSnapMessage.Type
 
 type Render = Drawer.DrawerContent<AppMessage>
 
@@ -230,6 +233,35 @@ export const drawerView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
       h.div(
         [h.Class('flex w-full flex-col gap-2')],
         [
+          h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['Snap Points']),
+          h.div(
+            [h.Class('flex flex-col items-start gap-4')],
+            [
+              h.p(
+                [h.Class('text-sm text-muted-foreground')],
+                [
+                  `Rests at 40%, 70%, or fully open. Release snaps to the nearest point; a flick past the lowest dismisses. Active snap: ${String(model.drawerSnap.activeSnap)} (${String(Drawer.activeSnapFraction(model.drawerSnap))})`,
+                ],
+              ),
+              button<AppMessage>(
+                { variant: 'outline', onClick: Message.ClickedOpenSnapDrawer() },
+                'Open Snap Drawer',
+                h,
+              ),
+              drawerSubmodel(
+                model.drawerSnap,
+                (render, h) =>
+                  sideContent('Snap Points', 'Drag the handle between rest positions.', render, h),
+                (message) => Message.GotDrawerSnapMessage({ message }),
+                h,
+              ),
+            ],
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class('flex w-full flex-col gap-2')],
+        [
           h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['Sides']),
           h.div(
             [h.Class('flex flex-wrap gap-2')],
@@ -281,6 +313,7 @@ const fields = {
   drawerLeft: Drawer.Model,
   drawerRight: Drawer.Model,
   drawerUp: Drawer.Model,
+  drawerSnap: Drawer.Model,
 }
 
 const stateSchema = S.Struct(fields)
@@ -359,6 +392,11 @@ const drawerSubscriptions = Subscription.aggregate<State, DrawerMessage>()(
     (model) => model.drawerUp,
     (message) => Message.GotDrawerUpMessage({ message }),
   ),
+  liftDrawerSubscriptions(
+    'drawerSnap',
+    (model) => model.drawerSnap,
+    (message) => Message.GotDrawerSnapMessage({ message }),
+  ),
 )
 
 export { drawerSubscriptions as subscriptions }
@@ -374,16 +412,24 @@ export const slice = defineSlice({
       isHandleVisible: true,
     }),
     drawerUp: Drawer.init({ id: 'drawer-up', swipeDirection: 'up', isHandleVisible: true }),
+    drawerSnap: Drawer.init({
+      id: 'drawer-snap',
+      swipeDirection: 'down',
+      isHandleVisible: true,
+      snapPoints: [0.4, 0.7, 1],
+    }),
   },
   messages: [
     Message.GotDrawerBasicMessage,
     Message.GotDrawerLeftMessage,
     Message.GotDrawerRightMessage,
     Message.GotDrawerUpMessage,
+    Message.GotDrawerSnapMessage,
     Message.ClickedOpenBasicDrawer,
     Message.ClickedOpenLeftDrawer,
     Message.ClickedOpenRightDrawer,
     Message.ClickedOpenUpDrawer,
+    Message.ClickedOpenSnapDrawer,
   ],
   handlers: (model: State) => ({
     GotDrawerBasicMessage: (payload: typeof Message.GotDrawerBasicMessage.Type): UpdateReturn =>
@@ -410,6 +456,19 @@ export const slice = defineSlice({
         (state, next) => modifyFields(state, { drawerUp: () => next }),
         (message) => Message.GotDrawerUpMessage({ message }),
       )(model, payload.message),
+    GotDrawerSnapMessage: (payload: typeof Message.GotDrawerSnapMessage.Type): UpdateReturn =>
+      foldDrawer(
+        (state) => state.drawerSnap,
+        (state, next) => modifyFields(state, { drawerSnap: () => next }),
+        (message) => Message.GotDrawerSnapMessage({ message }),
+      )(model, payload.message),
+    ClickedOpenSnapDrawer: (): UpdateReturn =>
+      openDrawer(
+        (state) => state.drawerSnap,
+        (state, next) => modifyFields(state, { drawerSnap: () => next }),
+        (message) => Message.GotDrawerSnapMessage({ message }),
+        model,
+      ),
     ClickedOpenBasicDrawer: (): UpdateReturn =>
       openDrawer(
         (state) => state.drawerBasic,

@@ -23,7 +23,8 @@ export const gapsByItem = {
     'Only a swipe plays the full leave animation. Closing, the auto-dismiss timer, and Dismiss all unmount the entry after roughly 60ms and cut off the card’s own slide-out — foldkit settles leave animations on the entry wrapper, which is where the swipe exit runs.',
   ],
   drawer: [
-    'No snap points, nested stacks, or non-modal drawers — handle drag-to-dismiss and all four directions work.',
+    'No nested drawer stacks or non-modal drawers — handle drag-to-dismiss, all four directions, and fractional snap points work.',
+    'Snap points are fractions of the panel extent driven by the handle only — no swipe from panel content, no scroll-vs-drag handoff, and no `--drawer-snap-point-offset`/`data-snap-points` styling hooks.',
   ],
   'scroll-area': [
     "Wheel events over the scrollbar don't scroll the viewport — foldkit has no wheel-delta listener yet.",
