@@ -12,7 +12,9 @@ import {
   type HtmlBuilder,
 } from 'foldkit/html'
 import { Option } from 'effect'
+import { Check, ChevronRight } from 'lucide'
 
+import { icon } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 // Re-export the @foldkit/ui Menu surface. A menubar is a horizontal bar of
@@ -34,13 +36,15 @@ export type OutMessage = typeof OutMessage.Type
 // trigger/panel events (hover on a trigger, ArrowLeft/Right) as parent
 // messages; the owner closes the open menu and opens the neighbour in its
 // update (see the web menubar demo slice for the reference wiring).
-// foldcn gaps vs upstream (primitive ceiling — needs @foldkit/ui work): no
-// submenu/checkbox/radio item kinds (upstream MenubarSub,
-// MenubarCheckboxItem, MenubarRadioGroup/Item) — the Menu primitive has flat
-// items + labeled groups only; demo state can toggle check/radio affordances
-// (see the web menubar demo). No per-item data-inset/data-variant attributes
-// (upstream MenubarItem inset/destructive props) and no per-item data-slot
-// (menubar-item etc) — the primitive has no per-item attribute hook.
+// foldcn gaps vs upstream (primitive ceiling — needs @foldkit/ui work): the
+// primitive's item config is `{ className, content }` over one flat level, so
+// item kinds are foldcn-owned: destructive/inset via `menubarItemDestructiveClass`
+// / `menubarItemInsetClass`; checkbox/radio via the indicator helpers (keep the
+// panel open by handling `SelectedItem` yourself instead of forwarding it to
+// `update`, which would close the menu); submenus via a nested bundle built with
+// `subViewInputs` that the consumer slice opens/closes and key-coordinates (see
+// the web menu demo). No per-item data-slot (menubar-item etc) — the primitive
+// has no per-item attribute hook.
 // Menubar content/item/label/separator/shortcut use the cn-menubar-* family.
 // Group headings render via itemGroupKey/groupToHeading (upstream
 // MenubarGroup/MenubarLabel); separators render between groups. The panel is
@@ -82,28 +86,63 @@ export const menubarLabelClass = menubarHeadingClass
 
 export const menubarShortcutClass = 'cn-menubar-shortcut ml-auto'
 
-/** Upstream `MenubarCheckboxItem` token string (verbatim). No foldkit highlight
- *  twin: upstream keys checkbox highlight on focus: inside the token. */
+/** Upstream `MenubarCheckboxItem` token string, plus the foldkit highlight twin
+ *  (upstream keys the highlight on focus: inside the token). */
 export const menubarCheckboxItemClass =
-  'cn-menubar-checkbox-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+  'cn-menubar-checkbox-item data-active:bg-accent data-active:text-accent-foreground relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
 
 export const menubarCheckboxItemIndicatorClass =
   'cn-menubar-checkbox-item-indicator pointer-events-none absolute flex items-center justify-center'
 
 /** Upstream `MenubarRadioItem` token string (verbatim — note: no disabled
- *  opacity, matching upstream). */
+ *  opacity, matching upstream), plus the foldkit highlight twin. */
 export const menubarRadioItemClass =
-  'cn-menubar-radio-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0'
+  'cn-menubar-radio-item data-active:bg-accent data-active:text-accent-foreground relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0'
 
 export const menubarRadioItemIndicatorClass =
   'cn-menubar-radio-item-indicator pointer-events-none absolute flex items-center justify-center'
 
 /** Upstream `MenubarSubTrigger` token (verbatim). Open-state styling arrives
  *  via cn-compat.css twins (foldkit emits data-open, Base UI data-popup-open). */
-export const menubarSubTriggerClass = 'cn-menubar-sub-trigger'
+export const menubarSubTriggerClass =
+  'cn-menubar-sub-trigger group/menubar-item relative flex cursor-default items-center outline-hidden select-none data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+
+/** Highlight for the parent row while its submenu is open. */
+export const menubarSubTriggerOpenClass = 'bg-accent text-accent-foreground'
+
+/** Row className for upstream `variant="destructive"`. */
+export const menubarItemDestructiveClass = 'cn-menubar-item-destructive'
+
+/** Row className for upstream `inset`. */
+export const menubarItemInsetClass = 'cn-menubar-item-inset'
 
 /** Upstream `MenubarSubContent` token string (verbatim). */
 export const menubarSubContentClass = 'cn-menubar-sub-content cn-menu-target cn-menu-translucent'
+
+/** Check indicator for a checkbox row: render it inside the row's `content`
+ *  (empty when unchecked) with `menubarCheckboxItemClass` on the row. */
+export const menubarCheckboxIndicator = <M>(h: HtmlBuilder<M>, isChecked: boolean): Html =>
+  h.span(
+    [
+      h.Class(menubarCheckboxItemIndicatorClass),
+      h.DataAttribute('slot', 'menubar-checkbox-item-indicator'),
+    ],
+    isChecked ? [icon(h, Check)] : [],
+  )
+
+/** Same for a radio row, with `menubarRadioItemClass` on the row. */
+export const menubarRadioIndicator = <M>(h: HtmlBuilder<M>, isSelected: boolean): Html =>
+  h.span(
+    [
+      h.Class(menubarRadioItemIndicatorClass),
+      h.DataAttribute('slot', 'menubar-radio-item-indicator'),
+    ],
+    isSelected ? [icon(h, Check)] : [],
+  )
+
+/** Trailing chevron for a submenu trigger row. */
+export const menubarSubTriggerChevron = <M>(h: HtmlBuilder<M>): Html =>
+  icon(h, ChevronRight, 'cn-rtl-flip ml-auto size-4')
 
 export const menubarBackdropClass = 'fixed inset-0 z-0'
 
@@ -204,6 +243,54 @@ export const viewInputs = <Item extends string>(
     backdropClassName: cn(menubarBackdropClass, config.backdropClass),
     className: cn(menubarWrapperClass, config.wrapperClass),
     attributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar')]),
+  }
+}
+
+// The trigger button sits inside the parent row (px-1.5) inside the parent
+// panel (p-1), so the gap clears both and the offset lines the first row up with
+// the trigger row (the sub panel's own p-1).
+export const MENUBAR_SUB_ANCHOR: AnchorConfig = {
+  placement: 'right-start',
+  gap: 14,
+  offset: -8,
+  padding: 8,
+}
+
+/** `viewInputs` for a nested menu, rendered as the `content` of a parent row.
+ *  The trigger is a full-width, pointer-transparent button: the parent row owns
+ *  the click (its `SelectedItem` message opens the submenu — handle it yourself, do not forward it) and the panel
+ *  anchors to the trigger. Pair it with `menubarSubTriggerClass` on the parent
+ *  row's className and `menubarSubTriggerChevron` in the trigger's content. */
+export const subViewInputs = <Item extends string>(
+  config: MenubarViewInputsConfig<Item>,
+): ViewInputs<Item> => {
+  const anchor = config.anchor ?? MENUBAR_SUB_ANCHOR
+  const inputs = viewInputs({ wrapperClass: 'block w-full', ...config, anchor })
+  return {
+    ...inputs,
+    buttonClassName: cn(
+      'pointer-events-none flex w-full items-center gap-1.5',
+      config.triggerClass,
+    ),
+    buttonAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'menubar-sub-trigger'),
+        inertHtml.Tabindex(-1),
+      ]),
+      ...(config.triggerAttributes ?? []),
+    ],
+    itemsClassName: cn(
+      menubarSubContentClass,
+      'z-50 max-h-(--available-height) w-auto origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none',
+      config.itemsClass,
+    ),
+    itemsAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'menubar-sub-content'),
+        inertHtml.DataAttribute('side', anchor.placement?.split('-')[0] ?? 'right'),
+      ]),
+      ...(config.contentAttributes ?? []),
+    ],
   }
 }
 

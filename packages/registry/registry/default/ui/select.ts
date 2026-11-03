@@ -98,6 +98,14 @@ export type SelectViewInputsConfig<Item, Value extends string = string> = Readon
   isDisabled?: boolean
   isReadOnly?: boolean
   isInvalid?: boolean
+  /** Disable individual options (upstream `SelectItem disabled`). */
+  isItemDisabled?: (item: Item, index: number) => boolean
+  /** Split the options into several labelled groups with separators between
+   *  them (upstream multiple `SelectGroup`s). `groupToLabel` returns the group's
+   *  label, or `undefined` for an unlabelled group. Without `itemGroupKey`, all
+   *  options form one group labelled by `label`. */
+  itemGroupKey?: (item: Item, index: number) => string
+  groupToLabel?: (groupKey: string) => string | undefined
   name?: string
   form?: string
   ariaLabel?: string
@@ -127,13 +135,19 @@ export const styledViewInputs = <M, Item, Value extends string = string>(
     maybeSelectedValue: config.maybeSelectedValue,
     itemToValue,
     itemToSearchText: (item) => config.itemToLabel(item),
-    itemGroupKey: hasLabel ? () => label : undefined,
-    groupToHeading: hasLabel
-      ? () => ({
-          content: h.span([], [label]),
-          className: selectLabelClass,
-        })
-      : undefined,
+    isItemDisabled: config.isItemDisabled,
+    itemGroupKey: config.itemGroupKey ?? (hasLabel ? () => label : undefined),
+    groupToHeading:
+      config.itemGroupKey !== undefined
+        ? (groupKey) => {
+            const groupLabel = config.groupToLabel?.(groupKey)
+            return groupLabel === undefined
+              ? undefined
+              : { content: h.span([], [groupLabel]), className: selectLabelClass }
+          }
+        : hasLabel
+          ? () => ({ content: h.span([], [label]), className: selectLabelClass })
+          : undefined,
     buttonContent: h.span(
       [h.Class('flex w-full items-center justify-between gap-2')],
       [

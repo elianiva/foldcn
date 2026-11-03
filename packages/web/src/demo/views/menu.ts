@@ -4,7 +4,7 @@ import { Schema as S } from 'effect'
 import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
-import { Check, CreditCard, LogOut, Settings, User } from 'lucide'
+import { CreditCard, LogOut, Settings, User } from 'lucide'
 
 import { Menu as FoldkitMenu } from '@foldkit/ui'
 
@@ -12,8 +12,10 @@ import * as menu from '../../generated/registry/ui/menu'
 import { icon } from '../../generated/registry/lib/icons'
 
 import { DemoMenu } from '../bundles'
+import { keepOpenOnSelect, subMenu } from '../menu-family'
 import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
+import { cn } from '../../generated/registry/lib/utils'
 
 export const Message = defineMessageUnion({
   GotBasicMenuMessage: { message: menu.Message },
@@ -22,15 +24,20 @@ export const Message = defineMessageUnion({
   GotChecksMenuMessage: { message: menu.Message },
   GotRadioMenuMessage: { message: menu.Message },
   GotComplexMenuMessage: { message: menu.Message },
+  GotComplexSubMenuMessage: { message: menu.Message },
+  OpenedComplexSubMenu: {},
+  ClosedComplexSubMenu: {},
 })
 
 // Sections mirror apps/v4/examples/base/dropdown-menu-*.tsx. The foldkit
-// primitive has flat items only (no submenu/checkbox/radio kinds), so the
-// submenu rows from upstream render as labelled groups, and the
-// checkbox/radio rows render check indicators from demo-owned state (see
-// gapsByItem.menu). Every row is selectable; the status line below reports
-// the last selection. Checkbox/radio selections toggle demo state and close
-// the panel — upstream keeps the panel open, which needs primitive support.
+// primitive's item config is `{ className, content }` over one flat level, so
+// the item kinds are built here from foldcn helpers:
+//   - destructive / inset rows: `menuItemDestructiveClass` / `menuItemInsetClass`.
+//   - checkbox / radio rows: `menuItemIndicator` plus `menu.reopen` in the fold,
+//     which keeps the panel open after the primitive's close-on-select.
+//   - submenu: a nested `menu.subViewInputs` bundle rendered as the content of
+//     the parent row; the slice below opens/closes it and wires the keys.
+// The status line below reports the last selection.
 
 const BASIC_ITEMS = ['Profile', 'Billing', 'Settings', 'GitHub', 'Support', 'API'] as const
 
@@ -45,7 +52,7 @@ const SHORTCUTS = new Map<string, string>([
   ['Log out', '⇧⌘Q'],
 ])
 
-const ICON_ITEMS = ['Profile', 'Billing', 'Settings', 'Log out'] as const
+const ICON_ITEMS = ['Profile', 'Billing', 'Settings', 'Documentation', 'Log out'] as const
 
 const ICONS = new Map<string, typeof User>([
   ['Profile', User],
@@ -62,16 +69,16 @@ const COMPLEX_ITEMS = [
   'Profile',
   'Billing',
   'Settings',
-  'Team',
-  'Email',
-  'Message',
-  'More...',
+  'Invite users',
   'New Team',
   'GitHub',
   'Support',
   'API',
   'Log out',
 ] as const
+
+const COMPLEX_SUB_INDEX = COMPLEX_ITEMS.indexOf('Invite users')
+const SUB_ITEMS = ['Email', 'Message', 'More...'] as const
 
 const COMPLEX_SHORTCUTS = new Map<string, string>([
   ['Profile', '⇧⌘P'],
@@ -83,8 +90,7 @@ const COMPLEX_SHORTCUTS = new Map<string, string>([
 
 const complexGroupKey = (item: string): string => {
   if (item === 'Profile' || item === 'Billing' || item === 'Settings') return 'account'
-  if (item === 'Team' || item === 'Email' || item === 'Message' || item === 'More...') return 'team'
-  if (item === 'New Team') return 'new-team'
+  if (item === 'Invite users' || item === 'New Team') return 'team'
   if (item === 'GitHub' || item === 'Support' || item === 'API') return 'links'
   return 'logout'
 }
@@ -108,6 +114,7 @@ const fields = {
   checksMenu: menu.Model,
   radioMenu: menu.Model,
   complexMenu: menu.Model,
+  complexSubMenu: menu.Model,
   showStatusBar: S.Boolean,
   showPanel: S.Boolean,
   panelPosition: S.String,
@@ -193,16 +200,22 @@ export const menuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
             viewInputs: menu.viewInputs<string>({
               items: ICON_ITEMS,
               buttonContent: h.span([], ['Open']),
+              itemsClass: 'w-44',
               isItemDisabled: (item) => item === 'Billing',
               itemToConfig: (item) => ({
                 className:
                   item === 'Log out'
-                    ? 'text-destructive data-active:bg-destructive/10 data-active:text-destructive dark:data-active:bg-destructive/20 [&_svg]:text-destructive'
-                    : '',
-                content: h.span(
-                  [h.Class('flex w-full items-center gap-2')],
-                  [icon(h, ICONS.get(item) ?? User), h.span([], [item])],
-                ),
+                    ? menu.menuItemDestructiveClass
+                    : item === 'Documentation'
+                      ? menu.menuItemInsetClass
+                      : '',
+                content:
+                  item === 'Documentation'
+                    ? h.span([], [item])
+                    : h.span(
+                        [h.Class('flex w-full items-center gap-2')],
+                        [icon(h, ICONS.get(item) ?? User), h.span([], [item])],
+                      ),
               }),
             }),
             toParentMessage: (message) => Message.GotIconsMenuMessage({ message }),
@@ -225,24 +238,15 @@ export const menuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               groupToHeading: () => ({ content: h.span([], ['Appearance']) }),
               isItemDisabled: (item) => item === 'Activity Bar',
               itemToConfig: (item) => ({
+                className: menu.menuCheckboxItemClass,
                 content: h.span(
-                  [h.Class('flex w-full items-center gap-2')],
-                  [
-                    h.span(
-                      [h.Class('flex w-4 shrink-0 items-center justify-center')],
-                      [...(checkOn(model, item) ? [icon(h, Check, 'size-4')] : [])],
-                    ),
-                    h.span([], [item]),
-                  ],
+                  [h.Class('contents')],
+                  [item, menu.menuItemIndicator(h, checkOn(model, item))],
                 ),
               }),
             }),
             toParentMessage: (message) => Message.GotChecksMenuMessage({ message }),
           }),
-          h.p(
-            [h.Class('px-1 text-xs text-muted-foreground')],
-            ['Toggling a row closes the panel — upstream keeps it open (primitive gap).'],
-          ),
         ],
       ),
       h.div(
@@ -260,15 +264,10 @@ export const menuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               itemGroupKey: () => 'position',
               groupToHeading: () => ({ content: h.span([], ['Panel Position']) }),
               itemToConfig: (item) => ({
+                className: menu.menuRadioItemClass,
                 content: h.span(
-                  [h.Class('flex w-full items-center gap-2')],
-                  [
-                    h.span(
-                      [h.Class('flex w-4 shrink-0 items-center justify-center')],
-                      [...(model.panelPosition === item ? [icon(h, Check, 'size-4')] : [])],
-                    ),
-                    h.span([], [item]),
-                  ],
+                  [h.Class('contents')],
+                  [item, menu.menuItemIndicator(h, model.panelPosition === item)],
                 ),
               }),
             }),
@@ -289,17 +288,35 @@ export const menuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               buttonContent: h.span([], ['Open']),
               itemsClass: 'w-44',
               itemGroupKey: (item) => complexGroupKey(item),
-              groupToHeading: (groupKey) => {
-                if (groupKey === 'account') return { content: h.span([], ['My Account']) }
-                // Upstream nests these under an "Invite users" submenu;
-                // without a submenu primitive they render as a labelled group.
-                if (groupKey === 'team') return { content: h.span([], ['Invite users']) }
-                return undefined
-              },
+              groupToHeading: (groupKey) =>
+                groupKey === 'account' ? { content: h.span([], ['My Account']) } : undefined,
               isItemDisabled: (item) => item === 'API',
-              itemToConfig: (item) => ({
-                content: withShortcut(h, item, COMPLEX_SHORTCUTS.get(item)),
-              }),
+              contentAttributes: complexSub.parentKeys(h, model, Message.OpenedComplexSubMenu()),
+              itemToConfig: (item) =>
+                item === 'Invite users'
+                  ? {
+                      className: cn(
+                        menu.menuSubTriggerClass,
+                        model.complexSubMenu.isOpen && menu.menuSubTriggerOpenClass,
+                      ),
+                      content: h.submodel({
+                        slotId: model.complexSubMenu.id,
+                        model: model.complexSubMenu,
+                        view: DemoMenu.view,
+                        viewInputs: menu.subViewInputs<string>({
+                          items: SUB_ITEMS,
+                          buttonContent: h.span(
+                            [h.Class('flex w-full items-center')],
+                            [h.span([], [item]), menu.menuSubTriggerChevron(h)],
+                          ),
+                          itemsClass: 'w-36',
+                          itemToConfig: (subItem) => ({ content: h.span([], [subItem]) }),
+                          contentAttributes: complexSub.subKeys(h, Message.ClosedComplexSubMenu()),
+                        }),
+                        toParentMessage: (message) => Message.GotComplexSubMenuMessage({ message }),
+                      }),
+                    }
+                  : { content: withShortcut(h, item, COMPLEX_SHORTCUTS.get(item)) },
             }),
             toParentMessage: (message) => Message.GotComplexMenuMessage({ message }),
           }),
@@ -318,35 +335,26 @@ const foldOutMessage = (menuName: string) =>
     M.tagsExhaustive({ Selected: ({ value }) => recordSelection(menuName, value) }),
   )
 
-const foldChecksOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({
-    Selected:
-      ({ value }) =>
-      (model) => ({
-        model: modifyFields(model, {
-          showStatusBar: () =>
-            value === 'Status Bar' ? !model.showStatusBar : model.showStatusBar,
-          showPanel: () => (value === 'Panel' ? !model.showPanel : model.showPanel),
-          lastMenuAction: () => `Appearance: ${value}`,
-        }),
-      }),
-  }),
-)
+// Checkbox/radio rows keep the panel open: the slice applies the toggle for
+// `SelectedItem` and never forwards it to the primitive (`keepOpenOnSelect`).
+const toggleCheck =
+  (item: string): Update.Step<State, AppMessage> =>
+  (model) => ({
+    model: modifyFields(model, {
+      showStatusBar: () => (item === 'Status Bar' ? !model.showStatusBar : model.showStatusBar),
+      showPanel: () => (item === 'Panel' ? !model.showPanel : model.showPanel),
+      lastMenuAction: () => `Appearance: ${item}`,
+    }),
+  })
 
-const foldRadioOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({
-    Selected:
-      ({ value }) =>
-      (model) => ({
-        model: modifyFields(model, {
-          panelPosition: () => value,
-          lastMenuAction: () => `Panel position: ${value}`,
-        }),
-      }),
-  }),
-)
+const selectRadio =
+  (item: string): Update.Step<State, AppMessage> =>
+  (model) => ({
+    model: modifyFields(model, {
+      panelPosition: () => item,
+      lastMenuAction: () => `Panel position: ${item}`,
+    }),
+  })
 
 const foldBasic = Update.foldChild({
   update: DemoMenu.update,
@@ -377,7 +385,7 @@ const foldChecks = Update.foldChild({
   read: (model: State) => Option.some(model.checksMenu),
   write: (model, next) => modifyFields(model, { checksMenu: () => next }),
   toParentMessage: (message) => Message.GotChecksMenuMessage({ message }),
-  foldOutMessage: foldChecksOutMessage,
+  foldOutMessage: foldOutMessage('Appearance'),
 })
 
 const foldRadio = Update.foldChild({
@@ -385,15 +393,21 @@ const foldRadio = Update.foldChild({
   read: (model: State) => Option.some(model.radioMenu),
   write: (model, next) => modifyFields(model, { radioMenu: () => next }),
   toParentMessage: (message) => Message.GotRadioMenuMessage({ message }),
-  foldOutMessage: foldRadioOutMessage,
+  foldOutMessage: foldOutMessage('Panel position'),
 })
 
-const foldComplex = Update.foldChild({
-  update: DemoMenu.update,
-  read: (model: State) => Option.some(model.complexMenu),
-  write: (model, next) => modifyFields(model, { complexMenu: () => next }),
+// The Complex menu's "Invite users" row opens a nested menu; `subMenu` owns the
+// coordination (see menu-family.ts).
+const complexSub = subMenu<State, AppMessage>({
+  readParent: (model) => model.complexMenu,
+  writeParent: (model, next) => modifyFields(model, { complexMenu: () => next }),
+  readSub: (model) => model.complexSubMenu,
+  writeSub: (model, next) => modifyFields(model, { complexSubMenu: () => next }),
   toParentMessage: (message) => Message.GotComplexMenuMessage({ message }),
-  foldOutMessage: foldOutMessage('Complex'),
+  toSubMessage: (message) => Message.GotComplexSubMenuMessage({ message }),
+  subIndex: COMPLEX_SUB_INDEX,
+  foldParentSelected: foldOutMessage('Complex'),
+  foldSubSelected: foldOutMessage('Complex › Invite users'),
 })
 
 export const slice = defineSlice({
@@ -405,6 +419,7 @@ export const slice = defineSlice({
     checksMenu: menu.init({ id: 'menu-checks' }),
     radioMenu: menu.init({ id: 'menu-radio' }),
     complexMenu: menu.init({ id: 'menu-complex' }),
+    complexSubMenu: menu.init({ id: 'menu-complex-sub', isAnimated: false }),
     showStatusBar: true,
     showPanel: false,
     panelPosition: 'bottom',
@@ -417,6 +432,9 @@ export const slice = defineSlice({
     Message.GotChecksMenuMessage,
     Message.GotRadioMenuMessage,
     Message.GotComplexMenuMessage,
+    Message.GotComplexSubMenuMessage,
+    Message.OpenedComplexSubMenu,
+    Message.ClosedComplexSubMenu,
   ],
   handlers: (model: State) => ({
     GotBasicMenuMessage: (payload: typeof Message.GotBasicMenuMessage.Type): UpdateReturn =>
@@ -426,11 +444,28 @@ export const slice = defineSlice({
     GotIconsMenuMessage: (payload: typeof Message.GotIconsMenuMessage.Type): UpdateReturn =>
       foldIcons(model, payload.message),
     GotChecksMenuMessage: (payload: typeof Message.GotChecksMenuMessage.Type): UpdateReturn =>
-      foldChecks(model, payload.message),
+      keepOpenOnSelect<State, AppMessage>({
+        items: CHECK_ITEMS,
+        readMenu: (state) => state.checksMenu,
+        isKept: () => true,
+        onSelected: toggleCheck,
+        forward: (state, message) => foldChecks(state, message),
+      })(model, payload.message),
     GotRadioMenuMessage: (payload: typeof Message.GotRadioMenuMessage.Type): UpdateReturn =>
-      foldRadio(model, payload.message),
+      keepOpenOnSelect<State, AppMessage>({
+        items: RADIO_ITEMS,
+        readMenu: (state) => state.radioMenu,
+        isKept: () => true,
+        onSelected: selectRadio,
+        forward: (state, message) => foldRadio(state, message),
+      })(model, payload.message),
     GotComplexMenuMessage: (payload: typeof Message.GotComplexMenuMessage.Type): UpdateReturn =>
-      foldComplex(model, payload.message),
+      complexSub.handleParent(model, payload.message),
+    GotComplexSubMenuMessage: (
+      payload: typeof Message.GotComplexSubMenuMessage.Type,
+    ): UpdateReturn => complexSub.handleSub(model, payload.message),
+    OpenedComplexSubMenu: (): UpdateReturn => complexSub.openSub(model),
+    ClosedComplexSubMenu: (): UpdateReturn => complexSub.closeSub(model),
   }),
   samples: [],
 })

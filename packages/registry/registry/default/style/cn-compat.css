@@ -217,6 +217,24 @@
   @apply data-open:bg-accent data-open:text-accent-foreground data-[popup-open]:bg-accent data-[popup-open]:text-accent-foreground;
 }
 
+/* menu item variants: upstream keys destructive/inset on per-item
+ * data-variant / data-inset attributes, but the foldkit Menu primitive only
+ * accepts a className per item and cannot stamp attributes on the row. These
+ * tokens carry the same utilities (destructive keyed on data-active, the
+ * foldkit highlight attribute, instead of focus:) so a row opts in through its
+ * className. */
+.cn-dropdown-menu-item-destructive,
+.cn-context-menu-item-destructive,
+.cn-menubar-item-destructive {
+  @apply text-destructive data-active:bg-destructive/10 data-active:text-destructive dark:data-active:bg-destructive/20 [&_svg]:text-destructive!;
+}
+
+.cn-dropdown-menu-item-inset,
+.cn-context-menu-item-inset,
+.cn-menubar-item-inset {
+  @apply pl-7;
+}
+
 /* menu shortcuts: upstream keys the accent-on-highlight on
  * group-focus/<item> (e.g. group-focus/dropdown-menu-item:), but foldkit
  * highlights items via data-active while DOM focus stays on the panel —

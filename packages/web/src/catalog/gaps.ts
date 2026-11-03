@@ -1,6 +1,6 @@
 // User-facing caveats for registry items whose behavior differs from their
 // shadcn/ui counterpart. Most of these stem from foldkit primitive ceilings
-// (no submenu kinds, no pointer-position anchoring) that are
+// (flat menu items, no menubar model) that are
 // documented in depth in docs/shadcn-base-parity-audit.md; this map surfaces
 // the short version on the item pages themselves so adopters learn the limits
 // before installing.
@@ -14,10 +14,11 @@ export const gapsByItem = {
     'Data-driven Foldkit API: provide stable item values and content instead of cmdk React children. CommandDialog uses Foldkit Dialog; nested pages and async fetching remain application-owned.',
   ],
   menubar: [
-    'Hover-to-switch and ArrowLeft/Right traversal are app-owned (wired in the bar’s update, via navigationAttributes) — the primitive has no menubar model. No submenu, checkbox, or radio item kinds.',
+    'Hover-to-switch and ArrowLeft/Right traversal are app-owned (wired in the bar’s update, via navigationAttributes) — the primitive has no menubar model. Submenus, keep-open checkbox/radio rows, destructive, and inset rows follow the menu caveats.',
   ],
   'context-menu': [
     'Opens at the pointer on right-click or touch long-press; keyboard open anchors to the region, since foldkit gives no point for it. Pointer position is the caller’s model state, passed as `maybePoint`. iOS Safari fires no `contextmenu` on long-press, so it does not open there.',
+    'Submenus, keep-open checkbox/radio rows, destructive, and inset rows follow the menu caveats.',
     'The trigger is the anchor, so content passed as `buttonContent` travels with it while the menu is open; region content that must stay in place belongs beside the submodel.',
   ],
   toast: [
@@ -46,8 +47,11 @@ export const gapsByItem = {
     'No imperative API hand-off: listen for ChangedIndex out-messages instead of upstream setApi.',
   ],
   menu: [
-    'No submenu, checkbox-item, or radio-item kinds — submenus render as labelled groups and checkbox/radio rows run off demo state; toggling one closes the panel.',
+    'Submenus are a second Menu bundle inside the parent row, opened on click, Enter/Space, or ArrowRight (not on hover) and wired in your slice — the primitive is one flat level.',
+    'Checkbox/radio rows keep the panel open only if your slice handles `SelectedItem` itself instead of forwarding it to the primitive, which closes on every selection.',
+    'Destructive and inset are row classes, not per-item data-variant/data-inset attributes.',
   ],
+  select: ['No scroll-up/down arrow buttons — long lists scroll natively.'],
   progress: [
     'Indeterminate state renders an empty track — animated indeterminacy awaits primitive support.',
   ],
