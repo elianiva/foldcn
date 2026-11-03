@@ -57,29 +57,6 @@ const toParentMessage = (message: NavMenu.Message): AppMessage =>
 const GETTING_STARTED_ID = 'getting-started'
 const COMPONENTS_ID = 'components'
 const WITH_ICON_ID = 'with-icon'
-const NAV_ITEM_IDS = [GETTING_STARTED_ID, COMPONENTS_ID, WITH_ICON_ID] as const
-
-const navDropdown = (
-  id: string,
-  trigger: string,
-  content: ReadonlyArray<Html>,
-  model: Model,
-  h: HtmlBuilder<AppMessage>,
-): Html =>
-  NavigationMenu.item(
-    {},
-    [
-      h.submodel({
-        slotId: id,
-        model: NavMenu.getItem(model.navigationMenu, id),
-        view: NavMenu.view,
-        viewInputs: NavMenu.dropdownViewInputs({ id, trigger }, content, h),
-        toParentMessage: (message) =>
-          toParentMessage(NavMenu.Message.GotItemMessage({ id, message })),
-      }),
-    ],
-    h,
-  )
 
 export const navigationMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
@@ -89,16 +66,17 @@ export const navigationMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Ht
         [h.Class('flex w-full flex-col gap-2')],
         [
           h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['Basic']),
-          NavigationMenu(
-            {},
-            [
-              NavigationMenu.list(
-                {},
-                [
-                  navDropdown(
-                    GETTING_STARTED_ID,
-                    'Getting started',
-                    [
+          h.submodel({
+            slotId: 'navigation-menu',
+            model: model.navigationMenu,
+            view: NavMenu.view,
+            viewInputs: NavMenu.viewInputs(
+              {
+                items: [
+                  NavMenu.dropdown({
+                    id: GETTING_STARTED_ID,
+                    trigger: 'Getting started',
+                    content: [
                       h.ul(
                         [h.Class('grid w-96 gap-1')],
                         [
@@ -123,82 +101,61 @@ export const navigationMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Ht
                         ],
                       ),
                     ],
-                    model,
-                    h,
-                  ),
-                  navDropdown(
-                    COMPONENTS_ID,
-                    'Components',
-                    [
+                  }),
+                  NavMenu.dropdown({
+                    id: COMPONENTS_ID,
+                    trigger: 'Components',
+                    content: [
                       h.ul(
                         [h.Class('grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]')],
                         COMPONENTS.map((c) => navListItem(h, c.title, c.href, c.description)),
                       ),
                     ],
-                    model,
-                    h,
-                  ),
-                  navDropdown(
-                    WITH_ICON_ID,
-                    'With Icon',
-                    [
+                  }),
+                  NavMenu.dropdown({
+                    id: WITH_ICON_ID,
+                    trigger: 'With Icon',
+                    content: [
                       h.ul(
                         [h.Class('grid w-[200px] gap-1')],
                         [
-                          h.li(
-                            [],
-                            [
-                              NavigationMenu.link(
-                                { href: '#', className: 'flex-row items-center gap-2' },
-                                [icon(h, CircleAlert, 'size-4'), ' Backlog'],
-                                h,
-                              ),
-                            ],
-                          ),
-                          h.li(
-                            [],
-                            [
-                              NavigationMenu.link(
-                                { href: '#', className: 'flex-row items-center gap-2' },
-                                [icon(h, CircleDashed, 'size-4'), ' To Do'],
-                                h,
-                              ),
-                            ],
-                          ),
-                          h.li(
-                            [],
-                            [
-                              NavigationMenu.link(
-                                { href: '#', className: 'flex-row items-center gap-2' },
-                                [icon(h, CircleCheck, 'size-4'), ' Done'],
-                                h,
-                              ),
-                            ],
-                          ),
+                          iconLink(h, CircleAlert, 'Backlog'),
+                          iconLink(h, CircleDashed, 'To Do'),
+                          iconLink(h, CircleCheck, 'Done'),
                         ],
                       ),
                     ],
-                    model,
-                    h,
-                  ),
-                  NavigationMenu.item(
-                    {},
-                    [
-                      NavigationMenu.link(
-                        { href: '/docs', className: NavMenu.navigationMenuTriggerStyle() },
-                        ['Docs'],
-                        h,
-                      ),
-                    ],
-                    h,
+                  }),
+                  NavMenu.staticItem(
+                    NavigationMenu.link(
+                      { href: '/docs', className: NavMenu.navigationMenuTriggerStyle() },
+                      ['Docs'],
+                      h,
+                    ),
                   ),
                 ],
-                h,
-              ),
-            ],
-            h,
-          ),
+              },
+              h,
+            ),
+            toParentMessage,
+          }),
         ],
+      ),
+    ],
+  )
+
+const iconLink = (
+  h: HtmlBuilder<AppMessage>,
+  glyph: Parameters<typeof icon>[1],
+  label: string,
+): Html =>
+  h.li(
+    [],
+    [
+      NavigationMenu.link(
+        { href: '#', className: 'flex-row items-center gap-2' },
+        [icon(h, glyph, 'size-4'), ` ${label}`],
+        h,
       ),
     ],
   )
@@ -243,7 +200,7 @@ const foldNavigationMenu = Update.foldChild({
 
 export const slice = defineSlice({
   fields,
-  init: { navigationMenu: NavMenu.init(NAV_ITEM_IDS) },
+  init: { navigationMenu: NavMenu.init() },
   messages: [Message.GotNavigationMenuMessage],
   handlers: (model: State) => ({
     GotNavigationMenuMessage: (
