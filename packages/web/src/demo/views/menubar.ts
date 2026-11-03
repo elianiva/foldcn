@@ -780,20 +780,28 @@ const SUB_ROWS: Partial<
 
 // Closes a bar menu together with its submenu. The submenu closes quietly (no
 // focus command) so focus is left to the menu that opens next.
+const quietClose = (menu: Menubar.Model): Menubar.Model => ({
+  ...menu,
+  isOpen: false,
+  maybeActiveItemIndex: Option.none(),
+})
+
 const closeBarMenu =
   (field: MenuField): Update.Step<State, AppMessage> =>
   (model) => {
     const subRow = SUB_ROWS[field]
+    // Each bar owns one submenu field, so branching on it keeps the update
+    // record typed without asserting on a computed key.
     const quiet: State =
       subRow === undefined
         ? model
-        : modifyFields(model, {
-            [subRow.sub]: () => ({
-              ...model[subRow.sub],
-              isOpen: false,
-              maybeActiveItemIndex: Option.none(),
-            }),
-          } as Partial<Record<typeof subRow.sub, () => Menubar.Model>>)
+        : subRow.sub === 'subFileShareMenu'
+          ? modifyFields(model, {
+              subFileShareMenu: () => quietClose(model.subFileShareMenu),
+            })
+          : modifyFields(model, {
+              subEditFindMenu: () => quietClose(model.subEditFindMenu),
+            })
     return menuStep(field, DemoMenu.close)(quiet)
   }
 
