@@ -889,7 +889,7 @@
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",
-      "description": "Menu styled for right-click use, built on the @foldkit/ui Menu submodel. ⚠ Opens on activation at a fixed anchor, not at the pointer — foldkit has no pointer-position anchor yet.",
+      "description": "Menu styled for right-click use, built on the @foldkit/ui Menu submodel. Opens at the pointer when the caller records the pointer position as maybePoint; keyboard open anchors to the trigger region.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {
