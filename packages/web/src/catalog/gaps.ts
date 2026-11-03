@@ -14,7 +14,7 @@ export const gapsByItem = {
     'Data-driven Foldkit API: provide stable item values and content instead of cmdk React children. CommandDialog uses Foldkit Dialog; nested pages and async fetching remain application-owned.',
   ],
   menubar: [
-    'Renders independent menus in a bar — no cross-menu keyboard traversal or open-on-hover of the next trigger.',
+    'Hover-to-switch and ArrowLeft/Right traversal are app-owned (wired in the bar’s update, via navigationAttributes) — the primitive has no menubar model. No submenu, checkbox, or radio item kinds.',
   ],
   'context-menu': [
     'Right-click opens the menu anchored to the trigger region — foldkit has no pointer-position anchoring primitive yet.',

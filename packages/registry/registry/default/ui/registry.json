@@ -902,7 +902,7 @@
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",
-      "description": "Horizontal bar of menus built on the @foldkit/ui Menu submodel. ⚠ Each trigger is an independent menu — no cross-menu arrow-key traversal yet.",
+      "description": "Horizontal bar of menus built on the @foldkit/ui Menu submodel. Ships navigationAttributes so the bar's owner can wire hover-to-switch and ArrowLeft/Right traversal across triggers.",
       "registryDependencies": ["@foldcn/utils"],
       "files": [
         {

@@ -1,14 +1,17 @@
-/** ⚠ BEHAVIOR GAP vs upstream shadcn: each trigger is an independent menu bundle — no ArrowLeft/Right traversal between menus and no open-on-hover-of-next-trigger.
- *  The styled surface matches, but this behavior is absent — do not use
- *  where that behavior is required.
- */
 /** Stateful submodel — import the whole module as a namespace and wire its
  *  Model/Message/init/update into your app:
  *  `import * as Menubar from '@/components/ui/menubar'`
  */
 import { Menu as FoldkitMenu } from '@foldkit/ui'
 import type { AnchorConfig } from '@foldkit/ui/menu'
-import { childAttributes, inertHtml, type Html, type HtmlBuilder } from 'foldkit/html'
+import {
+  childAttributes,
+  inertHtml,
+  type ChildAttribute,
+  type Html,
+  type HtmlBuilder,
+} from 'foldkit/html'
+import { Option } from 'effect'
 
 import { cn } from '@/lib/utils'
 
@@ -26,10 +29,13 @@ export type Message = typeof Message.Type
 export const OutMessage = FoldkitMenu.OutMessage
 export type OutMessage = typeof OutMessage.Type
 
-// foldcn gaps vs upstream (primitive ceiling — needs @foldkit/ui work): each
-// trigger is an independent Menu bundle — no cross-menu ArrowLeft/Right
-// traversal or open-on-hover-of-next-trigger (upstream Menubar primitive
-// behavior). No submenu/checkbox/radio item kinds (upstream MenubarSub,
+// Cross-menu behavior is app-owned: each trigger is still an independent Menu
+// bundle, so the bar's owner coordinates them. `navigationAttributes` emits the
+// trigger/panel events (hover on a trigger, ArrowLeft/Right) as parent
+// messages; the owner closes the open menu and opens the neighbour in its
+// update (see the web menubar demo slice for the reference wiring).
+// foldcn gaps vs upstream (primitive ceiling — needs @foldkit/ui work): no
+// submenu/checkbox/radio item kinds (upstream MenubarSub,
 // MenubarCheckboxItem, MenubarRadioGroup/Item) — the Menu primitive has flat
 // items + labeled groups only; demo state can toggle check/radio affordances
 // (see the web menubar demo). No per-item data-inset/data-variant attributes
@@ -123,6 +129,10 @@ export type MenubarViewInputsConfig<Item extends string> = Readonly<{
   itemGroupKey?: (item: Item, index: number) => string
   groupToHeading?: (groupKey: string) => GroupHeading | undefined
   triggerClass?: string
+  /** Extra trigger attributes, e.g. from `navigationAttributes`. */
+  triggerAttributes?: ReadonlyArray<ChildAttribute>
+  /** Extra panel attributes, e.g. from `navigationAttributes`. */
+  contentAttributes?: ReadonlyArray<ChildAttribute>
   itemsClass?: string
   itemClass?: string
   backdropClass?: string
@@ -162,15 +172,27 @@ export const viewInputs = <Item extends string>(
     ariaLabel: config.ariaLabel,
     ariaLabelledBy: config.ariaLabelledBy,
     buttonClassName: cn(menubarTriggerClass, config.triggerClass),
-    buttonAttributes: childAttributes([inertHtml.DataAttribute('slot', 'menubar-trigger')]),
+    buttonAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'menubar-trigger'),
+        // The primitive's backdrop covers the page and only lifts the OPEN
+        // trigger above it; lift every trigger so the others stay hoverable
+        // and clickable while a menu is open.
+        inertHtml.Style({ position: 'relative', zIndex: '1' }),
+      ]),
+      ...(config.triggerAttributes ?? []),
+    ],
     itemsClassName: cn(
       config.isAnimated !== false ? menubarContentAnimatedClass : menubarContentClass,
       config.itemsClass,
     ),
-    itemsAttributes: childAttributes([
-      inertHtml.DataAttribute('slot', 'menubar-content'),
-      inertHtml.DataAttribute('side', side),
-    ]),
+    itemsAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'menubar-content'),
+        inertHtml.DataAttribute('side', side),
+      ]),
+      ...(config.contentAttributes ?? []),
+    ],
     itemToConfig: (item, context) => {
       const { className, content } = config.itemToConfig(item, context)
       return { className: cn(menubarItemClass, config.itemClass, className), content }
@@ -188,3 +210,40 @@ export const viewInputs = <Item extends string>(
 /** Wrap a single menubar trigger's menu in the bar container. */
 export const menubar = <M>(children: ReadonlyArray<Html>, h: HtmlBuilder<M>): Html =>
   h.div([h.Class(cn(menubarClass)), h.DataAttribute('slot', 'menubar')], children)
+
+export type NavigationConfig<M> = Readonly<{
+  /** The builder of the view that renders the bar, so handlers dispatch to its owner. */
+  h: HtmlBuilder<M>
+  /** The pointer entered this trigger. */
+  onHoverTrigger: M
+  /** ArrowLeft/ArrowRight asked for the previous/next trigger. */
+  onStep: (direction: 'Previous' | 'Next') => M
+  /** Swap the arrow keys inside `dir="rtl"` bars. */
+  isRtl?: boolean
+}>
+
+export type NavigationAttributes = Readonly<{
+  triggerAttributes: ReadonlyArray<ChildAttribute>
+  contentAttributes: ReadonlyArray<ChildAttribute>
+}>
+
+/** Trigger/panel attributes that surface menubar navigation as owner
+ *  messages: hover on a trigger, and ArrowLeft/ArrowRight on a trigger or an
+ *  open panel. Spread the result into `viewInputs`. */
+export const navigationAttributes = <M>(config: NavigationConfig<M>): NavigationAttributes => {
+  const { h } = config
+  const [before, after] = config.isRtl
+    ? (['ArrowRight', 'ArrowLeft'] as const)
+    : (['ArrowLeft', 'ArrowRight'] as const)
+  const onKeyDown = h.OnKeyDownPreventDefault((key) =>
+    key === before
+      ? Option.some(config.onStep('Previous'))
+      : key === after
+        ? Option.some(config.onStep('Next'))
+        : Option.none(),
+  )
+  return {
+    triggerAttributes: childAttributes([h.OnMouseEnter(config.onHoverTrigger), onKeyDown]),
+    contentAttributes: childAttributes([onKeyDown]),
+  }
+}
