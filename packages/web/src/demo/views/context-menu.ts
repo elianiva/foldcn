@@ -1,16 +1,18 @@
 import { Update } from 'foldkit'
-import { Match as M, Option } from 'effect'
+import { Option } from 'effect'
 import { Schema as S } from 'effect'
 import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
 import type { Html, HtmlBuilder } from 'foldkit/html'
-import { Check, Clipboard, Copy, Scissors, Trash2 } from 'lucide'
+import { Clipboard, Copy, Scissors, Trash2 } from 'lucide'
 
 import { Menu as FoldkitMenu } from '@foldkit/ui'
 
 import * as ContextMenu from '../../generated/registry/ui/context-menu'
 import { icon } from '../../generated/registry/lib/icons'
 import { DemoMenu } from '../bundles'
+import { keepOpenOnSelect, subMenu } from '../menu-family'
+import { cn } from '../../generated/registry/lib/utils'
 
 import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
@@ -20,6 +22,9 @@ export const Message = defineMessageUnion({
   GotCtxIconsMenuMessage: { message: ContextMenu.Message },
   GotCtxTopMenuMessage: { message: ContextMenu.Message },
   RecordedCtxPoint: { maybePoint: S.Option(ContextMenu.Point) },
+  GotCtxBasicSubMenuMessage: { message: ContextMenu.Message },
+  OpenedCtxBasicSubMenu: {},
+  ClosedCtxBasicSubMenu: {},
 })
 
 // Sections mirror apps/v4/examples/base/context-menu-demo.tsx. Right-click on
@@ -28,22 +33,29 @@ export const Message = defineMessageUnion({
 // anchors to the pointer: pointerdown (right button, or touch/pen) records the
 // client point in `ctxPoint`, which moves the zero-size trigger there before
 // the menu opens. Keyboard open (Tab to the trigger, Enter/ArrowDown) has no
-// point and anchors to the region. Submenu/checkbox/radio rows render as flat
-// items with demo-owned state, as in the menu demo.
+// point and anchors to the region. Item kinds are foldcn-built over the
+// primitive's flat `{ className, content }` rows: the checkbox/radio rows keep
+// the panel open (`keepOpenOnSelect`), "More Tools" is a nested menu
+// (`subMenu`), and Delete uses the destructive row class. See menu-family.ts.
 
 const BASIC_ITEMS = [
   'Back',
   'Forward',
   'Reload',
+  'More Tools',
+  'Show Bookmarks',
+  'Show Full URLs',
+  'Pedro Duarte',
+  'Colm Tuite',
+] as const
+
+const BASIC_SUB_INDEX = BASIC_ITEMS.indexOf('More Tools')
+const BASIC_SUB_ITEMS = [
   'Save Page...',
   'Create Shortcut...',
   'Name Window...',
   'Developer Tools',
   'Delete',
-  'Show Bookmarks',
-  'Show Full URLs',
-  'Pedro Duarte',
-  'Colm Tuite',
 ] as const
 
 const BASIC_SHORTCUTS = new Map<string, string>([
@@ -54,14 +66,7 @@ const BASIC_SHORTCUTS = new Map<string, string>([
 
 const basicGroupKey = (item: string): string => {
   if (item === 'Back' || item === 'Forward' || item === 'Reload') return 'nav'
-  if (
-    item === 'Save Page...' ||
-    item === 'Create Shortcut...' ||
-    item === 'Name Window...' ||
-    item === 'Developer Tools' ||
-    item === 'Delete'
-  )
-    return 'tools'
+  if (item === 'More Tools') return 'tools'
   if (item === 'Show Bookmarks' || item === 'Show Full URLs') return 'appearance'
   return 'people'
 }
@@ -89,6 +94,7 @@ const fields = {
   ctxBasicMenu: ContextMenu.Model,
   ctxIconsMenu: ContextMenu.Model,
   ctxTopMenu: ContextMenu.Model,
+  ctxBasicSubMenu: ContextMenu.Model,
   showBookmarks: S.Boolean,
   showFullUrls: S.Boolean,
   person: S.String,
@@ -106,36 +112,42 @@ const basicCheckOn = (model: State, item: string): boolean => {
 
 const isBasicRadio = (item: string): boolean => item === 'Pedro Duarte' || item === 'Colm Tuite'
 
-const basicItemContent = (model: State, h: HtmlBuilder<AppMessage>, item: string): Html => {
-  const inner: Array<Html> = []
-  if (item === 'Show Bookmarks' || item === 'Show Full URLs' || isBasicRadio(item)) {
-    const on =
-      item === 'Show Bookmarks' || item === 'Show Full URLs'
-        ? basicCheckOn(model, item)
-        : model.person === item
-    inner.push(
-      h.span(
-        [h.Class('flex w-4 shrink-0 items-center justify-center')],
-        [...(on ? [icon(h, Check, 'size-4')] : [])],
-      ),
-    )
-  }
-  inner.push(h.span([], [item]))
+const basicItemConfig = (
+  model: State,
+  h: HtmlBuilder<AppMessage>,
+  item: string,
+): ContextMenu.ItemConfig => {
   const shortcut = BASIC_SHORTCUTS.get(item)
-  if (shortcut !== undefined) {
-    inner.push(h.span([h.Class(ContextMenu.contextMenuShortcutClass)], [shortcut]))
-  }
-  const destructive = item === 'Delete'
-  return h.span(
-    [
-      h.Class(
-        destructive
-          ? 'flex w-full items-center gap-2 text-destructive data-active:bg-destructive/10 data-active:text-destructive dark:data-active:bg-destructive/20 [&_svg]:text-destructive'
-          : 'flex w-full items-center gap-2',
+  if (item === 'Show Bookmarks' || item === 'Show Full URLs') {
+    return {
+      className: ContextMenu.contextMenuCheckboxItemClass,
+      content: h.span(
+        [h.Class('contents')],
+        [item, ContextMenu.contextMenuItemIndicator(h, basicCheckOn(model, item))],
       ),
-    ],
-    inner,
-  )
+    }
+  }
+  if (isBasicRadio(item)) {
+    return {
+      className: ContextMenu.contextMenuRadioItemClass,
+      content: h.span(
+        [h.Class('contents')],
+        [item, ContextMenu.contextMenuItemIndicator(h, model.person === item)],
+      ),
+    }
+  }
+  return {
+    content:
+      shortcut === undefined
+        ? h.span([], [item])
+        : h.span(
+            [h.Class('flex w-full items-center gap-2')],
+            [
+              h.span([], [item]),
+              h.span([h.Class(ContextMenu.contextMenuShortcutClass)], [shortcut]),
+            ],
+          ),
+  }
 }
 
 // Region wiring shared by the three demos: keydown clears the stale point so
@@ -194,15 +206,46 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                   buttonContent: h.span([], ['Right click here']),
                   itemsClass: 'w-48',
                   itemGroupKey: (item) => basicGroupKey(item),
-                  groupToHeading: (groupKey) => {
-                    // Upstream nests the tools under a "More Tools" submenu;
-                    // without a submenu primitive they render as a group.
-                    if (groupKey === 'tools') return { content: h.span([], ['More Tools']) }
-                    if (groupKey === 'people') return { content: h.span([], ['People']) }
-                    return undefined
-                  },
+                  groupToHeading: (groupKey) =>
+                    groupKey === 'people' ? { content: h.span([], ['People']) } : undefined,
                   isItemDisabled: (item) => item === 'Forward',
-                  itemToConfig: (item) => ({ content: basicItemContent(model, h, item) }),
+                  contentAttributes: basicSub.parentKeys(h, model, Message.OpenedCtxBasicSubMenu()),
+                  itemToConfig: (item) =>
+                    item === 'More Tools'
+                      ? {
+                          className: cn(
+                            ContextMenu.contextMenuSubTriggerClass,
+                            model.ctxBasicSubMenu.isOpen &&
+                              ContextMenu.contextMenuSubTriggerOpenClass,
+                          ),
+                          content: h.submodel({
+                            slotId: model.ctxBasicSubMenu.id,
+                            model: model.ctxBasicSubMenu,
+                            view: DemoMenu.view,
+                            viewInputs: ContextMenu.subViewInputs<string>({
+                              items: BASIC_SUB_ITEMS,
+                              buttonContent: h.span(
+                                [h.Class('flex w-full items-center')],
+                                [h.span([], [item]), ContextMenu.contextMenuSubTriggerChevron(h)],
+                              ),
+                              itemsClass: 'w-44',
+                              contentAttributes: basicSub.subKeys(
+                                h,
+                                Message.ClosedCtxBasicSubMenu(),
+                              ),
+                              itemToConfig: (subItem) =>
+                                subItem === 'Delete'
+                                  ? {
+                                      className: ContextMenu.contextMenuItemDestructiveClass,
+                                      content: h.span([], [subItem]),
+                                    }
+                                  : { content: h.span([], [subItem]) },
+                            }),
+                            toParentMessage: (message) =>
+                              Message.GotCtxBasicSubMenuMessage({ message }),
+                          }),
+                        }
+                      : basicItemConfig(model, h, item),
                 }),
                 toParentMessage: (message) => Message.GotCtxBasicMenuMessage({ message }),
               }),
@@ -243,10 +286,7 @@ export const contextMenuView = (model: Model, h: HtmlBuilder<AppMessage>): Html 
                   buttonContent: h.span([], ['Right click — Copy / Cut / Paste']),
                   itemsClass: 'w-44',
                   itemToConfig: (item) => ({
-                    className:
-                      item === 'Delete'
-                        ? 'text-destructive data-active:bg-destructive/10 data-active:text-destructive dark:data-active:bg-destructive/20 [&_svg]:text-destructive'
-                        : '',
+                    className: item === 'Delete' ? ContextMenu.contextMenuItemDestructiveClass : '',
                     content: h.span(
                       [h.Class('flex w-full items-center gap-2')],
                       [
@@ -309,36 +349,39 @@ const recordAction = (action: string) => (model: State) => ({
   model: modifyFields(model, { lastContextAction: () => action }),
 })
 
-const foldBasicOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({
-    Selected:
-      ({ value }) =>
-      (model) => ({
-        model: modifyFields(model, {
-          showBookmarks: () =>
-            value === 'Show Bookmarks' ? !model.showBookmarks : model.showBookmarks,
-          showFullUrls: () =>
-            value === 'Show Full URLs' ? !model.showFullUrls : model.showFullUrls,
-          person: () => (value === 'Pedro Duarte' || value === 'Colm Tuite' ? value : model.person),
-          lastContextAction: () => value,
-        }),
-      }),
-  }),
-)
+const foldActionOutMessage =
+  (prefix: string) =>
+  ({ value }: FoldkitMenu.OutMessage): Update.Step<State, AppMessage> =>
+    recordAction(`${prefix}: ${value}`)
 
-const foldActionOutMessage = (prefix: string) =>
-  M.type<FoldkitMenu.OutMessage>().pipe(
-    M.withReturnType<Update.Step<State, unknown>>(),
-    M.tagsExhaustive({ Selected: ({ value }) => recordAction(`${prefix}: ${value}`) }),
-  )
+// Checkbox/radio rows keep the panel open: the slice applies the toggle for
+// `SelectedItem` and never forwards it to the primitive (`keepOpenOnSelect`).
+const isKeptOpen = (value: string): boolean =>
+  value === 'Show Bookmarks' || value === 'Show Full URLs' || isBasicRadio(value)
 
-const foldCtxBasic = Update.foldChild({
-  update: DemoMenu.update,
-  read: (model: State) => Option.some(model.ctxBasicMenu),
-  write: (model, next) => modifyFields(model, { ctxBasicMenu: () => next }),
+const toggleBasic =
+  (value: string): Update.Step<State, AppMessage> =>
+  (model) => ({
+    model: modifyFields(model, {
+      showBookmarks: () =>
+        value === 'Show Bookmarks' ? !model.showBookmarks : model.showBookmarks,
+      showFullUrls: () => (value === 'Show Full URLs' ? !model.showFullUrls : model.showFullUrls),
+      person: () => (isBasicRadio(value) ? value : model.person),
+      lastContextAction: () => value,
+    }),
+  })
+
+// "More Tools" is the nested menu (menu-family.ts).
+const basicSub = subMenu<State, AppMessage>({
+  readParent: (model) => model.ctxBasicMenu,
+  writeParent: (model, next) => modifyFields(model, { ctxBasicMenu: () => next }),
+  readSub: (model) => model.ctxBasicSubMenu,
+  writeSub: (model, next) => modifyFields(model, { ctxBasicSubMenu: () => next }),
   toParentMessage: (message) => Message.GotCtxBasicMenuMessage({ message }),
-  foldOutMessage: foldBasicOutMessage,
+  toSubMessage: (message) => Message.GotCtxBasicSubMenuMessage({ message }),
+  subIndex: BASIC_SUB_INDEX,
+  foldParentSelected: foldActionOutMessage('Basic'),
+  foldSubSelected: foldActionOutMessage('More Tools'),
 })
 
 const foldCtxIcons = Update.foldChild({
@@ -362,6 +405,7 @@ export const slice = defineSlice({
   init: {
     ctxPoint: Option.none(),
     ctxBasicMenu: ContextMenu.init({ id: 'context-menu-basic' }),
+    ctxBasicSubMenu: ContextMenu.init({ id: 'context-menu-basic-sub', isAnimated: false }),
     ctxIconsMenu: ContextMenu.init({ id: 'context-menu-icons' }),
     ctxTopMenu: ContextMenu.init({ id: 'context-menu-top' }),
     showBookmarks: true,
@@ -374,17 +418,31 @@ export const slice = defineSlice({
     Message.GotCtxIconsMenuMessage,
     Message.GotCtxTopMenuMessage,
     Message.RecordedCtxPoint,
+    Message.GotCtxBasicSubMenuMessage,
+    Message.OpenedCtxBasicSubMenu,
+    Message.ClosedCtxBasicSubMenu,
   ],
   handlers: (model: State) => ({
     GotCtxBasicMenuMessage: (payload: typeof Message.GotCtxBasicMenuMessage.Type): UpdateReturn =>
-      foldCtxBasic(model, payload.message),
+      keepOpenOnSelect<State, AppMessage>({
+        items: BASIC_ITEMS,
+        readMenu: (state) => state.ctxBasicMenu,
+        isKept: isKeptOpen,
+        onSelected: toggleBasic,
+        forward: basicSub.handleParent,
+      })(model, payload.message),
     GotCtxIconsMenuMessage: (payload: typeof Message.GotCtxIconsMenuMessage.Type): UpdateReturn =>
       foldCtxIcons(model, payload.message),
     GotCtxTopMenuMessage: (payload: typeof Message.GotCtxTopMenuMessage.Type): UpdateReturn =>
       foldCtxTop(model, payload.message),
+    GotCtxBasicSubMenuMessage: (
+      payload: typeof Message.GotCtxBasicSubMenuMessage.Type,
+    ): UpdateReturn => basicSub.handleSub(model, payload.message),
     RecordedCtxPoint: (payload: typeof Message.RecordedCtxPoint.Type): UpdateReturn => ({
       model: modifyFields(model, { ctxPoint: () => payload.maybePoint }),
     }),
+    OpenedCtxBasicSubMenu: (): UpdateReturn => basicSub.openSub(model),
+    ClosedCtxBasicSubMenu: (): UpdateReturn => basicSub.closeSub(model),
   }),
   samples: [],
 })

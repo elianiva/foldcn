@@ -24,7 +24,12 @@ const FRUITS: ReadonlyArray<FruitItem> = [
   { value: 'blueberry', label: 'Blueberry' },
   { value: 'grapes', label: 'Grapes' },
   { value: 'pineapple', label: 'Pineapple' },
+  { value: 'carrot', label: 'Carrot' },
+  { value: 'broccoli', label: 'Broccoli' },
+  { value: 'spinach', label: 'Spinach' },
 ]
+
+const VEGETABLES = new Set(['carrot', 'broccoli', 'spinach'])
 
 export const selectView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
@@ -41,6 +46,9 @@ export const selectView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
             itemToValue: (item) => item.value,
             itemToLabel: (item) => item.label,
             label: 'Fruits',
+            itemGroupKey: (item) => (VEGETABLES.has(item.value) ? 'vegetables' : 'fruits'),
+            groupToLabel: (groupKey) => (groupKey === 'vegetables' ? 'Vegetables' : 'Fruits'),
+            isItemDisabled: (item) => item.value === 'grapes',
             placeholder: 'Select a fruit',
             triggerClass: 'w-full max-w-48',
           },

@@ -5,7 +5,16 @@
 import { Menu as FoldkitMenu } from '@foldkit/ui'
 import type { AnchorConfig } from '@foldkit/ui/menu'
 import { Option, Schema as S } from 'effect'
-import { childAttributes, inertHtml, type Html } from 'foldkit/html'
+import {
+  childAttributes,
+  inertHtml,
+  type ChildAttribute,
+  type Html,
+  type HtmlBuilder,
+} from 'foldkit/html'
+import { Check, ChevronRight } from 'lucide'
+
+import { icon } from '@/lib/icons'
 
 import { cn } from '@/lib/utils'
 
@@ -32,10 +41,15 @@ export type OutMessage = typeof OutMessage.Type
 
 // Remaining gaps vs upstream: items highlight via data-active (upstream
 // focus:) per the derivation mapping. The panel's data-side is emitted from
-// the anchor placement (foldkit anchors expose placement, not side). Flat item
-// path uses correct tokens/slots; per-item data-slot (context-menu-item etc)
-// cannot be stamped — primitive has no per-item attribute hook. Submenu/
-// checkbox/radio/destructive/inset kinds require primitive work.
+// the anchor placement (foldkit anchors expose placement, not side). Per-item
+// data-slot (context-menu-item etc) cannot be stamped — primitive has no
+// per-item attribute hook. The primitive's item config is `{ className, content }`
+// over one flat level, so item kinds are foldcn-owned: destructive/inset via
+// `contextMenuItemDestructiveClass` / `contextMenuItemInsetClass`; checkbox/radio
+// via `contextMenuItemIndicator` (keep the panel open by handling `SelectedItem`
+// yourself instead of forwarding it to `update`, which would close the menu);
+// submenus via a nested bundle built with `subViewInputs` that the consumer
+// slice opens/closes and key-coordinates (see the web menu demo).
 
 /** Viewport (client) coordinates of the pointer that requested the menu. */
 export const Point = S.Struct({ x: S.Number, y: S.Number })
@@ -78,7 +92,46 @@ export const contextMenuHeadingClass = 'cn-context-menu-label'
 export const contextMenuShortcutClass = 'cn-context-menu-shortcut'
 
 export const contextMenuSubTriggerClass =
-  'cn-context-menu-sub-trigger flex cursor-default items-center outline-hidden select-none [&_svg]:pointer-events-none [&_svg]:shrink-0'
+  'cn-context-menu-sub-trigger group/context-menu-item relative flex cursor-default items-center outline-hidden select-none data-active:bg-accent data-active:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+
+/** Highlight for the parent row while its submenu is open. */
+export const contextMenuSubTriggerOpenClass = 'bg-accent text-accent-foreground'
+
+/** Upstream `ContextMenuSubContent` string (the nested panel). */
+export const contextMenuSubContentClass =
+  'cn-context-menu-sub-content cn-menu-target cn-menu-translucent z-50 max-h-(--available-height) w-auto origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none'
+
+/** Row className for upstream `variant="destructive"`. */
+export const contextMenuItemDestructiveClass = 'cn-context-menu-item-destructive'
+
+/** Row className for upstream `inset`. */
+export const contextMenuItemInsetClass = 'cn-context-menu-item-inset'
+
+/** Upstream `ContextMenuCheckboxItem` / `ContextMenuRadioItem` strings, with
+ *  the foldkit highlight twin. */
+export const contextMenuCheckboxItemClass =
+  'cn-context-menu-checkbox-item data-active:bg-accent data-active:text-accent-foreground relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+
+export const contextMenuRadioItemClass =
+  'cn-context-menu-radio-item data-active:bg-accent data-active:text-accent-foreground relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+
+export const contextMenuItemIndicatorClass = 'cn-context-menu-item-indicator pointer-events-none'
+
+/** Check indicator for a checkbox or radio row: render it inside the row's
+ *  `content` (empty when unchecked) and give the row `contextMenuCheckboxItemClass`
+ *  / `contextMenuRadioItemClass`. */
+export const contextMenuItemIndicator = <M>(h: HtmlBuilder<M>, isChecked: boolean): Html =>
+  h.span(
+    [
+      h.Class(contextMenuItemIndicatorClass),
+      h.DataAttribute('slot', 'context-menu-item-indicator'),
+    ],
+    isChecked ? [icon(h, Check)] : [],
+  )
+
+/** Trailing chevron for a submenu trigger row. */
+export const contextMenuSubTriggerChevron = <M>(h: HtmlBuilder<M>): Html =>
+  icon(h, ChevronRight, 'cn-rtl-flip ml-auto size-4')
 
 export const contextMenuBackdropClass = 'fixed inset-0 z-0'
 
@@ -116,6 +169,11 @@ export type ContextMenuViewInputsConfig<Item extends string> = Readonly<{
   groupClass?: string
   ariaLabel?: string
   ariaLabelledBy?: string
+  /** Extra trigger attributes. Build them with `childAttributes` so handlers
+   *  dispatch through your own update. */
+  triggerAttributes?: ReadonlyArray<ChildAttribute>
+  /** Extra panel attributes (used for submenu ArrowRight/ArrowLeft). */
+  contentAttributes?: ReadonlyArray<ChildAttribute>
 }>
 
 /** Build styled `Menu.ViewInputs` for a context menu with foldcn's classes. */
@@ -151,25 +209,31 @@ export const viewInputs = <Item extends string>(
       Option.isSome(config.maybePoint ?? Option.none()) ? contextMenuTriggerAnchorClass : undefined,
       config.triggerClass,
     ),
-    buttonAttributes: childAttributes([
-      inertHtml.DataAttribute('slot', 'context-menu-trigger'),
-      // Replaces the primitive's open-state Style (position: relative) so the
-      // zero-size trigger sits at the pointer while the menu is open.
-      ...Option.match(config.maybePoint ?? Option.none(), {
-        onNone: () => [],
-        onSome: ({ x, y }) => [
-          inertHtml.Style({ position: 'fixed', left: `${x}px`, top: `${y}px`, zIndex: '1' }),
-        ],
-      }),
-    ]),
+    buttonAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'context-menu-trigger'),
+        // Replaces the primitive's open-state Style (position: relative) so the
+        // zero-size trigger sits at the pointer while the menu is open.
+        ...Option.match(config.maybePoint ?? Option.none(), {
+          onNone: () => [],
+          onSome: ({ x, y }) => [
+            inertHtml.Style({ position: 'fixed', left: `${x}px`, top: `${y}px`, zIndex: '1' }),
+          ],
+        }),
+      ]),
+      ...(config.triggerAttributes ?? []),
+    ],
     itemsClassName: cn(
       config.isAnimated !== false ? contextMenuItemsAnimatedClass : contextMenuItemsClass,
       config.itemsClass,
     ),
-    itemsAttributes: childAttributes([
-      inertHtml.DataAttribute('slot', 'context-menu-content'),
-      inertHtml.DataAttribute('side', side),
-    ]),
+    itemsAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'context-menu-content'),
+        inertHtml.DataAttribute('side', side),
+      ]),
+      ...(config.contentAttributes ?? []),
+    ],
     itemToConfig: (item, context) => {
       const { className, content } = config.itemToConfig(item, context)
       return { className: cn(contextMenuItemClass, config.itemClass, className), content }
@@ -183,5 +247,50 @@ export const viewInputs = <Item extends string>(
     backdropClassName: cn(contextMenuBackdropClass, config.backdropClass),
     className: cn(contextMenuWrapperClass, config.wrapperClass),
     attributes: childAttributes([inertHtml.DataAttribute('slot', 'context-menu')]),
+  }
+}
+
+// The trigger button sits inside the parent row (px-1.5) inside the parent
+// panel (p-1), so the gap clears both and the offset lines the first row up with
+// the trigger row (the sub panel's own p-1).
+export const CONTEXT_MENU_SUB_ANCHOR: AnchorConfig = {
+  placement: 'right-start',
+  gap: 14,
+  offset: -8,
+  padding: 8,
+}
+
+/** `viewInputs` for a nested menu, rendered as the `content` of a parent row.
+ *  The trigger is a full-width, pointer-transparent button: the parent row owns
+ *  the click (its `SelectedItem` message opens the submenu — handle it yourself, do not forward it) and the panel
+ *  anchors to the trigger. Pair it with `contextMenuSubTriggerClass` on the
+ *  parent row's className and `contextMenuSubTriggerChevron` in the trigger's
+ *  content. */
+export const subViewInputs = <Item extends string>(
+  config: ContextMenuViewInputsConfig<Item>,
+): ViewInputs<Item> => {
+  const anchor = config.anchor ?? CONTEXT_MENU_SUB_ANCHOR
+  const inputs = viewInputs({ wrapperClass: 'block w-full', ...config, anchor })
+  return {
+    ...inputs,
+    buttonClassName: cn(
+      'pointer-events-none flex w-full items-center gap-1.5',
+      config.triggerClass,
+    ),
+    buttonAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'context-menu-sub-trigger'),
+        inertHtml.Tabindex(-1),
+      ]),
+      ...(config.triggerAttributes ?? []),
+    ],
+    itemsClassName: cn(contextMenuSubContentClass, config.itemsClass),
+    itemsAttributes: [
+      ...childAttributes([
+        inertHtml.DataAttribute('slot', 'context-menu-sub-content'),
+        inertHtml.DataAttribute('side', anchor.placement?.split('-')[0] ?? 'right'),
+      ]),
+      ...(config.contentAttributes ?? []),
+    ],
   }
 }

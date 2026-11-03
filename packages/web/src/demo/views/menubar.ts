@@ -1,18 +1,20 @@
 import { Update } from 'foldkit'
-import { Match as M, Option } from 'effect'
+import { Option } from 'effect'
 import { Schema as S } from 'effect'
 import { modifyFields } from 'foldkit/struct'
 import { defineMessageUnion } from 'foldkit/message'
-import type { Html, HtmlBuilder } from 'foldkit/html'
+import type { ChildAttribute, Html, HtmlBuilder } from 'foldkit/html'
 
 import { Menu as FoldkitMenu } from '@foldkit/ui'
-import { Check, CircleHelp, File, Folder, Save, Settings, Trash2 } from 'lucide'
+import { CircleHelp, File, Folder, Save, Settings, Trash2 } from 'lucide'
 import type { IconNode } from 'lucide'
 
 import * as Menubar from '../../generated/registry/ui/menubar'
 import { icon } from '../../generated/registry/lib/icons'
 
 import { DemoMenu } from '../bundles'
+import { keepOpenOnSelect, subMenu } from '../menu-family'
+import { cn } from '../../generated/registry/lib/utils'
 
 import { defineSlice, type UpdateReturn } from '../slice'
 import type { Model, Message as AppMessage } from '../assemble'
@@ -43,17 +45,24 @@ export const Message = defineMessageUnion({
   GotIconFileMessage: { message: Menubar.Message },
   GotIconMoreMessage: { message: Menubar.Message },
   GotRtlFileMessage: { message: Menubar.Message },
+  GotSubFileShareMessage: { message: Menubar.Message },
+  OpenedSubFileShare: {},
+  ClosedSubFileShare: {},
+  GotSubEditFindMessage: { message: Menubar.Message },
+  OpenedSubEditFind: {},
+  ClosedSubEditFind: {},
   HoveredMenubarTrigger: { bar: BarName, index: S.Number },
   SteppedMenubar: { bar: BarName, index: S.Number, direction: S.Literals(['Previous', 'Next']) },
 })
 
 // Mirrors apps/v4/examples/base/menubar-*.tsx. Every bar below is a live menu:
 // keyboard nav, typeahead, disabled items, groups/separators, and selection
-// all work. Primitive-ceiling approximations (see the notes section at the
-// bottom of the view): submenus render as labeled groups (Share/Find), check
-// and radio rows toggle slice state on select (the menu closes — upstream
-// keeps it open), inset uses pl-7 (no per-item data-inset hook), and the
-// destructive Delete row uses text-destructive (no per-item data-variant hook).
+// all work. Item kinds are foldcn-built over the primitive's flat
+// `{ className, content }` rows: check and radio rows keep their menu open
+// (`keepOpenOnSelect`), the "With Submenu" bars nest a second menu (`subMenu`), and
+// inset/destructive rows use the foldcn row classes. See menu-family.ts. The
+// File/Edit bars in the first section still render Share/Find as labelled
+// groups.
 
 const shortcut = (h: HtmlBuilder<AppMessage>, text: string): Html =>
   h.span([h.Class(Menubar.menubarShortcutClass)], [text])
@@ -75,20 +84,14 @@ const checkRow = (
   h.span(
     [h.Class(rowClass)],
     [
-      h.span([h.Class(Menubar.menubarCheckboxItemIndicatorClass)], checked ? [icon(h, Check)] : []),
+      Menubar.menubarCheckboxIndicator(h, checked),
       label,
       ...(text === undefined ? [] : [shortcut(h, text)]),
     ],
   )
 
 const radioRow = (h: HtmlBuilder<AppMessage>, label: string, selected: boolean): Html =>
-  h.span(
-    [h.Class(rowClass)],
-    [
-      h.span([h.Class(Menubar.menubarRadioItemIndicatorClass)], selected ? [icon(h, Check)] : []),
-      label,
-    ],
-  )
+  h.span([h.Class(rowClass)], [Menubar.menubarRadioIndicator(h, selected), label])
 
 const iconRow = (
   h: HtmlBuilder<AppMessage>,
@@ -101,15 +104,30 @@ const iconRow = (
     [icon(h, iconNode), label, ...(text === undefined ? [] : [shortcut(h, text)])],
   )
 
-// Upstream menubar-demo.tsx items, in order. Inset rows (upstream `inset`)
-// add pl-7 — the token's data-inset:pl-7 never matches because the primitive
-// has no per-item attribute hook.
-const INSET = 'pl-7'
+// Upstream menubar-demo.tsx items, in order. Inset rows (upstream `inset`) use
+// the foldcn inset row class; check/radio rows use the checkbox/radio item
+// classes (indicator room on the left, highlight via data-active).
+const INSET = Menubar.menubarItemInsetClass
+const checkItemClass = Menubar.menubarCheckboxItemClass
+const radioItemClass = Menubar.menubarRadioItemClass
 
-// Checkbox/radio rows use the upstream checkbox/radio token classes (pl-7 room
-// for the indicator) plus the foldkit data-active highlight twin.
-const checkItemClass = `${Menubar.menubarCheckboxItemClass} data-active:bg-accent data-active:text-accent-foreground`
-const radioItemClass = `${Menubar.menubarRadioItemClass} data-active:bg-accent data-active:text-accent-foreground`
+const VIEW_ITEMS = [
+  'Bookmarks Bar',
+  'Full URLs',
+  'Reload',
+  'Force Reload',
+  'Toggle Fullscreen',
+  'Hide Sidebar',
+] as const
+const CHECK_VIEW_ITEMS = [
+  'Always Show Bookmarks Bar',
+  'Always Show Full URLs',
+  'Reload',
+  'Force Reload',
+] as const
+const PROFILE_ITEMS = ['Andy', 'Benoit', 'Luis', 'Edit...', 'Add Profile...'] as const
+const FORMAT_ITEMS = ['Strikethrough', 'Code', 'Superscript'] as const
+const THEME_ITEMS = ['Light', 'Dark', 'System'] as const
 
 const fileItems = [
   'New Tab',
@@ -188,6 +206,18 @@ const nav = (h: HtmlBuilder<AppMessage>, bar: BarName, index: number) =>
     onStep: (direction) => Message.SteppedMenubar({ bar, index, direction }),
   })
 
+// A submenu row's trigger menu also gets ArrowRight-opens-submenu on its panel;
+// merge that with the bar's own panel keys.
+const navWith = (
+  h: HtmlBuilder<AppMessage>,
+  bar: BarName,
+  index: number,
+  extraContent: ReadonlyArray<ChildAttribute>,
+) => {
+  const { triggerAttributes, contentAttributes } = nav(h, bar, index)
+  return { triggerAttributes, contentAttributes: [...contentAttributes, ...extraContent] }
+}
+
 export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
   h.div(
     [h.Class('flex w-full flex-col gap-8')],
@@ -234,14 +264,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
                 ...nav(h, 'demo', 2),
-                items: [
-                  'Bookmarks Bar',
-                  'Full URLs',
-                  'Reload',
-                  'Force Reload',
-                  'Toggle Fullscreen',
-                  'Hide Sidebar',
-                ],
+                items: [...VIEW_ITEMS],
                 buttonContent: h.span([], ['View']),
                 itemsClass: 'w-44',
                 itemToConfig: (item) => {
@@ -288,7 +311,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
                 ...nav(h, 'demo', 3),
-                items: ['Andy', 'Benoit', 'Luis', 'Edit...', 'Add Profile...'],
+                items: [...PROFILE_ITEMS],
                 buttonContent: h.span([], ['Profiles']),
                 itemToConfig: (item) => {
                   if (item === 'Edit...' || item === 'Add Profile...')
@@ -310,23 +333,47 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
         [h.Class('flex w-full flex-col gap-2')],
         [
           h.div([h.Class('px-1 text-xs font-medium text-muted-foreground')], ['With Submenu']),
-          h.p(
-            [h.Class('px-1 text-xs text-muted-foreground')],
-            ['Share and Find have no submenu primitive — they render as labeled groups.'],
-          ),
           bar(h, [
             h.submodel({
               slotId: model.subFileMenu.id,
               model: model.subFileMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
-                ...nav(h, 'submenu', 0),
-                items: ['Email link', 'Messages', 'Notes', 'Print...'],
+                ...navWith(
+                  h,
+                  'submenu',
+                  0,
+                  fileSub.parentKeys(h, model, Message.OpenedSubFileShare()),
+                ),
+                items: ['Share', 'Print...'],
                 buttonContent: h.span([], ['File']),
-                itemToConfig: (item) => ({ content: fileContent(h, item) }),
+                itemsClass: 'w-44',
                 itemGroupKey: (item) => (item === 'Print...' ? 'print' : 'share'),
-                groupToHeading: (groupKey) =>
-                  groupKey === 'share' ? { content: h.span([], ['Share']) } : undefined,
+                itemToConfig: (item) =>
+                  item === 'Share'
+                    ? {
+                        className: cn(
+                          Menubar.menubarSubTriggerClass,
+                          model.subFileShareMenu.isOpen && Menubar.menubarSubTriggerOpenClass,
+                        ),
+                        content: h.submodel({
+                          slotId: model.subFileShareMenu.id,
+                          model: model.subFileShareMenu,
+                          view: DemoMenu.view,
+                          viewInputs: Menubar.subViewInputs<string>({
+                            items: ['Email link', 'Messages', 'Notes'],
+                            buttonContent: h.span(
+                              [h.Class('flex w-full items-center')],
+                              [h.span([], [item]), Menubar.menubarSubTriggerChevron(h)],
+                            ),
+                            itemsClass: 'w-40',
+                            contentAttributes: fileSub.subKeys(h, Message.ClosedSubFileShare()),
+                            itemToConfig: (subItem) => ({ content: labelRow(h, subItem) }),
+                          }),
+                          toParentMessage: (message) => Message.GotSubFileShareMessage({ message }),
+                        }),
+                      }
+                    : { content: fileContent(h, item) },
               }),
               toParentMessage: (message) => Message.GotSubFileMessage({ message }),
             }),
@@ -335,22 +382,42 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               model: model.subEditMenu,
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
-                ...nav(h, 'submenu', 1),
-                items: [
-                  'Undo',
-                  'Redo',
-                  'Find...',
-                  'Find Next',
-                  'Find Previous',
-                  'Cut',
-                  'Copy',
-                  'Paste',
-                ],
+                ...navWith(
+                  h,
+                  'submenu',
+                  1,
+                  editSub.parentKeys(h, model, Message.OpenedSubEditFind()),
+                ),
+                items: ['Undo', 'Redo', 'Find', 'Cut', 'Copy', 'Paste'],
                 buttonContent: h.span([], ['Edit']),
-                itemToConfig: (item) => ({ content: editContent(h, item) }),
-                itemGroupKey: (item) => editGroupKey(item),
-                groupToHeading: (groupKey) =>
-                  groupKey === 'find' ? { content: h.span([], ['Find']) } : undefined,
+                itemsClass: 'w-44',
+                itemGroupKey: (item) =>
+                  item === 'Find' ? 'find' : item === 'Undo' || item === 'Redo' ? 'main' : 'action',
+                itemToConfig: (item) =>
+                  item === 'Find'
+                    ? {
+                        className: cn(
+                          Menubar.menubarSubTriggerClass,
+                          model.subEditFindMenu.isOpen && Menubar.menubarSubTriggerOpenClass,
+                        ),
+                        content: h.submodel({
+                          slotId: model.subEditFindMenu.id,
+                          model: model.subEditFindMenu,
+                          view: DemoMenu.view,
+                          viewInputs: Menubar.subViewInputs<string>({
+                            items: ['Search the web', 'Find...', 'Find Next', 'Find Previous'],
+                            buttonContent: h.span(
+                              [h.Class('flex w-full items-center')],
+                              [h.span([], [item]), Menubar.menubarSubTriggerChevron(h)],
+                            ),
+                            itemsClass: 'w-44',
+                            contentAttributes: editSub.subKeys(h, Message.ClosedSubEditFind()),
+                            itemToConfig: (subItem) => ({ content: labelRow(h, subItem) }),
+                          }),
+                          toParentMessage: (message) => Message.GotSubEditFindMessage({ message }),
+                        }),
+                      }
+                    : { content: editContent(h, item) },
               }),
               toParentMessage: (message) => Message.GotSubEditMessage({ message }),
             }),
@@ -368,12 +435,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
                 ...nav(h, 'checkbox', 0),
-                items: [
-                  'Always Show Bookmarks Bar',
-                  'Always Show Full URLs',
-                  'Reload',
-                  'Force Reload',
-                ],
+                items: [...CHECK_VIEW_ITEMS],
                 buttonContent: h.span([], ['View']),
                 itemsClass: 'w-64',
                 itemToConfig: (item) => {
@@ -412,7 +474,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
                 ...nav(h, 'checkbox', 1),
-                items: ['Strikethrough', 'Code', 'Superscript'],
+                items: [...FORMAT_ITEMS],
                 buttonContent: h.span([], ['Format']),
                 itemToConfig: (item) => ({
                   className: checkItemClass,
@@ -435,7 +497,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
                 ...nav(h, 'radio', 0),
-                items: ['Andy', 'Benoit', 'Luis', 'Edit...', 'Add Profile...'],
+                items: [...PROFILE_ITEMS],
                 buttonContent: h.span([], ['Profiles']),
                 itemToConfig: (item) => {
                   if (item === 'Edit...' || item === 'Add Profile...')
@@ -456,7 +518,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               view: DemoMenu.view,
               viewInputs: Menubar.viewInputs<string>({
                 ...nav(h, 'radio', 1),
-                items: ['Light', 'Dark', 'System'],
+                items: [...THEME_ITEMS],
                 buttonContent: h.span([], ['Theme']),
                 itemToConfig: (item) => ({
                   className: radioItemClass,
@@ -518,7 +580,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
                       return { content: iconRow(h, CircleHelp, 'Help') }
                     default:
                       return {
-                        className: 'text-destructive',
+                        className: Menubar.menubarItemDestructiveClass,
                         content: iconRow(h, Trash2, 'Delete'),
                       }
                   }
@@ -577,13 +639,7 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
               h.li(
                 [],
                 [
-                  'Submenus (Share, Find) render as labeled groups; checkbox and radio rows toggle state on select and the menu closes (upstream keeps it open).',
-                ],
-              ),
-              h.li(
-                [],
-                [
-                  'Inset rows use pl-7 and Delete uses text-destructive — the primitive has no per-item data-inset/data-variant hook.',
+                  'Submenus open on click, Enter/Space, or ArrowRight (not on hover); checkbox and radio rows keep the menu open.',
                 ],
               ),
             ],
@@ -593,72 +649,60 @@ export const menubarView = (model: Model, h: HtmlBuilder<AppMessage>): Html =>
     ],
   )
 
-const foldNoOp =
-  <Out>(): ((out: Out) => Update.Step<State, unknown>) =>
-  () =>
-  (model) => ({ model })
-
-const foldIgnoredOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({ Selected: foldNoOp() }),
-)
+const foldIgnored = (): Update.Step<State, AppMessage> => (model) => ({ model })
 
 // Bookmarks/Full URLs checkboxes (demo-bar View + checkbox-section View share
 // state — labels differ, values map to the same flags).
-const foldCheckOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({
-    Selected:
-      ({ value }) =>
-      (model) =>
-        value === 'Bookmarks Bar' || value === 'Always Show Bookmarks Bar'
-          ? { model: modifyFields(model, { showBookmarks: () => !model.showBookmarks }) }
-          : value === 'Full URLs' || value === 'Always Show Full URLs'
-            ? { model: modifyFields(model, { showFullUrls: () => !model.showFullUrls }) }
-            : { model },
-  }),
-)
+const isCheckRow = (value: string): boolean =>
+  value.includes('Bookmarks') || value.includes('Full URLs')
 
-const foldFormatOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({
-    Selected:
-      ({ value }) =>
-      (model) => ({
-        model: modifyFields(model, {
-          checkedFormats: () =>
-            model.checkedFormats.includes(value)
-              ? model.checkedFormats.filter((entry) => entry !== value)
-              : [...model.checkedFormats, value],
-        }),
-      }),
-  }),
-)
+const isProfileRow = (value: string): boolean => value !== 'Edit...' && value !== 'Add Profile...'
 
-const foldProfileOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({
-    Selected:
-      ({ value }) =>
-      (model) => ({
-        model: modifyFields(model, { profile: () => value }),
-      }),
-  }),
-)
+const applyCheck = (model: State, value: string): State =>
+  value === 'Bookmarks Bar' || value === 'Always Show Bookmarks Bar'
+    ? modifyFields(model, { showBookmarks: () => !model.showBookmarks })
+    : value === 'Full URLs' || value === 'Always Show Full URLs'
+      ? modifyFields(model, { showFullUrls: () => !model.showFullUrls })
+      : model
 
-const foldThemeOutMessage = M.type<FoldkitMenu.OutMessage>().pipe(
-  M.withReturnType<Update.Step<State, unknown>>(),
-  M.tagsExhaustive({
-    Selected:
-      ({ value }) =>
-      (model) => ({
-        model: modifyFields(model, { theme: () => value }),
-      }),
-  }),
-)
+const applyFormat = (model: State, value: string): State =>
+  modifyFields(model, {
+    checkedFormats: () =>
+      model.checkedFormats.includes(value)
+        ? model.checkedFormats.filter((entry) => entry !== value)
+        : [...model.checkedFormats, value],
+  })
 
-// One foldChild per menu field (mirrors the menu slice shape) — the read/write
-// pair below is per-field so inference stays on the proven path.
+const applyProfile = (model: State, value: string): State =>
+  modifyFields(model, { profile: () => value })
+
+const applyTheme = (model: State, value: string): State =>
+  modifyFields(model, { theme: () => value })
+
+// "With Submenu" bars: File › Share and Edit › Find (see menu-family.ts).
+const fileSub = subMenu<State, AppMessage>({
+  readParent: (model) => model.subFileMenu,
+  writeParent: (model, next) => modifyFields(model, { subFileMenu: () => next }),
+  readSub: (model) => model.subFileShareMenu,
+  writeSub: (model, next) => modifyFields(model, { subFileShareMenu: () => next }),
+  toParentMessage: (message) => Message.GotSubFileMessage({ message }),
+  toSubMessage: (message) => Message.GotSubFileShareMessage({ message }),
+  subIndex: 0,
+  foldParentSelected: foldIgnored,
+  foldSubSelected: foldIgnored,
+})
+
+const editSub = subMenu<State, AppMessage>({
+  readParent: (model) => model.subEditMenu,
+  writeParent: (model, next) => modifyFields(model, { subEditMenu: () => next }),
+  readSub: (model) => model.subEditFindMenu,
+  writeSub: (model, next) => modifyFields(model, { subEditFindMenu: () => next }),
+  toParentMessage: (message) => Message.GotSubEditMessage({ message }),
+  toSubMessage: (message) => Message.GotSubEditFindMessage({ message }),
+  subIndex: 2,
+  foldParentSelected: foldIgnored,
+  foldSubSelected: foldIgnored,
+})
 
 const fields = {
   fileMenu: Menubar.Model,
@@ -667,6 +711,8 @@ const fields = {
   profilesMenu: Menubar.Model,
   subFileMenu: Menubar.Model,
   subEditMenu: Menubar.Model,
+  subFileShareMenu: Menubar.Model,
+  subEditFindMenu: Menubar.Model,
   checkViewMenu: Menubar.Model,
   checkFormatMenu: Menubar.Model,
   radioProfilesMenu: Menubar.Model,
@@ -710,7 +756,7 @@ const menuStep = (
     read: (state: State) => Option.some(state[field]),
     write: (state, next) => ({ ...state, [field]: next }),
     toParentMessage: (message) => menuMessages[field]({ message }),
-    foldOutMessage: foldIgnoredOutMessage,
+    foldOutMessage: foldIgnored,
   })
 
 const openMenu = (field: MenuField, maybeActiveItemIndex: Option.Option<number>) =>
@@ -724,6 +770,41 @@ const focusTrigger = (field: MenuField) =>
     commands: [FoldkitMenu.FocusButton({ id: menu.id })],
   }))
 
+// A bar menu with a submenu row: the row's position and the nested menu.
+const SUB_ROWS: Partial<
+  Record<MenuField, { index: number; sub: 'subFileShareMenu' | 'subEditFindMenu' }>
+> = {
+  subFileMenu: { index: 0, sub: 'subFileShareMenu' },
+  subEditMenu: { index: 2, sub: 'subEditFindMenu' },
+}
+
+// Closes a bar menu together with its submenu. The submenu closes quietly (no
+// focus command) so focus is left to the menu that opens next.
+const quietClose = (menu: Menubar.Model): Menubar.Model => ({
+  ...menu,
+  isOpen: false,
+  maybeActiveItemIndex: Option.none(),
+})
+
+const closeBarMenu =
+  (field: MenuField): Update.Step<State, AppMessage> =>
+  (model) => {
+    const subRow = SUB_ROWS[field]
+    // Each bar owns one submenu field, so branching on it keeps the update
+    // record typed without asserting on a computed key.
+    const quiet: State =
+      subRow === undefined
+        ? model
+        : subRow.sub === 'subFileShareMenu'
+          ? modifyFields(model, {
+              subFileShareMenu: () => quietClose(model.subFileShareMenu),
+            })
+          : modifyFields(model, {
+              subEditFindMenu: () => quietClose(model.subEditFindMenu),
+            })
+    return menuStep(field, DemoMenu.close)(quiet)
+  }
+
 // Hovering another trigger while a menu is open moves the open menu over.
 const hoverTrigger = (model: State, bar: BarName, index: number): UpdateReturn => {
   const fieldsInBar: ReadonlyArray<MenuField> = bars[bar]
@@ -732,9 +813,7 @@ const hoverTrigger = (model: State, bar: BarName, index: number): UpdateReturn =
   const hasOtherOpen = fieldsInBar.some((field) => field !== target && model[field].isOpen)
   if (!hasOtherOpen || model[target].isOpen) return { model }
   return Update.combine(model, [
-    ...fieldsInBar
-      .filter((field) => field !== target)
-      .map((field) => menuStep(field, DemoMenu.close)),
+    ...fieldsInBar.filter((field) => field !== target).map(closeBarMenu),
     openMenu(target, Option.none()),
   ])
 }
@@ -751,12 +830,22 @@ const stepBar = (
   const count = fieldsInBar.length
   const target = fieldsInBar[(index + (direction === 'Next' ? 1 : count - 1)) % count]
   if (target === undefined || target === fieldsInBar[index]) return { model }
+  // ArrowRight on a submenu row opens the submenu (see parentKeys); it must
+  // not also hand over to the next menu.
+  const current = fieldsInBar[index]
+  const subRow = current === undefined ? undefined : SUB_ROWS[current]
+  if (
+    direction === 'Next' &&
+    current !== undefined &&
+    subRow !== undefined &&
+    (model[subRow.sub].isOpen ||
+      Option.exists(model[current].maybeActiveItemIndex, (active) => active === subRow.index))
+  )
+    return { model }
   if (!fieldsInBar.some((field) => model[field].isOpen))
     return Update.combine(model, [focusTrigger(target)])
   return Update.combine(model, [
-    ...fieldsInBar
-      .filter((field) => field !== target)
-      .map((field) => menuStep(field, DemoMenu.close)),
+    ...fieldsInBar.filter((field) => field !== target).map(closeBarMenu),
     openMenu(target, Option.some(0)),
   ])
 }
@@ -770,6 +859,8 @@ export const slice = defineSlice({
     profilesMenu: Menubar.init({ id: 'menubar-profiles' }),
     subFileMenu: Menubar.init({ id: 'menubar-sub-file' }),
     subEditMenu: Menubar.init({ id: 'menubar-sub-edit' }),
+    subFileShareMenu: Menubar.init({ id: 'menubar-sub-file-share', isAnimated: false }),
+    subEditFindMenu: Menubar.init({ id: 'menubar-sub-edit-find', isAnimated: false }),
     checkViewMenu: Menubar.init({ id: 'menubar-check-view' }),
     checkFormatMenu: Menubar.init({ id: 'menubar-check-format' }),
     radioProfilesMenu: Menubar.init({ id: 'menubar-radio-profiles' }),
@@ -797,6 +888,12 @@ export const slice = defineSlice({
     Message.GotIconFileMessage,
     Message.GotIconMoreMessage,
     Message.GotRtlFileMessage,
+    Message.GotSubFileShareMessage,
+    Message.OpenedSubFileShare,
+    Message.ClosedSubFileShare,
+    Message.GotSubEditFindMessage,
+    Message.OpenedSubEditFind,
+    Message.ClosedSubEditFind,
     Message.HoveredMenubarTrigger,
     Message.SteppedMenubar,
   ],
@@ -813,7 +910,7 @@ export const slice = defineSlice({
         read: (state: State) => Option.some(state.fileMenu),
         write: (state, next) => modifyFields(state, { fileMenu: () => next }),
         toParentMessage: (message) => Message.GotFileMessage({ message }),
-        foldOutMessage: foldIgnoredOutMessage,
+        foldOutMessage: foldIgnored,
       })(model, payload.message),
     GotEditMessage: (payload: typeof Message.GotEditMessage.Type): UpdateReturn =>
       Update.foldChild({
@@ -821,71 +918,101 @@ export const slice = defineSlice({
         read: (state: State) => Option.some(state.editMenu),
         write: (state, next) => modifyFields(state, { editMenu: () => next }),
         toParentMessage: (message) => Message.GotEditMessage({ message }),
-        foldOutMessage: foldIgnoredOutMessage,
+        foldOutMessage: foldIgnored,
       })(model, payload.message),
     GotViewMessage: (payload: typeof Message.GotViewMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.viewMenu),
-        write: (state, next) => modifyFields(state, { viewMenu: () => next }),
-        toParentMessage: (message) => Message.GotViewMessage({ message }),
-        foldOutMessage: foldCheckOutMessage,
+      keepOpenOnSelect<State, AppMessage>({
+        items: VIEW_ITEMS,
+        readMenu: (state) => state.viewMenu,
+        isKept: isCheckRow,
+        onSelected: (value) => (state) => ({ model: applyCheck(state, value) }),
+        forward: (state, message) =>
+          Update.foldChild({
+            update: DemoMenu.update,
+            read: (current: State) => Option.some(current.viewMenu),
+            write: (current, next) => modifyFields(current, { viewMenu: () => next }),
+            toParentMessage: (inner) => Message.GotViewMessage({ message: inner }),
+            foldOutMessage: foldIgnored,
+          })(state, message),
       })(model, payload.message),
     GotProfilesMessage: (payload: typeof Message.GotProfilesMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.profilesMenu),
-        write: (state, next) => modifyFields(state, { profilesMenu: () => next }),
-        toParentMessage: (message) => Message.GotProfilesMessage({ message }),
-        foldOutMessage: foldProfileOutMessage,
+      keepOpenOnSelect<State, AppMessage>({
+        items: PROFILE_ITEMS,
+        readMenu: (state) => state.profilesMenu,
+        isKept: isProfileRow,
+        onSelected: (value) => (state) => ({ model: applyProfile(state, value) }),
+        forward: (state, message) =>
+          Update.foldChild({
+            update: DemoMenu.update,
+            read: (current: State) => Option.some(current.profilesMenu),
+            write: (current, next) => modifyFields(current, { profilesMenu: () => next }),
+            toParentMessage: (inner) => Message.GotProfilesMessage({ message: inner }),
+            foldOutMessage: foldIgnored,
+          })(state, message),
       })(model, payload.message),
     GotSubFileMessage: (payload: typeof Message.GotSubFileMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.subFileMenu),
-        write: (state, next) => modifyFields(state, { subFileMenu: () => next }),
-        toParentMessage: (message) => Message.GotSubFileMessage({ message }),
-        foldOutMessage: foldIgnoredOutMessage,
-      })(model, payload.message),
+      fileSub.handleParent(model, payload.message),
     GotSubEditMessage: (payload: typeof Message.GotSubEditMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.subEditMenu),
-        write: (state, next) => modifyFields(state, { subEditMenu: () => next }),
-        toParentMessage: (message) => Message.GotSubEditMessage({ message }),
-        foldOutMessage: foldIgnoredOutMessage,
-      })(model, payload.message),
+      editSub.handleParent(model, payload.message),
     GotCheckViewMessage: (payload: typeof Message.GotCheckViewMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.checkViewMenu),
-        write: (state, next) => modifyFields(state, { checkViewMenu: () => next }),
-        toParentMessage: (message) => Message.GotCheckViewMessage({ message }),
-        foldOutMessage: foldCheckOutMessage,
+      keepOpenOnSelect<State, AppMessage>({
+        items: CHECK_VIEW_ITEMS,
+        readMenu: (state) => state.checkViewMenu,
+        isKept: isCheckRow,
+        onSelected: (value) => (state) => ({ model: applyCheck(state, value) }),
+        forward: (state, message) =>
+          Update.foldChild({
+            update: DemoMenu.update,
+            read: (current: State) => Option.some(current.checkViewMenu),
+            write: (current, next) => modifyFields(current, { checkViewMenu: () => next }),
+            toParentMessage: (inner) => Message.GotCheckViewMessage({ message: inner }),
+            foldOutMessage: foldIgnored,
+          })(state, message),
       })(model, payload.message),
     GotCheckFormatMessage: (payload: typeof Message.GotCheckFormatMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.checkFormatMenu),
-        write: (state, next) => modifyFields(state, { checkFormatMenu: () => next }),
-        toParentMessage: (message) => Message.GotCheckFormatMessage({ message }),
-        foldOutMessage: foldFormatOutMessage,
+      keepOpenOnSelect<State, AppMessage>({
+        items: FORMAT_ITEMS,
+        readMenu: (state) => state.checkFormatMenu,
+        isKept: () => true,
+        onSelected: (value) => (state) => ({ model: applyFormat(state, value) }),
+        forward: (state, message) =>
+          Update.foldChild({
+            update: DemoMenu.update,
+            read: (current: State) => Option.some(current.checkFormatMenu),
+            write: (current, next) => modifyFields(current, { checkFormatMenu: () => next }),
+            toParentMessage: (inner) => Message.GotCheckFormatMessage({ message: inner }),
+            foldOutMessage: foldIgnored,
+          })(state, message),
       })(model, payload.message),
     GotRadioProfilesMessage: (payload: typeof Message.GotRadioProfilesMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.radioProfilesMenu),
-        write: (state, next) => modifyFields(state, { radioProfilesMenu: () => next }),
-        toParentMessage: (message) => Message.GotRadioProfilesMessage({ message }),
-        foldOutMessage: foldProfileOutMessage,
+      keepOpenOnSelect<State, AppMessage>({
+        items: PROFILE_ITEMS,
+        readMenu: (state) => state.radioProfilesMenu,
+        isKept: isProfileRow,
+        onSelected: (value) => (state) => ({ model: applyProfile(state, value) }),
+        forward: (state, message) =>
+          Update.foldChild({
+            update: DemoMenu.update,
+            read: (current: State) => Option.some(current.radioProfilesMenu),
+            write: (current, next) => modifyFields(current, { radioProfilesMenu: () => next }),
+            toParentMessage: (inner) => Message.GotRadioProfilesMessage({ message: inner }),
+            foldOutMessage: foldIgnored,
+          })(state, message),
       })(model, payload.message),
     GotRadioThemeMessage: (payload: typeof Message.GotRadioThemeMessage.Type): UpdateReturn =>
-      Update.foldChild({
-        update: DemoMenu.update,
-        read: (state: State) => Option.some(state.radioThemeMenu),
-        write: (state, next) => modifyFields(state, { radioThemeMenu: () => next }),
-        toParentMessage: (message) => Message.GotRadioThemeMessage({ message }),
-        foldOutMessage: foldThemeOutMessage,
+      keepOpenOnSelect<State, AppMessage>({
+        items: THEME_ITEMS,
+        readMenu: (state) => state.radioThemeMenu,
+        isKept: () => true,
+        onSelected: (value) => (state) => ({ model: applyTheme(state, value) }),
+        forward: (state, message) =>
+          Update.foldChild({
+            update: DemoMenu.update,
+            read: (current: State) => Option.some(current.radioThemeMenu),
+            write: (current, next) => modifyFields(current, { radioThemeMenu: () => next }),
+            toParentMessage: (inner) => Message.GotRadioThemeMessage({ message: inner }),
+            foldOutMessage: foldIgnored,
+          })(state, message),
       })(model, payload.message),
     GotIconFileMessage: (payload: typeof Message.GotIconFileMessage.Type): UpdateReturn =>
       Update.foldChild({
@@ -893,7 +1020,7 @@ export const slice = defineSlice({
         read: (state: State) => Option.some(state.iconFileMenu),
         write: (state, next) => modifyFields(state, { iconFileMenu: () => next }),
         toParentMessage: (message) => Message.GotIconFileMessage({ message }),
-        foldOutMessage: foldIgnoredOutMessage,
+        foldOutMessage: foldIgnored,
       })(model, payload.message),
     GotIconMoreMessage: (payload: typeof Message.GotIconMoreMessage.Type): UpdateReturn =>
       Update.foldChild({
@@ -901,7 +1028,7 @@ export const slice = defineSlice({
         read: (state: State) => Option.some(state.iconMoreMenu),
         write: (state, next) => modifyFields(state, { iconMoreMenu: () => next }),
         toParentMessage: (message) => Message.GotIconMoreMessage({ message }),
-        foldOutMessage: foldIgnoredOutMessage,
+        foldOutMessage: foldIgnored,
       })(model, payload.message),
     GotRtlFileMessage: (payload: typeof Message.GotRtlFileMessage.Type): UpdateReturn =>
       Update.foldChild({
@@ -909,8 +1036,16 @@ export const slice = defineSlice({
         read: (state: State) => Option.some(state.rtlFileMenu),
         write: (state, next) => modifyFields(state, { rtlFileMenu: () => next }),
         toParentMessage: (message) => Message.GotRtlFileMessage({ message }),
-        foldOutMessage: foldIgnoredOutMessage,
+        foldOutMessage: foldIgnored,
       })(model, payload.message),
+    GotSubFileShareMessage: (payload: typeof Message.GotSubFileShareMessage.Type): UpdateReturn =>
+      fileSub.handleSub(model, payload.message),
+    OpenedSubFileShare: (): UpdateReturn => fileSub.openSub(model),
+    ClosedSubFileShare: (): UpdateReturn => fileSub.closeSub(model),
+    GotSubEditFindMessage: (payload: typeof Message.GotSubEditFindMessage.Type): UpdateReturn =>
+      editSub.handleSub(model, payload.message),
+    OpenedSubEditFind: (): UpdateReturn => editSub.openSub(model),
+    ClosedSubEditFind: (): UpdateReturn => editSub.closeSub(model),
   }),
   samples: [],
 })
