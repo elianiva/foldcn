@@ -21,20 +21,20 @@
     "typecheck": "tsrs --noEmit"
   },
   "devDependencies": {
-    "@foldkit/ui": "^0.169.0",
-    "@tanstack/highlight": "^1.2.0",
+    "@foldkit/ui": "^0.171.0",
+    "@tanstack/highlight": "^1.2.12",
     "@types/d3-shape": "^3.2.0",
-    "@types/node": "^26.6.5",
-    "cn": "^0.5.0",
-    "d3-shape": "^3.2.0",
-    "effect": "4.0.0",
+    "@types/node": "^26.6.6",
+    "cn": "^0.5.2",
+    "d3-shape": "^3.2.1",
+    "effect": "4.1.4",
     "embla-carousel": "^8.6.0",
-    "foldkit": "^0.169.0",
-    "lucide": "^1.61.0",
-    "postcss": "^8.5.31",
-    "postcss-selector-parser": "^7.1.7",
+    "foldkit": "^0.171.0",
+    "lucide": "^1.74.0",
+    "postcss": "^8.5.33",
+    "postcss-selector-parser": "^7.2.1",
     "ts-morph": "^28.0.0",
-    "tsrs": "0.18.0-ts7.1.0-dev.20260929",
+    "tsrs": "7.1.0-beta.tsrs2",
     "typescript": "^7.0.2"
   }
 }

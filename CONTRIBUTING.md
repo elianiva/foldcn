@@ -4,7 +4,7 @@ Thanks for picking this up! This doc covers the implicit stuff like the gotchas 
 
 ## Prerequisites
 
-- Node ≥ 20, pnpm 11+
+- Node ≥ 22.19, pnpm 12+
 
 ```bash
 git clone git@github.com:elianiva/foldcn.git
@@ -41,12 +41,15 @@ For local dev / typecheck / tests, the web's `predev`/`prebuild` hooks re-resolv
 
 ```bash
 pnpm dev          # showcase site
+pnpm lint         # Oxlint, type-aware through tsrs
 pnpm typecheck
 pnpm test
 pnpm validate     # registry schema check
 ```
 
 `typecheck` runs `tsrs`, a drop-in `tsc` replacement. It is the Rust port of the TypeScript 7 compiler, shipped as an experimental prerelease that pins its own TypeScript port. If `tsrs` reports an error that `tsc` accepts, inference at that call site is fragile. Name the type argument or annotate the callback instead of dropping the check. See `Command.input<Message>` in `command.ts`.
+
+`lint` runs Oxlint through Vite+ and uses the same `tsrs` build as the backend for type-aware rules. Keep the `tsrs` pins in both packages aligned with the version `vite-plus` ships in `pnpm-lock.yaml`.
 
 ## Adding a component
 

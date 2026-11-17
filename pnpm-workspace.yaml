@@ -7,14 +7,12 @@ allowBuilds:
   msgpackr-extract: true
   sharp: true
   workerd: true
-# Foldkit 0.169 pins Effect and @effect/platform-browser to 4.0.0 exactly.
-# Keep Alchemy's optional Effect integrations on that same release; otherwise
-# pnpm selects 4.0.6, which does not satisfy Foldkit's exact Effect peer.
-# @effect/vitest is unused and its current release requires Effect ^4.0.6.
-# The Effect pin also caps Alchemy at 2.0.0-beta.83; beta.84 requires Effect
-# ^4.0.5. Move both together when Foldkit widens its Effect peer.
+# Foldkit 0.171 pins effect and @effect/platform-browser to the 4.1 line.
+# Keep Alchemy and the Effect platform packages on that same release; a
+# separate 4.0 copy cannot satisfy Foldkit's ~4.1.0 peer.
+# @effect/vitest is unused and its current release requires effect ^4.1.4.
+# Alchemy's Cloudflare runtime accepts unenv ^2.0.0-rc.24, but its
+# @cloudflare/unenv-preset peer is pinned to rc.24. Keep the pair together.
 overrides:
-  '@effect/platform-node@4.0.0>@effect/platform-node-shared': 4.0.0
-  '@effect/sql-d1': 4.0.0
-  '@effect/sql-sqlite-do': 4.0.0
   '@effect/vitest': '-'
+  unenv: 2.0.0-rc.24

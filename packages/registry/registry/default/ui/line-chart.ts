@@ -577,10 +577,7 @@ export const LineChart = <M>(props: LineChartProps<M>, h: HtmlBuilder<M>): Html 
       ? coordinate(value, domain[0], domain[1], left, right)
       : coordinate(value, domain[0], domain[1], bottom, top)
   const numericTicks = numericAxis?.ticks ?? ticks(domain, numericAxis?.tickCount ?? 5)
-  const lineValuePosition = (
-    child: Extract<ChartChild, { kind: 'line' }>,
-    value: number,
-  ): number =>
+  const lineValuePosition = (child: Extract<ChartChild, { kind: 'line' }>, value: number): number =>
     !vertical &&
     dualAxes &&
     rightAxis !== undefined &&
