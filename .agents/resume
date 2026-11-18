@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Oxlint reserves a 4 GiB arena per worker (oxc-project/oxc#20331). The orb's
+# heuristic overcommit rejects that reservation, so `pnpm lint` and lefthook's
+# pre-commit hook abort in the allocator. A waking orb can come back with the
+# default, so re-apply the setting when it drifts.
+if [[ "$(cat /proc/sys/vm/overcommit_memory 2>/dev/null || true)" != "1" ]]; then
+	if [[ "$EUID" -eq 0 ]]; then
+		printf '1' > /proc/sys/vm/overcommit_memory
+	elif sudo -n sh -c 'echo 1 > /proc/sys/vm/overcommit_memory' 2>/dev/null; then
+		:
+	else
+		printf 'Warning: could not set vm.overcommit_memory=1; `pnpm lint` will abort.\n' >&2
+		exit 0
+	fi
+	printf 'Re-applied vm.overcommit_memory=1 for Oxlint.\n'
+fi
